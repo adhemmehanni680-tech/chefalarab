@@ -127,6 +127,7 @@ export async function POST(req: Request) {
         }
         return r;
       });
+      
       fs.writeFileSync(filePath, JSON.stringify(updatedRecipes, null, 2), "utf-8");
       const updatedRecipe = updatedRecipes.find(r => r.id === id);
       return NextResponse.json({ message: "✅ تم تحديث المفضلة!", recipe: updatedRecipe });
