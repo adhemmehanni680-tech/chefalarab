@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import recipesData from "../../public/recipes.json";
-import ChefImage from "../../public/1.jpeg";
+import ChefImage from "../../public/Heeder.jpeg";
 import { motion } from "framer-motion";
 import { ArrowUp, Heart } from "lucide-react";
 
