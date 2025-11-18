@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-export const config = { api: { bodyParser: false } };
+// استبدال config القديم
+export const runtime = "nodejs"; // أو "edge" لو تحب Edge Runtime
 
-// تحديد ملف JSON
+// ملف JSON لتخزين الوصفات
 const filePath = path.join(process.cwd(), "public/recipes.json");
 if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, "[]", "utf-8");
 
@@ -45,9 +46,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "الرجاء إدخال جميع البيانات!" }, { status: 400 });
       }
 
-      // حفظ الصورة
       const uploadDir = path.join(process.cwd(), "public/uploads");
       if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
       const arrayBuffer = await imageFile.arrayBuffer();
       const imagePath = path.join(uploadDir, `${Date.now()}-${imageFile.name}`);
       fs.writeFileSync(imagePath, new Uint8Array(arrayBuffer));
