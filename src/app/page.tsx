@@ -92,7 +92,7 @@ export default function Home() {
             height={1080}
             className="mt-12 w-full h-96 object-cover"
             priority
-            loading="lazy"
+          
           />
 
           {/* النص فوق الصورة */}
