@@ -69,7 +69,7 @@ export default function Recipes() {
       {/* Main layout: Ads + Recipes */}
       <div className="flex justify-between items-start gap-4 lg:gap-6 w-full">
         {/* Left Ad */}
-        <div className="hidden xl:flex sticky top-24 w-64 h-[500px] bg-[#0f1a25] border border-gray-700 rounded-xl justify-center items-center">
+        <div className="hidden xl:flex sticky top-24 w-64 h-[800px]   rounded-xl justify-center items-center">
           <AdSense adSlot="9257395922" />
         </div>
 
@@ -133,7 +133,7 @@ export default function Recipes() {
         </div>
 
         {/* Right Ad */}
-        <div className="hidden xl:flex sticky top-24 w-64 h-[500px] bg-[#0f1a25] border border-gray-700 rounded-xl justify-center items-center">
+        <div className="hidden xl:flex sticky top-24 w-64 h-[800px]   rounded-xl justify-center items-center">
           <AdSense adSlot="9257395922" />
         </div>
       </div>
