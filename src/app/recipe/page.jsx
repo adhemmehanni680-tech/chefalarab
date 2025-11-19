@@ -66,28 +66,39 @@ export default function Recipes() {
       animate={{ opacity: 1 }}
       transition={{ delay: 0.3 }}
     >
-      {/* Main layout: Ads + Recipes */}
+      {/* Layout for desktop */}
       <div className="flex justify-between items-start gap-4 lg:gap-6 w-full">
-        {/* Left Ad */}
-        <div className="hidden xl:flex sticky top-24 w-64 h-[800px]   rounded-xl justify-center items-center">
+
+        {/* Left Ad (desktop only) */}
+        <div className="hidden xl:flex sticky top-24 w-64 h-[800px] rounded-xl justify-center items-center">
           <AdSense adSlot="9257395922" />
         </div>
 
         {/* Middle Section */}
         <div className="flex-1">
+
           {/* Filters */}
           <div className="flex flex-wrap justify-center gap-3 mb-10">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-md text-sm font-medium border border-lime-400 bg-gray-900 transition-all duration-300 $
-                  {activeCategory === cat ? "bg-lime-400 text-black" : "hover:bg-gray-700 text-lime-300"}
-                `}
+                className={`px-4 py-2 rounded-md text-sm font-medium border border-lime-400 bg-gray-900 transition-all duration-300 ${
+                  activeCategory === cat
+                    ? "bg-lime-400 text-black"
+                    : "hover:bg-gray-700 text-lime-300"
+                }`}
               >
                 {cat}
               </button>
             ))}
+          </div>
+
+          {/* Mobile Ad */}
+          <div className="xl:hidden w-full mb-6 flex justify-center">
+            <div className="w-full max-w-sm">
+              <AdSense adSlot="9257395922" />
+            </div>
           </div>
 
           {/* Recipes Grid */}
@@ -132,11 +143,17 @@ export default function Recipes() {
           </div>
         </div>
 
-        {/* Right Ad */}
-        <div className="hidden xl:flex sticky top-24 w-64 h-[800px]   rounded-xl justify-center items-center">
+        {/* Right Ad (desktop only) */}
+        <div className="hidden xl:flex sticky top-24 w-64 h-[800px] rounded-xl justify-center items-center">
           <AdSense adSlot="9257395922" />
         </div>
       </div>
+          {/* Mobile Ad */}
+          <div className="xl:hidden w-full mb-6 flex justify-center">
+            <div className="w-full max-w-sm">
+              <AdSense adSlot="9257395922" />
+            </div>
+          </div>
 
       {/* Scroll to Top */}
       {showScroll && (
