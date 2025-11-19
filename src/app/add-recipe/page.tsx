@@ -268,7 +268,7 @@ export default function AddRecipePage() {
         {existingImage && !image && (
           <div className="w-full aspect-[16/9] relative mb-3">
             <p className="text-sm mb-1 text-gray-900 dark:text-gray-100">الصورة الحالية:</p>
-            <Image src={existingImage} alt="Current Image" fill className="object-cover rounded" />
+            <Image src={existingImage} alt="Current Image" fill className="object-cover rounded"  loading="lazy"/>
           </div>
         )}
 
@@ -298,7 +298,7 @@ export default function AddRecipePage() {
           filteredRecipes.map(recipe => (
             <div key={recipe.id} className="bg-white dark:bg-[#0f1a25] text-gray-900 dark:text-white p-4 rounded-xl shadow flex flex-col transition-colors">
               <div className="relative w-full h-40 sm:h-44 md:h-48 rounded overflow-hidden">
-                <Image src={recipe.img} alt={recipe.title} fill className="object-cover" />
+                <Image src={recipe.img} alt={recipe.title} fill className="object-cover" loading="lazy" />
               </div>
 
               <div className="mt-2 flex flex-col gap-1 flex-1">

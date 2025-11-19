@@ -11,11 +11,11 @@ export const metadata: Metadata = {
   title: "شيف العرب",
   description: "أفضل الوصفات العربية مع شيف العرب",
   keywords: ["وصفات", "طبخ عربي", "حلويات", "مشروبات", "مأكولات"],
-  authors: [{ name: "Mahmoud Mohamed", url: "https://example.com" }],
+  authors: [{ name: "Mahmoud Mohamed", url: "https://chefalarab-39z4.vercel.app/" }],
   openGraph: {
     title: "شيف العرب",
     description: "أفضل الوصفات العربية مع شيف العرب",
-    url: "https://yourwebsite.com",
+    url: "https://chefalarab-39z4.vercel.app/",
     siteName: "شيف العرب",
     type: "website",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],

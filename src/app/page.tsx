@@ -92,6 +92,7 @@ export default function Home() {
             height={1080}
             className="mt-12 w-full h-96 object-cover"
             priority
+            loading="lazy"
           />
 
           {/* النص فوق الصورة */}
@@ -141,6 +142,7 @@ export default function Home() {
                       alt={recipe.title}
                       width={400}
                       height={300}
+                      loading="lazy"
                       className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </motion.div>

@@ -90,11 +90,12 @@ export default function RecipePage({ params }: RecipePageProps) {
               className="object-cover rounded-2xl"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 50vw"
               priority
+              loading="lazy"
             />
           </div>
         </div>
       )}
- {/* إعلان بعد الصوره */}
+      {/* إعلان بعد الصوره */}
       <AdSense adSlot="9257395922" />
       {/* الوصف */}
       <p className="text-gray-600 text-base dark:text-white sm:text-lg leading-relaxed mb-8 text-center break-words px-1">
