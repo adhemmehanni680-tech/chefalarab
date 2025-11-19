@@ -68,6 +68,16 @@ export default function Recipes() {
     >
       {/* Layout for desktop */}
       <div className="flex justify-between items-start gap-4 lg:gap-6 w-full">
+        <style jsx global>{`
+        html,
+        body {
+          overflow-x: hidden !important;
+        }
+        * {
+          box-sizing: border-box;
+          max-width: 100vw !important;
+        }
+      `}</style>
 
         {/* Left Ad (desktop only) */}
         <div className="hidden xl:flex sticky top-24 w-64 h-[800px] rounded-xl justify-center items-center">
