@@ -90,7 +90,7 @@ export default function RecipePage({ params }: RecipePageProps) {
               className="object-cover rounded-2xl"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 50vw"
               priority
-              loading="lazy"
+            
             />
           </div>
         </div>

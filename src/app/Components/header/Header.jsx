@@ -57,6 +57,7 @@ export default function Header() {
             <li><Link href="/" className="text-orange-400">الصفحة الرئيسية</Link></li>
             <li><Link href="/about_us" className="hover:text-orange-400 transition-colors">من نحن</Link></li>
             <li><Link href="/contact_us" className="hover:text-orange-400 transition-colors">تواصل معنا</Link></li>
+            <li><Link href="/recipe" className="hover:text-orange-400 transition-colors">الوصفات </Link></li>
           
           </ul>
         </div>
@@ -153,6 +154,7 @@ export default function Header() {
               <li><Link href="/" onClick={() => setIsMenuOpen(false)}>الصفحة الرئيسية</Link></li>
               <li><Link href="/about_us" onClick={() => setIsMenuOpen(false)}>من نحن</Link></li>
               <li><Link href="/contact_us" onClick={() => setIsMenuOpen(false)}>تواصل معنا</Link></li>
+              <li><Link href="/recipe" onClick={() => setIsMenuOpen(false)}>الوصفات </Link></li>
           
             </ul>
           </div>
