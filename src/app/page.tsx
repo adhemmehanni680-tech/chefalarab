@@ -77,7 +77,7 @@ export default function Home() {
 
   return (
     <motion.main
-      className="ml-3 mr-3"
+      className="ml-0 mr-0"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.3 }}
