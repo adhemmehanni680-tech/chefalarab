@@ -1,8 +1,7 @@
 import React from 'react'
 import Link from "next/link";
 import Image from "next/image";
-import food_icon from "../../../../public/food_icon.png";
-import { motion } from 'framer-motion';
+import food_icon from "../../../../public/food_icon.webp";
 const Footer = () => {
   return (
     <div>
