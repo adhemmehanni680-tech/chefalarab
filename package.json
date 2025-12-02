@@ -3,16 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-  "dev": "next dev",
-  "build": "next build",
-  "start": "next start",
-  "export": "next export"
-}
-,
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "export": "next export"
+  },
   "dependencies": {
     "formidable": "^3.5.4",
     "formidable-serverless": "^1.1.1",
-    "framer-motion": "^12.23.24",
+    "framer-motion": "^12.23.25",
     "lucide-react": "^0.553.0",
     "next": "14.2.4",
     "react": "^18",
