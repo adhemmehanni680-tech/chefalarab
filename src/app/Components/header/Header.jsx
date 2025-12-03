@@ -3,20 +3,25 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import food_icon from "../../../../public/food_icon.webp";
 import recipes from "../../../../public/recipes.json";
 
 export default function Header() {
-  const router = useRouter();
+  const pathname = usePathname();
   const [searchTerm, setSearchTerm] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState("light");
+  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") || "light";
     setTheme(savedTheme);
     document.documentElement.classList.toggle("dark", savedTheme === "dark");
+
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const toggleTheme = () => {
@@ -33,32 +38,55 @@ export default function Header() {
         )
       : [];
 
+  const navBg = scrollY > 10 ? "bg-gray-900/95 backdrop-blur-md shadow-md" : "bg-gray-900/80";
+
+  const links = [
+    { title: "الصفحة الرئيسية", href: "/" },
+    { title: "من نحن", href: "/about_us" },
+    { title: "تواصل معنا", href: "/contact_us" },
+    { title: "الوصفات", href: "/recipe" },
+  ];
 
   return (
-    <nav className="bg-gray-900 dark:bg-gray-900 fixed w-full z-30 top-0 left-0 border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors">
+    <nav className={`${navBg} fixed w-full z-50 top-0 left-0 border-b border-gray-200 dark:border-gray-700 transition-all`}>
       <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* الشعار */}
         <div className="flex items-center flex-shrink-0">
           <Link href="/" className="flex items-center space-x-3 rtl:space-x-reverse">
-            <Image
-              src={food_icon}
-              className="h-8 w-8"
-              alt="Chefalarab Logo"
-              width={32}
-              height={32}
-            />
+            <Image src={food_icon} className="h-8 w-8" alt="Chefalarab Logo" width={32} height={32} />
             <span className="text-2xl font-bold text-white">شيف العرب</span>
           </Link>
         </div>
 
         {/* روابط الديسكتوب */}
         <div className="hidden md:flex items-center flex-1 justify-center">
-          <ul className="flex space-x-8 rtl:space-x-reverse font-medium text-white">
-            <li><Link href="/" className="text-orange-400">الصفحة الرئيسية</Link></li>
-            <li><Link href="/about_us" className="hover:text-orange-400 transition-colors">من نحن</Link></li>
-            <li><Link href="/contact_us" className="hover:text-orange-400 transition-colors">تواصل معنا</Link></li>
-            <li><Link href="/recipe" className="hover:text-orange-400 transition-colors">الوصفات </Link></li>
-          
+          <ul className="flex space-x-8 rtl:space-x-reverse font-medium text-white relative">
+            {links.map((link) => {
+              const isActive =
+                link.href === "/"
+                  ? pathname === "/" // الصفحة الرئيسية نشطة فقط على /
+                  : pathname?.startsWith(link.href);
+
+              return (
+                <li key={link.href} className="relative group">
+                  <Link
+                    href={link.href}
+                    className={`px-2 py-1 transition-all duration-300 ${
+                      isActive
+                        ? "text-orange-400 font-semibold drop-shadow-lg scale-105"
+                        : "text-white hover:text-orange-400 hover:scale-105"
+                    }`}
+                  >
+                    {link.title}
+                    <span
+                      className={`absolute bottom-0 left-0 h-0.5 bg-orange-400 rounded transition-all duration-300 ${
+                        isActive ? "w-full opacity-100" : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100"
+                      }`}
+                    />
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
@@ -99,7 +127,7 @@ export default function Header() {
         {/* زر الوضع الليلي */}
         <button
           onClick={toggleTheme}
-          className="mr-8 text-gray-600 dark:text-yellow-300 hover:text-orange-500 transition-colors text-lg"
+          className="mr-4 md:mr-8 text-gray-600 dark:text-yellow-300 hover:text-orange-500 transition-colors text-lg"
           title="تبديل الوضع الليلي"
         >
           {theme === "light" ? "🌙" : "☀️"}
@@ -151,11 +179,13 @@ export default function Header() {
             )}
 
             <ul className="flex flex-col space-y-2 text-gray-900 dark:text-white font-medium mt-3">
-              <li><Link href="/" onClick={() => setIsMenuOpen(false)}>الصفحة الرئيسية</Link></li>
-              <li><Link href="/about_us" onClick={() => setIsMenuOpen(false)}>من نحن</Link></li>
-              <li><Link href="/contact_us" onClick={() => setIsMenuOpen(false)}>تواصل معنا</Link></li>
-              <li><Link href="/recipe" onClick={() => setIsMenuOpen(false)}>الوصفات </Link></li>
-          
+              {links.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} onClick={() => setIsMenuOpen(false)}>
+                    {link.title}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

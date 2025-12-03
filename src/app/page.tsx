@@ -1,3 +1,4 @@
+//Home Page 
 "use client";
 
 import { useState, useEffect } from "react";
@@ -29,7 +30,7 @@ const categories: string[] = [
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState<string>("جميع الوصفات");
   const [showScroll, setShowScroll] = useState(false);
-  const [recipes, setRecipes] = useState<Recipe[]>(recipesData);
+  const [recipes] = useState<Recipe[]>(recipesData);
 
   useEffect(() => {
     const handleScroll = () => setShowScroll(window.scrollY > 300);
@@ -39,33 +40,6 @@ export default function Home() {
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // toggle المفضلة وتحديث JSON + state
-  const toggleFavorite = async (id: number) => {
-    try {
-      const formData = new FormData();
-      formData.append("action", "toggleFavorite");
-      formData.append("id", id.toString());
-
-      const res = await fetch("/api/add-recipe", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (res.ok && data.recipe) {
-        // تحديث الـ state مباشرة
-        setRecipes((prev) =>
-          prev.map((r) => (r.id === id ? data.recipe : r))
-        );
-      } else {
-        alert(data.error || "حدث خطأ أثناء تحديث المفضلة");
-      }
-    } catch (err) {
-      alert("حدث خطأ أثناء تحديث المفضلة");
-      console.error(err);
-    }
   };
 
   const filteredRecipes: Recipe[] =
@@ -92,7 +66,6 @@ export default function Home() {
             height={1080}
             className="mt-12 w-full h-96 object-cover"
             priority
-          
           />
 
           {/* النص فوق الصورة */}
@@ -154,21 +127,15 @@ export default function Home() {
                   </h3>
                   <p className="text-sm text-gray-400">{recipe.country}</p>
 
-                  {/* زر المفضلة */}
-                  <button
-                    onClick={() => toggleFavorite(recipe.id)}
-                    className="absolute top-3 right-3"
-                    aria-label="Favorite"
-                  >
-                    <Heart
-                      size={24}
-                      className={`transition-colors duration-300 ${
-                        recipe.category.includes("الوصفات ألأكثر إعجابا")
-                          ? "text-orange-500"
-                          : "text-gray-400"
-                      }`}
-                    />
-                  </button>
+                  {/* القلب حسب المفضلة */}
+                  <Heart
+                    size={24}
+                    className={`absolute top-3 right-3 transition-colors duration-300 ${
+                      recipe.category.includes("الوصفات ألأكثر إعجابا")
+                        ? "text-red-500"
+                        : "text-white"
+                    }`}
+                  />
                 </div>
               </div>
             ))}

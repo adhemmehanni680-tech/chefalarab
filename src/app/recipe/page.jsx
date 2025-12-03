@@ -1,4 +1,4 @@
-// Updated Recipes Page – Ads aligned under navbar and full clean layout
+// Recipes page
 "use client";
 
 import { useState, useEffect } from "react";
@@ -32,25 +32,7 @@ export default function Recipes() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  const toggleFavorite = async (id) => {
-    try {
-      const formData = new FormData();
-      formData.append("action", "toggleFavorite");
-      formData.append("id", id.toString());
-
-      const res = await fetch("/api/add-recipe", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (res.ok && data.recipe) {
-        setRecipes((prev) => prev.map((r) => (r.id === id ? data.recipe : r)));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // هنا شيلنا toggleFavorite تماما، القلب هيظهر حسب category فقط
 
   const filteredRecipes =
     activeCategory === "جميع الوصفات"
@@ -66,28 +48,23 @@ export default function Recipes() {
       animate={{ opacity: 1 }}
       transition={{ delay: 0.3 }}
     >
-      {/* Layout for desktop */}
       <div className="flex justify-between items-start gap-4 lg:gap-6 w-full">
         <style jsx global>{`
-        html,
-        body {
-          overflow-x: hidden !important;
-        }
-        * {
-          box-sizing: border-box;
-          max-width: 100vw !important;
-        }
-      `}</style>
+          html,
+          body {
+            overflow-x: hidden !important;
+          }
+          * {
+            box-sizing: border-box;
+            max-width: 100vw !important;
+          }
+        `}</style>
 
-        {/* Left Ad (desktop only) */}
         <div className="hidden xl:flex sticky top-24 w-64 h-[800px] rounded-xl justify-center items-center">
           <AdSense adSlot="9257395922" />
         </div>
 
-        {/* Middle Section */}
         <div className="flex-1">
-
-          {/* Filters */}
           <div className="flex flex-wrap justify-center gap-3 mb-10">
             {categories.map((cat) => (
               <button
@@ -104,14 +81,12 @@ export default function Recipes() {
             ))}
           </div>
 
-          {/* Mobile Ad */}
           <div className="xl:hidden w-full mb-6 flex justify-center">
             <div className="w-full max-w-sm">
               <AdSense adSlot="9257395922" />
             </div>
           </div>
 
-          {/* Recipes Grid */}
           <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 max-w-6xl mx-auto">
             {filteredRecipes.map((recipe) => (
               <div
@@ -134,38 +109,33 @@ export default function Recipes() {
                   </h3>
                   <p className="text-sm text-gray-400">{recipe.country}</p>
 
-                  <button
-                    onClick={() => toggleFavorite(recipe.id)}
-                    className="absolute top-3 right-3"
-                  >
+                  <div className="absolute top-3 right-3">
                     <Heart
                       size={24}
                       className={
                         recipe.category.includes("الوصفات ألأكثر إعجابا")
-                          ? "text-orange-500"
-                          : "text-gray-400"
+                          ? "text-red-500"
+                          : "text-white"
                       }
                     />
-                  </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right Ad (desktop only) */}
         <div className="hidden xl:flex sticky top-24 w-64 h-[800px] rounded-xl justify-center items-center">
           <AdSense adSlot="9257395922" />
         </div>
       </div>
-          {/* Mobile Ad */}
-          <div className="xl:hidden w-full mb-6 flex justify-center">
-            <div className="w-full max-w-sm">
-              <AdSense adSlot="9257395922" />
-            </div>
-          </div>
 
-      {/* Scroll to Top */}
+      <div className="xl:hidden w-full mb-6 flex justify-center">
+        <div className="w-full max-w-sm">
+          <AdSense adSlot="9257395922" />
+        </div>
+      </div>
+
       {showScroll && (
         <button
           onClick={scrollToTop}
