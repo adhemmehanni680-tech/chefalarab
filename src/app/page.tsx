@@ -46,8 +46,8 @@ export default function Home() {
     activeCategory === "جميع الوصفات"
       ? recipes
       : activeCategory === "الوصفات ألأكثر إعجابا"
-      ? recipes.filter((r) => r.category.includes("الوصفات ألأكثر إعجابا"))
-      : recipes.filter((item) => item.category.includes(activeCategory));
+        ? recipes.filter((r) => r.category.includes("الوصفات ألأكثر إعجابا"))
+        : recipes.filter((item) => item.category.includes(activeCategory));
 
   return (
     <motion.main
@@ -69,12 +69,21 @@ export default function Home() {
           />
 
           {/* النص فوق الصورة */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white bg-black/40">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white bg-black/40 px-4">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">استمتعوا بطبخٍ</h2>
             <p className="text-lg md:text-xl mb-6 max-w-xl">
               .شهيّ مع عائلتكم، واستمتعوا بأطباقٍ شهيةٍ تُرضي جميع الأذواق
             </p>
+
+            {/* زر المزيد من الوصفات */}
+            <Link
+              href="/recipe"
+              className="mt-4 px-6 py-3 bg-lime-500 text-black font-semibold rounded-lg shadow-lg hover:bg-lime-600 hover:scale-105 transition-all duration-300"
+            >
+              المزيد من الوصفات
+            </Link>
           </div>
+
         </div>
 
         {/* قسم الوصفات */}
@@ -85,11 +94,10 @@ export default function Home() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-md text-sm font-medium border border-lime-400 bg-gray-900 transition-all duration-300 ${
-                  activeCategory === cat
+                className={`px-4 py-2 rounded-md text-sm font-medium border border-lime-400 bg-gray-900 transition-all duration-300 ${activeCategory === cat
                     ? "bg-lime-400 text-lime-600"
                     : "hover:bg-gray-700 text-lime-300"
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -130,11 +138,10 @@ export default function Home() {
                   {/* القلب حسب المفضلة */}
                   <Heart
                     size={24}
-                    className={`absolute top-3 right-3 transition-colors duration-300 ${
-                      recipe.category.includes("الوصفات ألأكثر إعجابا")
+                    className={`absolute top-3 right-3 transition-colors duration-300 ${recipe.category.includes("الوصفات ألأكثر إعجابا")
                         ? "text-red-500"
                         : "text-white"
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
