@@ -35,6 +35,11 @@ const Footer = () => {
                     chefalarab
                   </Link>
                 </li>
+                <li className="mb-4">
+                  <Link href="/recipe" className="hover:underline">
+                    Recipes
+                  </Link>
+                </li>
               
               </ul>
             </div>

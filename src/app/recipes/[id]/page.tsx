@@ -88,7 +88,7 @@ export default function RecipePage({ params }: RecipePageProps) {
               alt={recipe.title}
               fill
               className="object-cover rounded-2xl"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 50vw"
+              sizes="(max-width: 940px) 100vw, (max-width: 1024px) 75vw, 50vw"
               priority
             
             />
