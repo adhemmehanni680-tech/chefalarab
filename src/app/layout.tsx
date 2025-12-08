@@ -9,13 +9,18 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "شيف العرب",
-  description: "أفضل الوصفات العربية مع شيف العرب",
+  description: "اكتشف ألذ وأحدث الوصفات العربية الأصيلة، مع شيف العرب تجد وصفات شهية للطبخ المنزلي، الحلويات، المشروبات والمأكولات العربية بسهولة خطوة بخطوة.",
   keywords: ["وصفات", "طبخ عربي", "حلويات", "مشروبات", "مأكولات"],
-  authors: [{ name: "Mahmoud Mohamed", url: "https://chefalarab-39z4.vercel.app/" }],
+  authors: [{ name: "Mahmoud Mohamed", url: "https://chefalarab.com/" }],
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
   openGraph: {
     title: "شيف العرب",
-    description: "أفضل الوصفات العربية مع شيف العرب",
-    url: "https://chefalarab-39z4.vercel.app/",
+    description: "اكتشف ألذ وأحدث الوصفات العربية الأصيلة، مع شيف العرب تجد وصفات شهية للطبخ المنزلي، الحلويات، المشروبات والمأكولات العربية بسهولة خطوة بخطوة.",
+    url: "https://chefalarab.com/",
     siteName: "شيف العرب",
     type: "website",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
@@ -23,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "شيف العرب",
-    description: "أفضل الوصفات العربية مع شيف العرب",
+    description: "اكتشف ألذ وأحدث الوصفات العربية الأصيلة، مع شيف العرب تجد وصفات شهية للطبخ المنزلي، الحلويات، المشروبات والمأكولات العربية بسهولة خطوة بخطوة.",
     images: ["/og-image.jpg"],
   },
 };
@@ -32,7 +37,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ar">
       <head>
-        {/* سكربت Google Ads */}
+        {/* روابط الأيقونة */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+        {/* Google Ads */}
         <Script
           strategy="afterInteractive"
           async
