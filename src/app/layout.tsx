@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
   keywords: ["وصفات", "طبخ عربي", "حلويات", "مشروبات", "مأكولات"],
 
-  authors: [{ name: "Mahmoud Mohamed", url: "https://chefalarab.com" }],
+  authors: [{ name: "Adhem Mehanni", url: "https://chefalarab.com" }],
 
   alternates: {
     canonical: "https://chefalarab.com",
@@ -57,10 +57,14 @@ export const metadata: Metadata = {
     "max-image-preview": "large",
   },
 
-  // ✅ تفعيل التحقق من GSC عبر HTML Tag (اختياري)
-  // حط كود google-site-verification هنا لو حابب تستخدمه
+  // ✅ meta tag الخاص بـ AdSense للتحقق من الملكية
+  other: {
+    "google-adsense-account": "ca-pub-1234567890123456", // ← عدّل هنا
+  },
+
+  // ✅ لو حبيت تضيف كود تحقق Search Console (GSC) بعدين:
   // verification: {
-  //   google: "PUT_GOOGLE_VERIFICATION_CODE_HERE",
+  //   google: "CODE_FROM_SEARCH_CONSOLE",
   // },
 };
 
@@ -85,12 +89,12 @@ export default function RootLayout({
           hrefLang="x-default"
         />
 
-        {/* Google AdSense */}
+        {/* ✅ Google AdSense – الكود الرئيسي للتحقق + الإعلانات */}
         <Script
           id="adsbygoogle-init"
           strategy="afterInteractive"
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXX"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1234567890123456"
           crossOrigin="anonymous"
         />
       </head>
