@@ -59,7 +59,7 @@ export const metadata: Metadata = {
 
   // ✅ meta tag الخاص بـ AdSense للتحقق من الملكية
   other: {
-    "google-adsense-account": "ca-pub-1234567890123456", // ← عدّل هنا
+    "google-adsense-account": "ca-pub-9717868267549745", // ← عدّل هنا
   },
 
   // ✅ لو حبيت تضيف كود تحقق Search Console (GSC) بعدين:
@@ -94,7 +94,7 @@ export default function RootLayout({
           id="adsbygoogle-init"
           strategy="afterInteractive"
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1234567890123456"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9717868267549745"
           crossOrigin="anonymous"
         />
       </head>
