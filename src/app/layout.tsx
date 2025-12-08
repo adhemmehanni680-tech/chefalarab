@@ -59,13 +59,13 @@ export const metadata: Metadata = {
 
   // ✅ meta tag الخاص بـ AdSense للتحقق من الملكية
   other: {
-    "google-adsense-account": "ca-pub-9717868267549745", // ← عدّل هنا
+    "google-adsense-account": "ca-pub-9717868267549745",
   },
 
-  // ✅ لو حبيت تضيف كود تحقق Search Console (GSC) بعدين:
-  // verification: {
-  //   google: "CODE_FROM_SEARCH_CONSOLE",
-  // },
+  // ✅ كود التحقق من Google Search Console
+  verification: {
+    google: "tdSwWzOnOuUsvJhYhKTI616MoDw3Vb4Xvle7no2xtas",
+  },
 };
 
 export default function RootLayout({
