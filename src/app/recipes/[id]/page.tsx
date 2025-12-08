@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import recipes from "../../../../public/recipes.json";
-import AdSense from "../../Components/AdSense";
+import AdSenseBanner from "../../Components/AdSenseBanner";
 import InterstitialAd from "../../Components/InterstitialAd";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -90,13 +90,13 @@ export default function RecipePage({ params }: RecipePageProps) {
               className="object-cover rounded-2xl"
               sizes="(max-width: 940px) 100vw, (max-width: 1024px) 75vw, 50vw"
               priority
-            
+
             />
           </div>
         </div>
       )}
       {/* إعلان بعد الصوره */}
-      <AdSense adSlot="9257395922" />
+      <AdSenseBanner adSlot="9257395922" />
       {/* الوصف */}
       <p className="text-gray-600 text-base dark:text-white sm:text-lg leading-relaxed mb-8 text-center break-words px-1">
         {recipe.description}
@@ -142,7 +142,7 @@ export default function RecipePage({ params }: RecipePageProps) {
       </div>
 
       {/* إعلان بعد المعلومات */}
-      <AdSense adSlot="9257395921" />
+      <AdSenseBanner adSlot="9257395921" />
 
       {/* خطوات التحضير */}
       {recipe.preparation?.length && (
@@ -164,7 +164,7 @@ export default function RecipePage({ params }: RecipePageProps) {
       )}
 
       {/* إعلان بعد التحضير */}
-      <AdSense adSlot="9257395922" />
+      <AdSenseBanner adSlot="9257395922" />
 
       {/* زر الصعود للأعلى */}
       {showScrollTop && (

@@ -8,7 +8,7 @@ import InterstitialAd from '../Components/InterstitialAd';
 const PrivacyPolicyPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6">
-          <InterstitialAd interstitialUnitID="1234567890" />
+            <InterstitialAd interstitialUnitID="1234567890" />
       <div className="max-w-5xl mx-auto">
         <motion.h1
           className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"

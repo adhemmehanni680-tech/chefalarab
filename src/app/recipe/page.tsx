@@ -1,19 +1,17 @@
-// Recipes Page
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import recipesData from "../../../public/recipes.json";
-import { motion, useMotionValue } from "framer-motion";
 import { ArrowUp, Heart } from "lucide-react";
-import AdSense from "../../app/Components/AdSense";
+import AdSenseBanner from "../Components/AdSenseBanner";
 import InterstitialAd from "../Components/InterstitialAd";
 
 const categories = [
   "جميع الوصفات",
   "الطبق العربي",
-  "الطبق الأروبي",
+  "الطبق الغربى",
   "مخللات وسلطات",
   "حلويات",
   "مثلجات و مشروبات",
@@ -21,35 +19,21 @@ const categories = [
   "الوصفات ألأكثر إعجابا",
 ];
 
+// كومبوننت للإعلانات الجانبية Desktop (sticky داخل حدود الصفحة)
+const SideAd = ({ adSlot }: { adSlot: string }) => (
+  <div className="w-64 min-h-[400px] rounded-2xl shadow-lg border overflow-hidden sticky top-24">
+    <AdSenseBanner adSlot={adSlot} />
+  </div>
+);
+
 export default function Recipes() {
   const [activeCategory, setActiveCategory] = useState("جميع الوصفات");
   const [showScroll, setShowScroll] = useState(false);
   const [recipes] = useState(recipesData);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const yLeft = useMotionValue(0);
-  const yRight = useMotionValue(0);
-
-  const yLeftRef = useRef(yLeft);
-  const yRightRef = useRef(yRight);
-
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      setShowScroll(scrollTop > 400);
-
-      if (containerRef.current) {
-        const containerHeight = containerRef.current.scrollHeight;
-        const windowHeight = window.innerHeight;
-        const maxY = containerHeight - windowHeight - 100;
-
-        yLeftRef.current.set(Math.min(scrollTop * 0.8, maxY));
-        yRightRef.current.set(Math.min(scrollTop * 0.8, maxY));
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setShowScroll(window.scrollY > 400);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -63,32 +47,16 @@ export default function Recipes() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <motion.div
-      ref={containerRef}
-      className="w-full py-10 px-2 md:px-4 lg:px-8 mt-16"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <style jsx global>{`
-        html,
-        body {
-          overflow-x: hidden !important;
-        }
-      `}</style>
+    <div className="w-full py-10 px-2 md:px-4 lg:px-8 mt-16 relative">
       <InterstitialAd interstitialUnitID="1234567890" />
-      <div className="flex justify-between w-full gap-6">
-        {/* إعلان اليسار */}
-        <aside className="hidden xl:flex flex-col items-start">
-          <motion.div
-            style={{ y: yLeftRef.current }}
-            className="w-64 h-[400px] rounded-2xl shadow-lg border border-gray-800 sticky top-24 overflow-hidden"
-          >
-            <AdSense adSlot="9257395922" />
-          </motion.div>
+
+      <div className="flex justify-between max-w-7xl mx-auto gap-6 relative">
+        {/* إعلان يسار Desktop */}
+        <aside className="hidden xl:block">
+          <SideAd adSlot="9257395922" />
         </aside>
 
-        {/* المحتوى */}
+        {/* المحتوى الرئيسي */}
         <main className="flex-1">
           {/* التصنيفات */}
           <div className="flex flex-wrap justify-center gap-3 mb-12">
@@ -106,16 +74,37 @@ export default function Recipes() {
             ))}
           </div>
 
-          {/* إعلان موبايل */}
-          <div className="xl:hidden w-full mb-10 flex justify-center">
-            <div className="w-full max-w-sm">
-              <AdSense adSlot="9257395922" />
-            </div>
+          {/* إعلان موبايل بعد كل 3 كروت */}
+          <div className="xl:hidden w-full flex flex-col gap-6">
+            {filteredRecipes.map((recipe, index) => (
+              <div key={recipe.id} className="relative">
+                <Link href={`/recipes/${recipe.id}`}>
+                  <Image
+                    src={recipe.img}
+                    alt={recipe.title}
+                    width={500}
+                    height={350}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="w-full h-56 object-cover rounded-xl"
+                    loading="lazy"
+                  />
+                </Link>
+
+                {/* إعلان بعد كل 3 كروت */}
+                {(index + 1) % 3 === 0 && (
+                  <div className="w-full my-6 flex justify-center">
+                    <div className="w-full max-w-sm">
+                      <AdSenseBanner adSlot="9257395922" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
-          {/* الشبكة */}
-          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 max-w-6xl mx-auto">
-            {filteredRecipes.map((recipe, index) => (
+          {/* شبكة الوصفات Desktop */}
+          <div className="hidden xl:grid grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {filteredRecipes.map((recipe) => (
               <div
                 key={recipe.id}
                 className="group relative bg-[#0f1a25] rounded-xl overflow-hidden border border-gray-700 hover:border-lime-400 transition-all duration-300 shadow-md hover:shadow-lime-400/30"
@@ -127,18 +116,18 @@ export default function Recipes() {
                       alt={recipe.title}
                       width={500}
                       height={350}
+                      sizes="(max-width: 1024px) 50vw, 33vw"
                       className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
                     />
 
-                    {/* ❤️ القلب فوق الصورة */}
+                    {/* ❤️ القلب */}
                     <div className="absolute top-3 right-3 z-20">
                       <div
-                        className={`w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm border flex items-center justify-center
-                          ${recipe.category.includes("الوصفات ألأكثر إعجابا")
+                        className={`w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm border flex items-center justify-center ${recipe.category.includes("الوصفات ألأكثر إعجابا")
                             ? "border-red-500"
                             : "border-gray-300"
-                          }
-                        `}
+                          }`}
                       >
                         <Heart
                           size={20}
@@ -159,28 +148,14 @@ export default function Recipes() {
                   </h3>
                   <p className="text-sm text-gray-400">{recipe.country}</p>
                 </div>
-
-                {/* إعلان بعد كل 3 كروت */}
-                {index > 0 && (index + 1) % 3 === 0 && (
-                  <div className="xl:hidden w-full my-6 flex justify-center">
-                    <div className="w-full max-w-sm">
-                      <AdSense adSlot="9257395922" />
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
         </main>
 
-        {/* إعلان اليمين */}
-        <aside className="hidden xl:flex flex-col items-end">
-          <motion.div
-            style={{ y: yRightRef.current }}
-            className="w-64 h-[400px] rounded-2xl shadow-lg border border-gray-800 sticky top-24 overflow-hidden"
-          >
-            <AdSense adSlot="9257395922" />
-          </motion.div>
+        {/* إعلان يمين Desktop */}
+        <aside className="hidden xl:block">
+          <SideAd adSlot="9257395923" />
         </aside>
       </div>
 
@@ -193,6 +168,6 @@ export default function Recipes() {
           <ArrowUp size={24} />
         </button>
       )}
-    </motion.div>
+    </div>
   );
 }

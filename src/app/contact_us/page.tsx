@@ -38,20 +38,21 @@ const ContactPage = () => {
           <div className="flex items-center gap-3">
             <Mail className="text-blue-600" />
             <Link
-              href="mailto:contact@chefalarab.com"
+              href="mailto:chefalarabonline@gmail.com"
               className="text-blue-400  font-semibold "
             >
-              contact@chefalarab.com
+              chefalarabonline@gmail.com
             </Link>
           </div>
 
           <div className="flex items-center gap-3">
             <MessageCircle className="text-green-600" />
             <Link
-              target="_blank" href="https://wa.me/20117232016?text="
+              target="_blank" href="https://wa.me/201107232016?text="
               rel="noopener noreferrer"
               className="text-green-700 dark:text-green-400 font-semibold "
             >
+              
               تواصل معنا عبر واتس آب
             </Link>
           </div>

@@ -61,10 +61,10 @@ const TermsConditionsPage = () => {
             <strong>7. التواصل معنا</strong><br />
             في حال وجود أي استفسار أو شكوى بخصوص هذه الشروط، يُرجى التواصل معنا عبر البريد الإلكتروني التالي:<br />
             📧 <span className="font-semibold"><Link
-              href="mailto:contact@chefalarab.com"
+              href="mailto:chefalarabonline@gmail.com"
               className="text-blue-400  font-semibold "
             >
-              contact@chefalarab.com
+              chefalarabonline@gmail.com
             </Link></span>
           </p>
         </motion.div>
