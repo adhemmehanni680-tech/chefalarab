@@ -179,7 +179,7 @@ export default function Home() {
                             <HeartIcon
                               size={20}
                               className={isFav ? "text-red-500" : "text-white/70"}
-                            />
+                            /> 
                           </span>
                         </div>
                         <div className="p-4">
