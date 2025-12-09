@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 interface InterstitialAdProps {
@@ -10,24 +10,39 @@ interface InterstitialAdProps {
 export default function InterstitialAd({
   interstitialUnitID = "1234567890",
 }: InterstitialAdProps) {
-  const pathname = usePathname(); // علشان نرصد تغيّر الصفحات
+  const pathname = usePathname();
+  const pushedRef = useRef(false); // علشان نتأكد إننا push مرة واحدة فقط لكل صفحة
 
   useEffect(() => {
-    // نتأكد إننا على المتصفح مش السيرفر
     if (typeof window === "undefined") return;
 
-    try {
-      const w = window as any;
-      w.adsbygoogle = w.adsbygoogle || [];
-      w.adsbygoogle.push({
-        google_ad_client: "ca-pub-9717868267549745", // رقم حساب AdSense بتاعك
-        google_ad_slot: interstitialUnitID,          // وحدة الإعلان (لو عندك Slot مخصص)
-        overlays: { bottom: true },                  // Anchor / Interstitial بالأسفل
-      });
-    } catch (e) {
-      console.error("Interstitial Ads Error:", e);
+    const pushAd = () => {
+      try {
+        const w = window as Window & { adsbygoogle?: any[] };
+        w.adsbygoogle = w.adsbygoogle || [];
+
+        if (!pushedRef.current) {
+          w.adsbygoogle.push({
+            google_ad_client: "ca-pub-9717868267549745",
+            google_ad_slot: interstitialUnitID,
+            overlays: { bottom: true },
+          });
+          pushedRef.current = true;
+          console.log("Interstitial ad pushed for path:", pathname);
+        }
+      } catch (err) {
+        console.error("Interstitial Ads Error:", err);
+      }
+    };
+
+    // Push بعد التأكد من تحميل الصفحة بالكامل
+    if (document.readyState === "complete") {
+      pushAd();
+    } else {
+      window.addEventListener("load", pushAd);
+      return () => window.removeEventListener("load", pushAd);
     }
-  }, [pathname, interstitialUnitID]); // كل ما المسار يتغير نحاول نفعّل الإعلان تاني
+  }, [pathname, interstitialUnitID]);
 
   return null;
 }

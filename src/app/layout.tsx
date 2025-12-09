@@ -50,19 +50,16 @@ export const metadata: Metadata = {
     ],
   },
 
-  // ✅ Google Discover
   robots: {
     index: true,
     follow: true,
     "max-image-preview": "large",
   },
 
-  // ✅ meta tag الخاص بـ AdSense للتحقق من الملكية
   other: {
     "google-adsense-account": "ca-pub-9717868267549745",
   },
 
-  // ✅ كود التحقق من Google Search Console
   verification: {
     google: "tdSwWzOnOuUsvJhYhKTI616MoDw3Vb4Xvle7no2xtas",
   },
@@ -97,6 +94,22 @@ export default function RootLayout({
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9717868267549745"
           crossOrigin="anonymous"
         />
+
+        {/* ✅ Google Analytics gtag.js */}
+        <Script
+          id="gtag-js"
+          strategy="afterInteractive"
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-GCE8E2TYB1"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-GCE8E2TYB1');
+          `}
+        </Script>
       </head>
 
       <body

@@ -1,17 +1,25 @@
-//ContactPage
 'use client';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Mail, MessageCircle } from 'lucide-react';
-import InterstitialAd from '../Components/InterstitialAd';
 import Link from 'next/link';
-
+import AdSenseBanner from '../Components/AdSenseBanner';
+import InterstitialAd from '../Components/InterstitialAd';
 
 const ContactPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6">
-      <div className="max-w-4xl mx-auto text-center">
-        <InterstitialAd interstitialUnitID="1234567890" />
+      <InterstitialAd interstitialUnitID="1234567890" />
+      <style jsx global>{`
+        html,
+        body {
+          overflow-x: hidden !important;
+        }
+        * {
+            max-width: 100vw !important;
+        }
+      `}</style>
+      <div className="max-w-4xl mx-auto text-center mt-10">
         <motion.h1
           className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6"
           initial={{ opacity: 0, y: -20 }}
@@ -39,7 +47,7 @@ const ContactPage = () => {
             <Mail className="text-blue-600" />
             <Link
               href="mailto:chefalarabonline@gmail.com"
-              className="text-blue-400  font-semibold "
+              className="text-blue-400 font-semibold"
             >
               chefalarabonline@gmail.com
             </Link>
@@ -48,18 +56,21 @@ const ContactPage = () => {
           <div className="flex items-center gap-3">
             <MessageCircle className="text-green-600" />
             <Link
-              target="_blank" href="https://wa.me/201107232016?text="
+              target="_blank"
+              href="https://wa.me/201107232016?text="
               rel="noopener noreferrer"
-              className="text-green-700 dark:text-green-400 font-semibold "
+              className="text-green-700 dark:text-green-400 font-semibold"
             >
-              
               تواصل معنا عبر واتس آب
             </Link>
           </div>
-
-         
         </motion.div>
       </div>
+
+      <div className="flex justify-center my-8">
+        <AdSenseBanner adSlot="9257395925" adFormat="horizontal" />
+      </div>
+
     </div>
   );
 };

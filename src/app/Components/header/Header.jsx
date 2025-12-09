@@ -1,8 +1,9 @@
+// Header.jsx
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import food_icon from "../../../../public/food_icon.webp";
 import recipes from "../../../../public/recipes.json";
@@ -13,6 +14,8 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState("light");
   const [scrollY, setScrollY] = useState(0);
+  const [debouncedTerm, setDebouncedTerm] = useState(searchTerm);
+  const debounceTimeout = useRef(null);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") || "light";
@@ -24,6 +27,12 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Debounce البحث لتقليل فلترة مستمرة
+  useEffect(() => {
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    debounceTimeout.current = setTimeout(() => setDebouncedTerm(searchTerm), 300);
+  }, [searchTerm]);
+
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
@@ -32,13 +41,16 @@ export default function Header() {
   };
 
   const filteredResults =
-    searchTerm.trim().length >= 2
+    debouncedTerm.trim().length >= 2
       ? recipes.filter((r) =>
-          r.title.toLowerCase().includes(searchTerm.toLowerCase())
+          r.title.toLowerCase().includes(debouncedTerm.toLowerCase())
         )
       : [];
 
-  const navBg = scrollY > 10 ? "bg-gray-900/95 backdrop-blur-md shadow-md" : "bg-gray-900/80";
+  const navBg =
+    scrollY > 10
+      ? "bg-gray-900/95 backdrop-blur-md shadow-md"
+      : "bg-gray-900/80";
 
   const links = [
     { title: "الصفحة الرئيسية", href: "/" },
@@ -48,12 +60,23 @@ export default function Header() {
   ];
 
   return (
-    <nav className={`${navBg} fixed w-full z-50 top-0 left-0 border-b border-gray-200 dark:border-gray-700 transition-all`}>
+    <nav
+      className={`${navBg} fixed w-full z-50 top-0 left-0 border-b border-gray-200 dark:border-gray-700 transition-all`}
+    >
       <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* الشعار */}
         <div className="flex items-center flex-shrink-0">
-          <Link href="/" className="flex items-center space-x-3 rtl:space-x-reverse">
-            <Image src={food_icon} className="h-8 w-8" alt="Chefalarab Logo" width={32} height={32} />
+          <Link
+            href="/"
+            className="flex items-center space-x-3 rtl:space-x-reverse"
+          >
+            <Image
+              src={food_icon}
+              className="h-8 w-8"
+              alt="Chefalarab Logo"
+              width={32}
+              height={32}
+            />
             <span className="text-2xl font-bold text-white">شيف العرب</span>
           </Link>
         </div>
@@ -64,7 +87,7 @@ export default function Header() {
             {links.map((link) => {
               const isActive =
                 link.href === "/"
-                  ? pathname === "/" // الصفحة الرئيسية نشطة فقط على /
+                  ? pathname === "/"
                   : pathname?.startsWith(link.href);
 
               return (
@@ -80,7 +103,9 @@ export default function Header() {
                     {link.title}
                     <span
                       className={`absolute bottom-0 left-0 h-0.5 bg-orange-400 rounded transition-all duration-300 ${
-                        isActive ? "w-full opacity-100" : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100"
+                        isActive
+                          ? "w-full opacity-100"
+                          : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100"
                       }`}
                     />
                   </Link>
@@ -104,7 +129,7 @@ export default function Header() {
           <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-gray-500 dark:text-gray-300">
             🔍
           </div>
-          {searchTerm.trim().length >= 2 && (
+          {debouncedTerm.trim().length >= 2 && (
             <div className="absolute top-full left-0 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg z-50">
               {filteredResults.length > 0 ? (
                 filteredResults.map((r) => (
@@ -118,7 +143,9 @@ export default function Header() {
                   </Link>
                 ))
               ) : (
-                <p className="px-4 py-2 text-sm text-gray-500">لا توجد نتائج مطابقة 😔</p>
+                <p className="px-4 py-2 text-sm text-gray-500">
+                  لا توجد نتائج مطابقة 😔
+                </p>
               )}
             </div>
           )}
@@ -156,7 +183,7 @@ export default function Header() {
                          dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors"
               placeholder="ابحث عن وصفة..."
             />
-            {searchTerm.trim().length >= 2 && (
+            {debouncedTerm.trim().length >= 2 && (
               <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg transition-colors">
                 {filteredResults.length > 0 ? (
                   filteredResults.map((r) => (
@@ -173,7 +200,9 @@ export default function Header() {
                     </Link>
                   ))
                 ) : (
-                  <p className="px-4 py-2 text-sm text-gray-500">لا توجد نتائج مطابقة 😔</p>
+                  <p className="px-4 py-2 text-sm text-gray-500">
+                    لا توجد نتائج مطابقة 😔
+                  </p>
                 )}
               </div>
             )}
