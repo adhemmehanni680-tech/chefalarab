@@ -67,10 +67,10 @@ export default function Home() {
     activeCategory === "جميع الوصفات"
       ? recipes
       : recipes.filter((item) =>
-          activeCategory === "الوصفات ألأكثر إعجابا"
-            ? item.category.includes("الوصفات ألأكثر إعجابا")
-            : item.category.includes(activeCategory)
-        );
+        activeCategory === "الوصفات ألأكثر إعجابا"
+          ? item.category.includes("الوصفات ألأكثر إعجابا")
+          : item.category.includes(activeCategory)
+      );
 
   // تقسيم الوصفات حسب حجم الشاشة
   const recipeChunks: Recipe[][] = [];
@@ -80,7 +80,7 @@ export default function Home() {
 
   return (
     <motion.main className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-       <style jsx global>{`
+      <style jsx global>{`
         html,
         body {
           overflow-x: hidden !important;
@@ -139,11 +139,10 @@ export default function Home() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-md text-sm font-medium border transition-all ${
-                  activeCategory === cat
+                className={`px-4 py-2 rounded-md text-sm font-medium border transition-all ${activeCategory === cat
                     ? "bg-lime-400 text-black border-lime-400"
                     : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -179,7 +178,7 @@ export default function Home() {
                             <HeartIcon
                               size={20}
                               className={isFav ? "text-red-500" : "text-white/70"}
-                            /> 
+                            />
                           </span>
                         </div>
                         <div className="p-4">
