@@ -14,7 +14,7 @@ const AdSenseBanner = dynamic(() => import("../Components/AdSenseBanner"), {
 const AboutPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6">
-       <InterstitialAd interstitialUnitID="1234567890" />
+       <InterstitialAd interstitialUnitID="2901613977" />
        <style jsx global>{`
         html,
         body {

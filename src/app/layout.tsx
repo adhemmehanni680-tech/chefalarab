@@ -112,6 +112,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
+
         {/* hreflang */}
         <link rel="alternate" href="https://chefalarab.com" hrefLang="ar" />
         <link
