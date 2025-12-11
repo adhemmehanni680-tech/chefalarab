@@ -1,3 +1,4 @@
+
 // Header.jsx
 "use client";
 
@@ -27,7 +28,7 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Debounce البحث لتقليل فلترة مستمرة
+  // Debounce
   useEffect(() => {
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => setDebouncedTerm(searchTerm), 300);
@@ -64,6 +65,7 @@ export default function Header() {
       className={`${navBg} fixed w-full z-50 top-0 left-0 border-b border-gray-200 dark:border-gray-700 transition-all`}
     >
       <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
+        
         {/* الشعار */}
         <div className="flex items-center flex-shrink-0">
           <Link
@@ -115,7 +117,7 @@ export default function Header() {
           </ul>
         </div>
 
-        {/* البحث */}
+        {/* البحث ديسكتوب */}
         <div className="hidden md:flex relative w-64">
           <input
             type="text"
@@ -129,13 +131,14 @@ export default function Header() {
           <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-gray-500 dark:text-gray-300">
             🔍
           </div>
+
           {debouncedTerm.trim().length >= 2 && (
             <div className="absolute top-full left-0 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg z-50">
               {filteredResults.length > 0 ? (
                 filteredResults.map((r) => (
                   <Link
-                    key={r.id}
-                    href={`/recipes/${r.id}`}
+                    key={r.slug}
+                    href={`/recipes/${r.slug}`}
                     className="block px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-orange-100 dark:hover:bg-gray-700 transition-colors"
                     onClick={() => setSearchTerm("")}
                   >
@@ -151,7 +154,7 @@ export default function Header() {
           )}
         </div>
 
-        {/* زر الوضع الليلي */}
+        {/* الزر الليلي */}
         <button
           onClick={toggleTheme}
           className="mr-4 md:mr-8 text-gray-600 dark:text-yellow-300 hover:text-orange-500 transition-colors text-lg"
@@ -160,7 +163,7 @@ export default function Header() {
           {theme === "light" ? "🌙" : "☀️"}
         </button>
 
-        {/* زر الموبايل */}
+        {/* الموبايل */}
         <button
           type="button"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -174,6 +177,8 @@ export default function Header() {
       {isMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-sm transition-colors">
           <div className="p-4 flex flex-col space-y-3">
+
+            {/* البحث موبايل */}
             <input
               type="text"
               value={searchTerm}
@@ -183,13 +188,14 @@ export default function Header() {
                          dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors"
               placeholder="ابحث عن وصفة..."
             />
+
             {debouncedTerm.trim().length >= 2 && (
               <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg transition-colors">
                 {filteredResults.length > 0 ? (
                   filteredResults.map((r) => (
                     <Link
-                      key={r.id}
-                      href={`/recipes/${r.id}`}
+                      key={r.slug}
+                      href={`/recipes/${r.slug}`}
                       className="block px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-orange-100 dark:hover:bg-gray-700 transition-colors"
                       onClick={() => {
                         setSearchTerm("");
