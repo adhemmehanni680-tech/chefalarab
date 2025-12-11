@@ -74,7 +74,7 @@ export default function RecipePage({ params }: RecipePageProps) {
         className="text-3xl sm:text-4xl font-bold text-orange-500 mb-2 text-center break-words"
       >
         
-      <InterstitialAd interstitialUnitID="1234567890" />
+      <InterstitialAd interstitialUnitID="2901613977" />
 
         {recipe.title}
       </motion.h1>
@@ -110,7 +110,12 @@ export default function RecipePage({ params }: RecipePageProps) {
       {/* إعلان بعد الصورة */}
       <div className="flex justify-center my-6">
         <div className="w-full sm:w-3/4 md:w-2/3 lg:w-1/2">
-          <AdSenseBanner adSlot="9257395922" adFormat="auto" />
+          <AdSenseBanner
+  adSlot="2901613977"
+  adFormat="fluid"
+  layoutKey="-fc+5g+70-cl-1m"
+  style={{ display: "block" }}
+/>
         </div>
       </div>
 
@@ -160,7 +165,12 @@ export default function RecipePage({ params }: RecipePageProps) {
 
       {/* إعلان وسط المحتوى */}
       <div className="flex justify-center my-8">
-        <AdSenseBanner adSlot="9257395921" adFormat="horizontal" />
+        <AdSenseBanner
+  adSlot="2901613977"
+  adFormat="fluid"
+  layoutKey="-fc+5g+70-cl-1m"
+  style={{ display: "block" }}
+/>
       </div>
 
       {/* خطوات التحضير */}

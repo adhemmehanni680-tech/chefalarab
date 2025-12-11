@@ -71,7 +71,7 @@ const TermsConditionsPage = () => {
       `}</style>
 
 
-      <InterstitialAd interstitialUnitID="1234567890" />
+      <InterstitialAd interstitialUnitID="2901613977" />
 
       <div className="max-w-5xl mx-auto mt-10">
         <motion.h1

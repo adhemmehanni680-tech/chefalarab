@@ -108,9 +108,9 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <head>
         {/* أيقونات الموقع */}
-        <link rel="icon" href="../app/favicon.ico" sizes="any" />
-        <link rel="icon" href="../app/favicon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="../app/apple-touch-icon.png" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
         {/* hreflang */}
         <link rel="alternate" href="https://chefalarab.com" hrefLang="ar" />

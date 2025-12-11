@@ -26,11 +26,6 @@ const categories = [
   "الوصفات ألأكثر إعجابا",
 ];
 
-const SideAd = ({ adSlot }: { adSlot: string }) => (
-  <div className="w-64 min-h-[400px] rounded-2xl shadow-lg border overflow-hidden sticky top-24">
-    <AdSenseBanner adSlot={adSlot} />
-  </div>
-);
 
 export default function Recipes() {
   const [activeCategory, setActiveCategory] = useState("جميع الوصفات");
