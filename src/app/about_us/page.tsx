@@ -3,8 +3,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import AdSenseBanner from '../Components/AdSenseBanner';
-import InterstitialAd from '../Components/InterstitialAd';
+import dynamic from "next/dynamic";
+const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
+  ssr: false,
+});
+const AdSenseBanner = dynamic(() => import("../Components/AdSenseBanner"), {
+  ssr: false,
+});
 
 const AboutPage = () => {
   return (
@@ -44,7 +49,13 @@ const AboutPage = () => {
         </motion.div>
       </div>
           <div className="flex justify-center my-8">
-                     <AdSenseBanner adSlot="9257395925" adFormat="horizontal" />
+                <AdSenseBanner
+  adSlot="2901613977"
+  adFormat="fluid"
+  layoutKey="-fc+5g+70-cl-1m"
+  style={{ display: "block" }}
+/>
+
                    </div>
     </div>
   );

@@ -1,5 +1,5 @@
+//Home Page
 "use client";
-
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,14 +7,23 @@ import recipesData from "../../public/recipes.json";
 import ChefImage from "../../public/Heeder.webp";
 import { motion } from "framer-motion";
 import { ArrowUp, Heart as HeartIcon } from "lucide-react";
-import AdSenseBanner from "./Components/AdSenseBanner";
+import dynamic from "next/dynamic";
+const InterstitialAd = dynamic(() => import("../app/Components/InterstitialAd"), {
+  ssr: false,
+});
+const AdSenseBanner = dynamic(() => import("../app/Components/AdSenseBanner"), {
+  ssr: false,
+});
+
 
 interface Recipe {
   id: number;
   title: string;
+  slug: string;
   country: string;
   img: string;
   category: string[];
+  description: string;
 }
 
 const categories: string[] = [
@@ -85,10 +94,11 @@ export default function Home() {
         body {
           overflow-x: hidden !important;
         }
-        * {
-          max-width: 100vw !important;
-        }
+       
       `}</style>
+      
+      <InterstitialAd interstitialUnitID="1234567890" />
+
 
       {/* HEADER */}
       <header className="relative w-full">
@@ -163,7 +173,7 @@ export default function Home() {
                       key={recipe.id}
                       className="group bg-[#07121a] rounded-xl overflow-hidden border border-transparent hover:border-lime-400 transition duration-300 shadow-sm"
                     >
-                      <Link href={`/recipes/${recipe.id}`}>
+                     <Link href={`/recipes/${recipe.slug}`}>
                         <div className="relative">
                           <Image
                             src={recipe.img}
@@ -198,10 +208,13 @@ export default function Home() {
 
               {/* AdSense بعد كل chunk */}
               <div className="w-auto flex justify-center my-8 m-auto">
-                <AdSenseBanner
-                  adSlot="9257395922"
-                  style={{ display: "block", width: "200%", minHeight: 90 }}
-                />
+               <AdSenseBanner
+  adSlot="2901613977"
+  adFormat="fluid"
+  layoutKey="-fc+5g+70-cl-1m"
+  style={{ display: "block" }}
+/>
+
               </div>
             </div>
           ))}

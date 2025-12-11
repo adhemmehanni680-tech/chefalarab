@@ -5,12 +5,20 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import AdSenseBanner from "../../Components/AdSenseBanner";
 import recipes from "../../../../public/recipes.json";
+import dynamic from "next/dynamic";
+const InterstitialAd = dynamic(() => import("../../Components/InterstitialAd"), {
+  ssr: false,
+});
+const AdSenseBanner = dynamic(() => import("../../Components/AdSenseBanner"), {
+  ssr: false,
+});
+
 
 interface Recipe {
   id: number;
   title: string;
+  slug: string;
   country: string;
   img: string;
   category: string[];
@@ -21,12 +29,17 @@ interface Recipe {
 }
 
 interface RecipePageProps {
-  params: { id: string };
+  params: { slug: string };
 }
 
 export default function RecipePage({ params }: RecipePageProps) {
-  const recipeId = parseInt(params.id);
-  const recipe = (recipes as Recipe[]).find((r) => r.id === recipeId);
+  // ✅✅✅ الحل النهائي هنا
+  const decodedSlug = decodeURIComponent(params.slug);
+
+  const recipe = (recipes as Recipe[]).find(
+    (r) => r.slug === decodedSlug
+  );
+
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
@@ -60,13 +73,21 @@ export default function RecipePage({ params }: RecipePageProps) {
         transition={{ duration: 0.4 }}
         className="text-3xl sm:text-4xl font-bold text-orange-500 mb-2 text-center break-words"
       >
+        
+      <InterstitialAd interstitialUnitID="1234567890" />
+
         {recipe.title}
       </motion.h1>
 
-      <p className="text-gray-400 text-center mb-4 text-sm sm:text-base break-words">{recipe.country}</p>
+      <p className="text-gray-400 text-center mb-4 text-sm sm:text-base break-words">
+        {recipe.country}
+      </p>
 
       <div className="text-center mt-2 text-sm text-gray-400 mb-6 break-words">
-        التصنيفات: <span className="text-orange-400">{recipe.category.join(" / ")}</span>
+        التصنيفات:{" "}
+        <span className="text-orange-400">
+          {recipe.category.join(" / ")}
+        </span>
       </div>
 
       {/* صورة الوصفة */}
@@ -102,10 +123,15 @@ export default function RecipePage({ params }: RecipePageProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full">
         {recipe.data_box?.length && (
           <div className="bg-gray-800 rounded-xl shadow-md p-4 text-center">
-            <h3 className="text-orange-400 font-semibold mb-2 text-sm sm:text-base">معلومات الوصفة</h3>
+            <h3 className="text-orange-400 font-semibold mb-2 text-sm sm:text-base">
+              معلومات الوصفة
+            </h3>
             <div className="grid gap-2">
               {recipe.data_box.map((info, i) => (
-                <div key={i} className="bg-gray-900 p-2 rounded-lg text-xs sm:text-sm text-gray-300 break-words">
+                <div
+                  key={i}
+                  className="bg-gray-900 p-2 rounded-lg text-xs sm:text-sm text-gray-300 break-words"
+                >
                   {info}
                 </div>
               ))}
@@ -115,10 +141,15 @@ export default function RecipePage({ params }: RecipePageProps) {
 
         {recipe.ingredients?.length && (
           <div className="bg-gray-800 rounded-xl shadow-md p-4 text-center">
-            <h3 className="text-orange-400 font-semibold mb-3 text-sm sm:text-base">🧂 المكونات</h3>
+            <h3 className="text-orange-400 font-semibold mb-3 text-sm sm:text-base">
+              🧂 المكونات
+            </h3>
             <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
               {recipe.ingredients.map((item, i) => (
-                <span key={i} className="bg-gray-900 text-gray-200 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm break-words">
+                <span
+                  key={i}
+                  className="bg-gray-900 text-gray-200 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm break-words"
+                >
                   {item}
                 </span>
               ))}
@@ -135,16 +166,29 @@ export default function RecipePage({ params }: RecipePageProps) {
       {/* خطوات التحضير */}
       {recipe.preparation?.length && (
         <section className="mb-10 w-full">
-          <h2 className="text-xl sm:text-2xl text-orange-400 font-semibold mb-4">🍳 خطوات التحضير</h2>
+          <h2 className="text-xl sm:text-2xl text-orange-400 font-semibold mb-4">
+            🍳 خطوات التحضير
+          </h2>
           <ol className="list-decimal list-inside space-y-2 text-gray-300 bg-gray-900 rounded-xl p-4 leading-relaxed text-sm sm:text-base">
             {recipe.preparation.map((step, i) => (
-              <li key={i} className="p-1 sm:p-2 rounded break-words">{step}</li>
+              <li
+                key={i}
+                className="p-1 sm:p-2 rounded break-words"
+              >
+                {step}
+              </li>
             ))}
           </ol>
 
           {/* إعلان بعد التحضير */}
           <div className="flex justify-center my-8">
-            <AdSenseBanner adSlot="9257395925" adFormat="horizontal" />
+           <AdSenseBanner
+  adSlot="2901613977"
+  adFormat="fluid"
+  layoutKey="-fc+5g+70-cl-1m"
+  style={{ display: "block" }}
+/>
+
           </div>
         </section>
       )}

@@ -3,6 +3,11 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
 import Link from 'next/link';
+import dynamic from "next/dynamic";
+const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
+  ssr: false,
+});
+
 
 const TermsConditionsPage = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -64,6 +69,9 @@ const TermsConditionsPage = () => {
           max-width: 100vw !important;
         }
       `}</style>
+
+
+      <InterstitialAd interstitialUnitID="1234567890" />
 
       <div className="max-w-5xl mx-auto mt-10">
         <motion.h1

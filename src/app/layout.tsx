@@ -14,7 +14,41 @@ export const metadata: Metadata = {
   description:
     "اكتشف ألذ وأحدث الوصفات العربية الأصيلة، مع شيف العرب تجد وصفات شهية للطبخ المنزلي، الحلويات، المشروبات والمأكولات العربية بسهولة خطوة بخطوة.",
 
-  keywords: ["وصفات", "طبخ عربي", "حلويات", "مشروبات", "مأكولات"],
+  keywords: [
+    "شيف العرب",
+    "الطبق العربي",
+    "وصفات عربية",
+    "وصفات شيف العرب",
+    "أكلات مصرية",
+    "أكلات شرقية",
+    "مأكولات عربية",
+    "مأكولات شعبية",
+    "أكلات عربية تقليدية",
+    "الطبق الغربي",
+    "وصفات غربية",
+    "مأكولات غربية",
+    "أكلات عالمية",
+    "وصفات عالمية",
+    "سلطات ومخلّلات",
+    "مخللات وسلطات",
+    "وصفات سلطات",
+    "سلطات خضار",
+    "مخللات منزلية",
+    "حلويات",
+    "حلويات عربية",
+    "حلويات شرقية",
+    "حلويات غربية",
+    "مثلجات",
+    "مشروبات",
+    "مشروبات باردة",
+    "مشروبات ساخنة",
+    "عصائر طبيعية",
+    "مشروبات مثلجة",
+    "وصفات سهلة وسريعة",
+    "طبخ منزلي",
+    "وصفات يومية",
+    "أكلات سريعة",
+  ],
 
   authors: [{ name: "Adhem Mehanni", url: "https://chefalarab.com" }],
 
@@ -74,9 +108,9 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <head>
         {/* أيقونات الموقع */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/favicon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="../app/favicon.ico" sizes="any" />
+        <link rel="icon" href="../app/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="../app/apple-touch-icon.png" />
 
         {/* hreflang */}
         <link rel="alternate" href="https://chefalarab.com" hrefLang="ar" />
@@ -113,7 +147,7 @@ export default function RootLayout({
       </head>
 
       <body
-        className={`${inter.className} flex flex-col min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-500`}
+        className={`${inter.className} flex flex-col min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-500 `}
       >
         <Header />
         {children}

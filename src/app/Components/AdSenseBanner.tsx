@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 interface AdSenseBannerProps {
   adSlot: string;
-  adFormat?: "auto" | "rectangle" | "horizontal" | "vertical";
+  adFormat?: string; // خليها string عشان fluid
   style?: React.CSSProperties;
   className?: string;
+  layoutKey?: string; // ✅ إضافة layout-key للوحدات fluid
 }
 
 export default function AdSenseBanner({
@@ -14,6 +15,7 @@ export default function AdSenseBanner({
   adFormat = "auto",
   style,
   className = "",
+  layoutKey, // ✅
 }: AdSenseBannerProps) {
   const adRef = useRef<HTMLDivElement>(null);
   const loadedRef = useRef(false);
@@ -43,6 +45,7 @@ export default function AdSenseBanner({
     if (!visible || loadedRef.current) return;
 
     try {
+      // مهم جدًا: push يحصل بعد ظهور <ins>
       // @ts-ignore
       (window.adsbygoogle = window.adsbygoogle || []).push({});
       loadedRef.current = true;
@@ -68,6 +71,9 @@ export default function AdSenseBanner({
           data-ad-slot={adSlot}
           data-ad-format={adFormat}
           data-full-width-responsive="true"
+          // ✅ layout key يتضاف فقط لو موجود
+          // @ts-ignore
+          {...(layoutKey ? { "data-ad-layout-key": layoutKey } : {})}
         ></ins>
       )}
     </div>

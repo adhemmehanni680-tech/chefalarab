@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Lock, Cookie, FileText, ArrowUp } from 'lucide-react';
 import Link from 'next/link';
+import dynamic from "next/dynamic";
+const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
+  ssr: false,
+});
 
 const PrivacyPolicyPage = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -53,6 +57,9 @@ const PrivacyPolicyPage = () => {
         }
       `}</style>
       
+      
+      <InterstitialAd interstitialUnitID="1234567890" />
+
       <div className="max-w-5xl mx-auto mt-10">
         <motion.h1
           className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"
