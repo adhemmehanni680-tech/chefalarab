@@ -1,0 +1,189 @@
+// app/terms_conditions/TermsConditionsClient.jsx
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  ArrowUp,
+  FileText,
+  ShieldCheck,
+  Copyright,
+  Link2,
+  BadgeInfo,
+  AlertTriangle,
+  RefreshCw,
+  Mail,
+  Cookie,
+} from "lucide-react";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+import { adsEnabled } from "@/lib/ads";
+
+const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
+  ssr: false,
+});
+
+export default function TermsConditionsClient() {
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 300);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const sections = [
+    {
+      icon: ShieldCheck,
+      title: "قبول الشروط",
+      content:
+        "باستخدامك لموقع شيف العرب أو تصفحك لأي صفحة داخله، فإنك تقر بأنك قرأت هذه الشروط وفهمتها وتوافق على الالتزام بها. إذا كنت لا توافق على أي بند، يُرجى التوقف عن استخدام الموقع.",
+    },
+    {
+      icon: FileText,
+      title: "طبيعة المحتوى والغرض منه",
+      content:
+        "يقدم موقع شيف العرب وصفات ومعلومات طبخ لأغراض معرفية وتثقيفية عامة. قد تختلف النتائج حسب المكونات والأدوات وطرق الطهي. أنت تتحمل مسؤولية تطبيق الوصفات والتحقق من الملاءمة الغذائية والحساسية وسلامة الطعام.",
+    },
+    {
+      icon: AlertTriangle,
+      title: "حدود المسؤولية",
+      content:
+        "نبذل جهدًا لتقديم محتوى دقيق ومفيد، ومع ذلك لا نضمن خلو المحتوى من الأخطاء أو اكتماله في جميع الأوقات. لا يتحمل الموقع أي مسؤولية عن أي أضرار مباشرة أو غير مباشرة ناتجة عن استخدام المحتوى أو الاعتماد عليه.",
+    },
+    {
+      icon: Copyright,
+      title: "حقوق الملكية الفكرية",
+      content:
+        "جميع النصوص والتصاميم والشعارات والمحتوى المنشور في الموقع مملوكة لموقع شيف العرب أو لأصحابها إن وُجد، ومحميّة بموجب حقوق الملكية الفكرية. لا يجوز نسخ أو إعادة نشر أو توزيع أي جزء من المحتوى دون إذن كتابي مسبق، باستثناء الاستخدام الشخصي غير التجاري مع الإشارة للمصدر.",
+    },
+    {
+      icon: Link2,
+      title: "الروابط الخارجية",
+      content:
+        "قد يحتوي الموقع على روابط لمواقع أو خدمات خارجية. نحن غير مسؤولين عن محتوى تلك المواقع أو سياسات الخصوصية الخاصة بها، ويكون استخدامك لها على مسؤوليتك.",
+    },
+    {
+      icon: BadgeInfo,
+      title: "الإعلانات والأطراف الثالثة (AdSense)",
+      content:
+        "قد يعرض الموقع إعلانات من أطراف ثالثة مثل Google AdSense. قد تستخدم هذه الجهات ملفات تعريف الارتباط وتقنيات مشابهة لعرض الإعلانات وقياس الأداء. نحن لسنا مسؤولين عن محتوى الإعلانات المعروضة من أطراف ثالثة.",
+      links: [
+        { label: "سياسة Google للإعلانات", href: "https://policies.google.com/technologies/ads" },
+        { label: "سياسة الخصوصية", href: "/privacy_policy", internal: true },
+        { label: "سياسة الكوكيز", href: "/cookie_policy", internal: true },
+      ],
+    },
+    {
+      icon: Cookie,
+      title: "ملفات تعريف الارتباط",
+      content:
+        "قد يستخدم الموقع ملفات تعريف الارتباط لتحسين الأداء وتجربة المستخدم وقياس الزيارات ودعم الإعلانات. يمكنك إدارة ملفات الارتباط من إعدادات المتصفح لديك.",
+      links: [{ label: "اقرأ سياسة الكوكيز بالتفصيل", href: "/cookie_policy", internal: true }],
+    },
+    {
+      icon: RefreshCw,
+      title: "التعديلات على الشروط",
+      content:
+        "يحتفظ موقع شيف العرب بالحق في تعديل هذه الشروط والأحكام في أي وقت. يتم نشر النسخة المحدثة على هذه الصفحة وتصبح سارية فور نشرها. ننصح بمراجعة الصفحة دوريًا.",
+    },
+    {
+      icon: Mail,
+      title: "التواصل معنا",
+      content: (
+        <>
+          لأي استفسار بخصوص الشروط والأحكام يمكنك التواصل معنا عبر البريد:
+          {" "}
+          <Link href="mailto:chefalarabonline@gmail.com" className="text-blue-400 font-semibold">
+            chefalarabonline@gmail.com
+          </Link>
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden transition-colors duration-500" >
+      <style jsx global>{`
+        html,
+        body {
+          overflow-x: hidden !important;
+        }
+        * {
+          max-width: 100vw !important;
+        }
+      `}</style>
+
+      {/*  أثناء مراجعة   */}
+      {adsEnabled && showAdsOnThisPage && <InterstitialAd interstitialUnitID="2901613977" />}
+
+      <div className="max-w-5xl mx-auto mt-10">
+        <motion.h1
+          className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          الشروط والأحكام
+        </motion.h1>
+
+        {sections.map((section, idx) => (
+          <motion.section
+            key={idx}
+            className="bg-gray-800 rounded-2xl shadow-md p-8 mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 + idx * 0.1 }}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <section.icon className="text-blue-400 dark:text-blue-400" />
+              <h2 className="text-2xl font-semibold text-gray-100">{section.title}</h2>
+            </div>
+
+            <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
+              {section.content}
+            </p>
+
+            {section.links?.length > 0 && (
+              <div className="mt-4 flex flex-col gap-2">
+                {section.links.map((l, i) =>
+                  l.internal ? (
+                    <Link
+                      key={i}
+                      href={l.href}
+                      className="text-blue-400 hover:underline text-sm break-words"
+                    >
+                      {l.label}
+                    </Link>
+                  ) : (
+                    <a
+                      key={i}
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:underline text-sm break-words"
+                    >
+                      {l.label}
+                    </a>
+                  )
+                )}
+              </div>
+            )}
+          </motion.section>
+        ))}
+      </div>
+
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-24 right-6 bg-lime-500 hover:bg-lime-600 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-110 z-50"
+          aria-label="العودة للأعلى"
+          title="العودة للأعلى"
+        >
+          <ArrowUp size={24} />
+        </button>
+      )}
+    </div>
+  );
+}

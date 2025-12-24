@@ -1,6 +1,11 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "baseUrl": ".",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,9 +23,27 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/app/privacy_policy/page.jsx",
+    "src/app/about_us/page.jsx",
+    "src/app/terms_conditions/page.jsx",
+    "src/app/page.jsx",
+    "src/app/recipes/[slug]/page.tsx",
+    "src/app/recipe/page.tsx",
+    "src/app/contact_us/page.jsx",
+    "src/app/recipes/[slug]/RecipeClient.tsx",
+    "src/app/Components/footer/Footer.jsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

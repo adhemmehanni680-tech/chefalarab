@@ -2,23 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
+/* سلوك التمرير السلس + تثبيت خلفية html  */
 html {
   scroll-behavior: smooth;
+  transition: background-color 0.4s ease, color 0.4s ease;
+
+  /* منع أي overflow أفقي عالميًا */
+  overflow-x: hidden;
 }
 
+html[dir="rtl"] body { text-align: right; }
+
+/* إعدادات الألوان  */
 :root {
   color-scheme: light dark;
-}
 
-:root {
+  /* ألوان افتراضية للضوء */
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+
+  /* تأثيرات عالمية سلسة */
+  --transition-speed: 0.4s;
 }
 
+/* إعدادات الدارك مود */
+html.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 15, 15, 33;
+  --background-end-rgb: 34, 37, 41;
+}
 
+/* gradient على body فقط */
+body {
+  min-height: 100vh;
+  transition: background-color var(--transition-speed) ease,
+              color var(--transition-speed) ease;
+
+  /* منع أي scroll أفقي زائد */
+  overflow-x: hidden;
+
+  font-smooth: always;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* تحسين النصوص */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* تأثيرات عند التمرير أو hover */
+  .hover-fade {
+    transition: transform var(--transition-speed) ease,
+                opacity var(--transition-speed) ease;
+  }
+  .hover-fade:hover {
+    transform: translateY(-3px);
+    opacity: 0.9;
+  }
+
+  /* منع أي تجاوز عرض لأي عنصر عالميًا */
+  .max-w-global {
+    max-width: 100vw !important;
+  }
+}
+
+/* تحسين الروابط والأزرار */
+a,
+button {
+  transition: color var(--transition-speed) ease,
+              background-color var(--transition-speed) ease,
+              box-shadow var(--transition-speed) ease;
+}
+
+/* تأثير ظل خفيف عالمي */
+.shadow-smooth {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: box-shadow var(--transition-speed) ease;
+}
+.shadow-smooth:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }

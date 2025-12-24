@@ -1,17 +1,33 @@
+// src/app/Components/InterstitialAd
 "use client";
 
 import { useEffect } from "react";
+import { adsEnabled } from "@/lib/ads";
 
-interface InterstitialAdProps {
-  interstitialUnitID?: string; // مش هنستخدمه دلوقتي
-}
+type InterstitialAdProps = {
+  interstitialUnitID?: string;
+};
 
-export default function InterstitialAd(_props: InterstitialAdProps) {
-  // نسيب جوجل AdSense Auto Ads تدير الإعلانات البينية (Vignette / Anchor)
-  // الكومبوننت ده موجود بس عشان لو حابب تنظّم الكود أو توقفه بسهولة بعدين.
+export default function InterstitialAd({ interstitialUnitID }: InterstitialAdProps) {
   useEffect(() => {
-    // مش هنستدعي adsbygoogle.push() هنا
-  }, []);
+    //     
+    if (!adsEnabled) return;
 
+    
+    // const script = document.createElement("script");
+    // script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+    // script.async = true;
+    // script.setAttribute("data-ad-client", "ca-pub-XXXXXXX");
+    // document.body.appendChild(script);
+
+    return () => {
+      // تنظيف أي سكريبت لو حبيت
+    };
+  }, [interstitialUnitID]);
+
+  // ✅ حالياً الإعلانات مقفولة
+  if (!adsEnabled) return null;
+
+  // ⚠️ هنا مش هيظهر أي شيء لأننا مغلقين الإعلانات
   return null;
 }
