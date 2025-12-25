@@ -1,4 +1,4 @@
-// src/app/RootClient.tsx
+// src/app/RootClient
 "use client";
 
 import React from "react";
@@ -10,16 +10,15 @@ interface RootClientProps {
 }
 
 export default function RootClient({ children }: RootClientProps) {
-  const GTM_ID = "GTM-P8MZTC3W";
-  // حط هنا ID الصحيح
-  const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-9717868267549745";
+  const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? "GTM-P8MZTC3W";
+  const ADSENSE_CLIENT =
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT ?? "ca-pub-9717868267549745";
 
   return (
     <>
-      {/*  Cookie Consent Banner */}
       <CookieConsentBanner />
 
-      {/*  Google Tag Manager */}
+      {/* Google Tag Manager */}
       <Script id="gtm" strategy="afterInteractive">
         {`
           (function(w,d,s,l,i){w[l]=w[l]||[];
@@ -32,7 +31,7 @@ export default function RootClient({ children }: RootClientProps) {
         `}
       </Script>
 
-      {/*  Google AdSense */}
+      {/* Google AdSense */}
       <Script
         id="adsbygoogle-init"
         strategy="afterInteractive"
