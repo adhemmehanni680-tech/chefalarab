@@ -25,9 +25,9 @@ export default function InterstitialAd({ interstitialUnitID }: InterstitialAdPro
     };
   }, [interstitialUnitID]);
 
-  // ✅ حالياً الإعلانات مقفولة
+  //  حالياً الإعلانات مقفولة
   if (!adsEnabled) return null;
 
-  // ⚠️ هنا مش هيظهر أي شيء لأننا مغلقين الإعلانات
+  //        مغلقين الإعلانات
   return null;
 }

@@ -58,7 +58,7 @@ export default function Footer() {
     );
   };
 
-  // ✅ إدارة collapse لكل قسم على الموبايل
+  //   collapse   
   const [openSections, setOpenSections] = useState({
     siteLinks: false,
     supportLinks: false,

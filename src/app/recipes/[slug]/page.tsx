@@ -9,7 +9,7 @@ type PageProps = {
   params: { slug: string };
 };
 
-const BASE_URL = "https://chefalarab.com"; // ✅ وحّد الدومين هنا مع layout
+const BASE_URL = "https://chefalarab.com"; // ✅     layout
 
 export async function generateMetadata({ params }: PageProps) {
   const decodedSlug = decodeURIComponent(params.slug);
@@ -78,14 +78,14 @@ export default function Page({ params }: PageProps) {
   const decodedSlug = decodeURIComponent(params.slug);
   const recipe = (recipes as any[]).find((r) => r.slug === decodedSlug);
 
-  // ✅ 404 رسمي (ده مهم جدًا للسيو وأدسنس)
+  //  404  
   if (!recipe) notFound();
 
   const jsonLd = buildRecipeJsonLd(recipe);
 
   return (
     <>
-      {/* ✅ حقن Schema مرة واحدة فقط */}
+      {/* ✅  Schema    */}
       <Script
         id="recipe-jsonld"
         type="application/ld+json"

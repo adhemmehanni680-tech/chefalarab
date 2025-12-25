@@ -24,7 +24,7 @@ export default function AdSenseBanner({
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // ✅ guard داخل الـ effect (مش return قبل hooks)
+    //  guard   effect 
     if (!adsEnabled) return;
     if (!adRef.current) return;
 
@@ -64,7 +64,7 @@ export default function AdSenseBanner({
 
   return (
     <div ref={adRef} className={`flex justify-center my-4 w-full ${className}`}>
-      {/* ✅ بدل return قبل hooks */}
+      {/*   return  hooks */}
       {adsEnabled && visible && (
         <ins
           className="adsbygoogle"

@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     locale: "ar_AR",
     images: [
       {
-        url: "https://chefalarab.com/og-image.jpg", // ✅ absolute
+        url: "https://chefalarab.com/og-image.jpg", //  absolute
         width: 1200,
         height: 630,
         alt: "الأسئلة الشائعة | شيف العرب",

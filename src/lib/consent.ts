@@ -51,7 +51,7 @@ export function applyConsent(choice: ConsentChoice) {
 
   const granted = choice === "accepted";
 
-  // ✅ تحديث gtag (لو موجود)
+  //   gtag (لو موجود)
   const gtag = (window as any).gtag as undefined | ((...args: any[]) => void);
   if (typeof gtag === "function") {
     gtag("consent", "update", {
@@ -62,7 +62,7 @@ export function applyConsent(choice: ConsentChoice) {
     });
   }
 
-  // ✅ دعم Google Tag Manager مباشرة
+  //  دعم Google Tag Manager مباشرة
   (window as any).dataLayer = (window as any).dataLayer || [];
   (window as any).dataLayer.push({
     event: "consent_update",

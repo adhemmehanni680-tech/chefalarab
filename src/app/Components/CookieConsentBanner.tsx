@@ -25,7 +25,7 @@ export default function CookieConsentBanner() {
 
   const choose = (c: ConsentChoice) => {
     storeConsent(c);
-    applyConsent(c); // ✅ Consent Mode v2 update
+    applyConsent(c); //   Mode v2 update
     setOpen(false);
     logConsent(c);
   };

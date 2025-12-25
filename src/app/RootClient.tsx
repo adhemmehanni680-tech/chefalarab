@@ -15,10 +15,10 @@ export default function RootClient({ children }: RootClientProps) {
 
   return (
     <>
-      {/* ✅ Cookie Consent Banner */}
+      {/*  Cookie Consent Banner */}
       <CookieConsentBanner />
 
-      {/* ✅ Google Tag Manager Script */}
+       {/*  Google Tag Manager */}
       <Script id="gtm" strategy="afterInteractive">
         {`
           (function(w,d,s,l,i){w[l]=w[l]||[];
@@ -31,17 +31,7 @@ export default function RootClient({ children }: RootClientProps) {
         `}
       </Script>
 
-      {/* ✅ GTM noscript */}
-      <noscript>
-        <iframe
-          src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-          height="0"
-          width="0"
-          style={{ display: "none", visibility: "hidden" }}
-        />
-      </noscript>
-
-      {/* ✅ Google AdSense */}
+      {/*  Google AdSense */}
       <Script
         id="adsbygoogle-init"
         strategy="afterInteractive"
