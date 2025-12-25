@@ -1,4 +1,4 @@
-// src/app/RootClient.tsx
+// src/app/RootClient
 "use client";
 
 import React from "react";
@@ -10,31 +10,15 @@ interface RootClientProps {
 }
 
 export default function RootClient({ children }: RootClientProps) {
-  const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID!;
-  const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-9717868267549745";
+  const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? "GTM-P8MZTC3W";
+  const ADSENSE_CLIENT =
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT ?? "ca-pub-9717868267549745";
 
   return (
     <>
-      {/* 1) Consent default BEFORE anything else (Consent Mode v2) */}
-      <Script id="consent-default" strategy="beforeInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-
-          // default = denied (important قبل تحميل GTM)
-          gtag('consent', 'default', {
-            ad_storage: 'denied',
-            analytics_storage: 'denied',
-            ad_user_data: 'denied',
-            ad_personalization: 'denied'
-          });
-        `}
-      </Script>
-
-      {/* 2) Cookie Consent Banner (يعمل update عند accept/reject) */}
       <CookieConsentBanner />
 
-      {/* 3) Google Tag Manager */}
+      {/* Google Tag Manager */}
       <Script id="gtm" strategy="afterInteractive">
         {`
           (function(w,d,s,l,i){w[l]=w[l]||[];
@@ -47,7 +31,7 @@ export default function RootClient({ children }: RootClientProps) {
         `}
       </Script>
 
-      {/* 4) Google AdSense */}
+      {/* Google AdSense */}
       <Script
         id="adsbygoogle-init"
         strategy="afterInteractive"
