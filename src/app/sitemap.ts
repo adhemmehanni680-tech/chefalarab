@@ -1,8 +1,25 @@
-//src/app/sitemap
 import { MetadataRoute } from "next";
-import recipes from "../../public/recipes.json";
+import recipesData from "@/data/recipes.json";
 
 const SITE_URL = "https://chefalarab.com";
+
+// تعريف نوع البيانات للوصفات
+interface RecipeImage {
+  url: string;
+  alt?: string;
+}
+
+interface Recipe {
+  id: string | number;
+  title: string;
+  slug: string;
+  status: string;
+  updated_at?: string;
+  img?: RecipeImage;
+  alt?: string;
+}
+
+const recipes: Recipe[] = recipesData as Recipe[];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
@@ -17,26 +34,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   const recipePages: MetadataRoute.Sitemap = recipes
-    .filter((r: any) => r.status === "published")
-    .map((recipe: any) => {
+    .filter((recipe) => recipe.status === "published")
+    .map((recipe) => {
       const url = `${SITE_URL}/recipes/${encodeURIComponent(recipe.slug)}`;
       const lastModified = recipe.updated_at ? new Date(recipe.updated_at) : new Date();
 
-      // لو الصورة موجودة، نخليها ضمن sitemap
+      // الصورة كـ string array
       const images = recipe.img
-        ? [
-            {
-              url: recipe.img.url.startsWith("http") ? recipe.img.url : `${SITE_URL}${recipe.img.url}`,
-              title: recipe.title,
-              caption: recipe.alt || recipe.title,
-            },
-          ]
+        ? [recipe.img.url.startsWith("http") ? recipe.img.url : `${SITE_URL}${recipe.img.url}`]
         : undefined;
 
       return {
         url,
         lastModified,
-        changeFrequency: "weekly",
+        changeFrequency: "weekly" as const,
         priority: 0.8,
         images,
       };

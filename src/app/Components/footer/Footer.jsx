@@ -12,7 +12,7 @@ export default function Footer() {
 
   const links = [
     { title: "الرئيسية", href: "/" },
-    { title: "الوصفات", href: "/recipe" },
+    { title: "الوصفات", href: "/recipes" },
     { title: "من نحن", href: "/about_us" },
     { title: "تواصل معنا", href: "/contact_us" },
     { title: "سياسة الخصوصية", href: "/privacy_policy" },

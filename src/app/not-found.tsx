@@ -1,6 +1,4 @@
-"use client";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 export const metadata = {
   title: "الصفحة غير موجودة | شيف العرب",
@@ -15,15 +13,11 @@ export const metadata = {
 export default function NotFound() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 px-6 py-24 flex items-center justify-center">
-      <motion.div
-        className="max-w-xl w-full text-center bg-gray-800 rounded-2xl p-10 shadow-md"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
+      <div className="max-w-xl w-full text-center bg-gray-800 rounded-2xl p-10 shadow-md">
         <h1 className="text-3xl sm:text-4xl font-bold text-orange-400 mb-4">
           404 — الصفحة غير موجودة
         </h1>
+
         <p className="text-gray-300 leading-relaxed mb-8">
           ممكن تكون الصفحة اتنقلت أو اتغير الرابط. جرّب ترجع للرئيسية أو تفتح صفحة الوصفات.
         </p>
@@ -37,13 +31,13 @@ export default function NotFound() {
           </Link>
 
           <Link
-            href="/recipe"
+            href="/recipes"
             className="px-5 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:scale-[1.02] transition"
           >
             صفحة الوصفات
           </Link>
         </div>
-      </motion.div>
+      </div>
     </main>
   );
 }

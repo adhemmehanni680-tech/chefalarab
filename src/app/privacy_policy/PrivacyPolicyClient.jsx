@@ -1,13 +1,12 @@
 // PrivacyPolicyClient
 "use client";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+
 import {
   ShieldCheck,
   Lock,
   Cookie,
   FileText,
-  ArrowUp,
+
   Info,
   Users,
   Link2,
@@ -20,20 +19,13 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { adsEnabled } from "@/lib/ads";
 
+
+
 const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
   ssr: false,
 });
 
 export default function PrivacyPolicyClient() {
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
-
-
-  useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 300);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const sections = [
     {
@@ -128,15 +120,14 @@ export default function PrivacyPolicyClient() {
       {adsEnabled && <InterstitialAd interstitialUnitID="2901613977" />}
 
       <div className="max-w-5xl mx-auto mt-10">
-        <motion.h1
+        <h1
           className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+      
         >
           سياسة الخصوصية
-        </motion.h1>
+        </h1>
 
-        <motion.div
+        <div
           className="bg-gray-800 rounded-2xl shadow-md p-8 mb-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -150,15 +141,13 @@ export default function PrivacyPolicyClient() {
             نلتزم بحماية خصوصية زوارنا، ونسعى لتوفير تجربة آمنة وموثوقة لجميع المستخدمين.
             تتناول سياسة الخصوصية هذه كيفية جمع واستخدام وحماية المعلومات التي يتم جمعها من خلال الموقع.
           </p>
-        </motion.div>
+        </div>
 
         {sections.map((section, idx) => (
-          <motion.section
+          <section
             key={idx}
             className="bg-gray-800 rounded-2xl shadow-md p-8 mb-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 + idx * 0.1 }}
+       
           >
             <div className="flex items-center gap-3 mb-3">
               <section.icon className="text-blue-400 dark:text-blue-400" />
@@ -192,20 +181,11 @@ export default function PrivacyPolicyClient() {
                 )}
               </div>
             )}
-          </motion.section>
+          </section>
         ))}
       </div>
 
-      {showScrollTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-24 right-6 bg-lime-500 hover:bg-lime-600 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-110 z-50"
-          aria-label="العودة للأعلى"
-          title="العودة للأعلى"
-        >
-          <ArrowUp size={24} />
-        </button>
-      )}
+   
     </div>
   );
 }

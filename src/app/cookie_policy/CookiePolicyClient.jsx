@@ -2,7 +2,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+
 import {
   Cookie,
   Info,
@@ -15,14 +15,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function CookiePolicyClient() {
-  const [showScrollTop, setShowScrollTop] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 300);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+
+export default function CookiePolicyClient() {
+
+
 
   const sections = [
     {
@@ -104,19 +101,16 @@ export default function CookiePolicyClient() {
         }
       `}</style>
       <div className="max-w-5xl mx-auto mt-10">
-        <motion.h1
+        <h1
           className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           سياسة ملفات تعريف الارتباط (Cookies)
-        </motion.h1>
+        </h1>
 
-        <motion.div
+        <div
           className="bg-gray-800 rounded-2xl shadow-md p-8 mb-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
         >
           <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
             يوضح هذا المستند كيفية استخدام{" "}
@@ -126,15 +120,12 @@ export default function CookiePolicyClient() {
             لملفات تعريف الارتباط، مع التأكيد على عدم تفعيل أي ملفات غير ضرورية
             إلا بعد موافقتك.
           </p>
-        </motion.div>
+        </div>
 
         {sections.map((section, idx) => (
-          <motion.section
+          <section
             key={idx}
             className="bg-gray-800 rounded-2xl shadow-md p-8 mb-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 + idx * 0.1 }}
           >
             <div className="flex items-center gap-3 mb-3">
               <section.icon className="text-blue-400" />
@@ -172,19 +163,10 @@ export default function CookiePolicyClient() {
                 )}
               </div>
             )}
-          </motion.section>
+          </section>
         ))}
       </div>
 
-      {showScrollTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-24 right-6 bg-lime-500 hover:bg-lime-600 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-110 z-50"
-          aria-label="العودة للأعلى"
-        >
-          <ArrowUp size={24} />
-        </button>
-      )}
     </div>
   );
 }

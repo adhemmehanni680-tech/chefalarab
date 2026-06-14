@@ -2,24 +2,18 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import favicon_icon from "../../../../public/favicon.webp";
-import recipes from "../../../../public/recipes.json";
 
 export default function Header() {
   const pathname = usePathname();
-  const [searchTerm, setSearchTerm] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState("light");
   const [scrollY, setScrollY] = useState(0);
-  const [debouncedTerm, setDebouncedTerm] = useState(searchTerm);
-  const debounceTimeout = useRef(null);
   const lastScroll = useRef(0);
   const [hideHeader, setHideHeader] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const searchBoxRef = useRef(null);
 
   /* ------------------------------- Theme + Scroll ------------------------------- */
   useEffect(() => {
@@ -46,67 +40,12 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  /* ------------------------------- Debounce Search ------------------------------- */
-  useEffect(() => {
-    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-    debounceTimeout.current = setTimeout(() => setDebouncedTerm(searchTerm), 300);
-    return () => clearTimeout(debounceTimeout.current);
-  }, [searchTerm]);
-
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     document.documentElement.classList.toggle("dark", newTheme === "dark");
     localStorage.setItem("theme", newTheme);
   };
-
-  /* ------------------------- Search Result (Optimized) ------------------------- */
-  const recipesIndex = useMemo(() => {
-    return (recipes || []).map((r) => ({
-      slug: r.slug,
-      title: r.title,
-      titleLower: (r.title || "").toLowerCase(),
-    }));
-  }, []);
-
-  const filteredResults = useMemo(() => {
-    const q = debouncedTerm.trim().toLowerCase();
-    if (q.length < 2) return [];
-    const res = [];
-    for (const r of recipesIndex) {
-      if (r.titleLower.includes(q)) {
-        res.push({ slug: r.slug, title: r.title });
-        if (res.length >= 15) break;
-      }
-    }
-    return res;
-  }, [debouncedTerm, recipesIndex]);
-
-  /* ------------------------------- Highlight Function ------------------------------- */
-  const highlightMatch = (text, query) => {
-    if (!query) return text;
-    const regex = new RegExp(`(${query})`, "gi");
-    const parts = text.split(regex);
-    return parts.map((part, idx) =>
-      part.toLowerCase() === query.toLowerCase() ? (
-        <span key={idx} className="bg-orange-100 dark:bg-orange-600 text-orange-800 dark:text-orange-200 px-1 rounded">
-          {part}
-        </span>
-      ) : (
-        part
-      )
-    );
-  };
-
-  /* ------------------------------- Close results on outside click ------------------------------- */
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (!searchBoxRef.current) return;
-      if (!searchBoxRef.current.contains(e.target)) setShowResults(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   /* ------------------------------- Nav Background ------------------------------- */
   const navBg =
@@ -118,7 +57,7 @@ export default function Header() {
     { title: "الصفحة الرئيسية", href: "/" },
     { title: "من نحن", href: "/about_us" },
     { title: "تواصل معنا", href: "/contact_us" },
-    { title: "الوصفات", href: "/recipe" },
+    { title: "الوصفات", href: "/recipes" },
     { title: "الاسئلة الشائعة", href: "/faq" },
   ];
 
@@ -187,74 +126,15 @@ export default function Header() {
           </ul>
         </div>
 
-        {/* Desktop Search */}
-        <div className="hidden md:flex relative w-64" ref={searchBoxRef}>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setShowResults(true);
-            }}
-            onFocus={() => setShowResults(true)}
-            className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg
-            bg-gray-50 focus:ring-orange-200 focus:border-orange-200
-            dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors"
-            placeholder="ابحث عن وصفة..."
-            aria-label="بحث عن وصفة"
-          />
-          <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-gray-500 dark:text-gray-300">
-            🔍
-          </div>
-
-          {/* Animated Search Results */}
-          <AnimatePresence>
-            {showResults && debouncedTerm.trim().length >= 2 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 w-full bg-white dark:bg-gray-800 border border-gray-300
-                dark:border-gray-700 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg z-50"
-                role="listbox"
-                aria-label="نتائج البحث"
-              >
-                {filteredResults.length > 0 ? (
-                  filteredResults.map((r) => (
-                    <Link
-                      key={r.slug}
-                      href={`/recipes/${r.slug}`}
-                      className="block px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-orange-100 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => {
-                        setSearchTerm("");
-                        setShowResults(false);
-                      }}
-                    >
-                      {highlightMatch(r.title, debouncedTerm)}
-                    </Link>
-                  ))
-                ) : (
-                  <p className="px-4 py-2 text-sm text-gray-500">لا توجد نتائج مطابقة 😔</p>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
         {/* Desktop Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="hidden md:flex items-center justify-center mr-4 md:mr-8 w-10 h-10 rounded-full  text-xl transition-transform hover:scale-110 "
+          className="hidden md:flex items-center justify-center mr-4 md:mr-8 w-10 h-10 rounded-full text-xl transition-transform hover:scale-110"
           aria-label="تبديل الوضع الليلي"
         >
-          <motion.div
-            initial={{ rotate: theme === "light" ? 0 : 180 }}
-            animate={{ rotate: theme === "light" ? 0 : 180 }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="flex items-center justify-center w-full h-full "
-          >
-            {theme === "light" ? "🌙" : "☀️"}
-          </motion.div>
+         <div className="flex items-center justify-center w-full h-full transition-transform duration-300">
+  {theme === "light" ? "🌙" : "☀️"}
+</div>
         </button>
 
         {/* Mobile Menu Button */}
@@ -272,39 +152,6 @@ export default function Header() {
       {isMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-sm transition-colors">
           <div className="p-4 flex flex-col space-y-3">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg
-              bg-gray-50 focus:ring-orange-200 focus:border-orange-200
-              dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors"
-              placeholder="ابحث عن وصفة..."
-              aria-label="بحث عن وصفة"
-            />
-
-            {debouncedTerm.trim().length >= 2 && (
-              <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg transition-colors">
-                {filteredResults.length > 0 ? (
-                  filteredResults.map((r) => (
-                    <Link
-                      key={r.slug}
-                      href={`/recipes/${r.slug}`}
-                      className="block px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-orange-100 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => {
-                        setSearchTerm("");
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      {highlightMatch(r.title, debouncedTerm)}
-                    </Link>
-                  ))
-                ) : (
-                  <p className="px-4 py-2 text-sm text-gray-500">😔 لا توجد نتائج مطابقة</p>
-                )}
-              </div>
-            )}
-
             {/* Mobile Theme Button */}
             <button
               onClick={toggleTheme}

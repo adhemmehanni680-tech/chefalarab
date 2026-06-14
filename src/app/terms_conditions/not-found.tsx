@@ -17,6 +17,7 @@ export default function NotFound() {
         <h1 className="text-3xl sm:text-4xl font-bold text-orange-400 mb-4">
           404 — الصفحة غير موجودة
         </h1>
+
         <p className="text-gray-300 leading-relaxed mb-8">
           ممكن تكون الصفحة اتنقلت أو اتغير الرابط. جرّب ترجع للرئيسية أو تفتح صفحة الوصفات.
         </p>
@@ -30,7 +31,7 @@ export default function NotFound() {
           </Link>
 
           <Link
-            href="/recipe"
+            href="/recipes"
             className="px-5 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:scale-[1.02] transition"
           >
             صفحة الوصفات

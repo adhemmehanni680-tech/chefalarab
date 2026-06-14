@@ -4,7 +4,7 @@
 
 /* سلوك التمرير السلس + تثبيت خلفية html  */
 html {
-  scroll-behavior: smooth;
+  
   transition: background-color 0.4s ease, color 0.4s ease;
 
   /*   overflow أفقي  */
@@ -38,6 +38,8 @@ body {
   min-height: 100vh;
   transition: background-color var(--transition-speed) ease,
               color var(--transition-speed) ease;
+       
+
 
   /* منع أي scroll أفقي زائد */
   overflow-x: hidden;
@@ -47,6 +49,34 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0; /* تبدأ مخفية */
+}
 /* تحسين النصوص */
 @layer utilities {
   .text-balance {
@@ -85,3 +115,39 @@ button {
 .shadow-smooth:hover {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
+/* أضف في نهاية الملف */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+

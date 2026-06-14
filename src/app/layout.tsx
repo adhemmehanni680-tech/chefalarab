@@ -1,72 +1,98 @@
-"use client";
+// src/app/layout.tsx
 
-import React from "react";
-import Script from "next/script";
-import CookieConsentBanner from "./Components/CookieConsentBanner";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
 
-interface RootClientProps {
+import Header from "./Components/header/Header";
+import Footer from "./Components/footer/Footer";
+import RootClient from "./RootClient"; // 👈 مهم
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://chefalarab.com"),
+  title: {
+    default: "شيف العرب",
+    template: "%s | شيف العرب",
+  },
+  description:
+    "اكتشف ألذ وأحدث الوصفات العربية الأصيلة، مع شيف العرب تجد وصفات شهية للطبخ المنزلي، الحلويات، المشروبات والمأكولات العربية بسهولة خطوة بخطوة.",
+  keywords: [
+    "شيف العرب", "الطبق العربي", "وصفات عربية", "وصفات شيف العرب",
+    "أكلات مصرية", "أكلات شرقية", "مأكولات عربية", "مأكولات شعبية",
+    "أكلات عربية تقليدية", "الطبق الغربي", "وصفات غربية", "مأكولات غربية",
+    "أكلات عالمية", "وصفات عالمية", "سلطات ومخللات", "حلويات", "مثلجات",
+    "مشروبات", "وصفات سهلة وسريعة"
+  ],
+  authors: [{ name: "Adhem Mehanni", url: "https://chefalarab.com" }],
+  alternates: { canonical: "https://chefalarab.com" },
+
+  openGraph: {
+    title: "شيف العرب",
+    description: "اكتشف ألذ وأحدث الوصفات العربية الأصيلة، مع شيف العرب تجد وصفات شهية للطبخ المنزلي، الحلويات، المشروبات والمأكولات العربية بسهولة خطوة بخطوة.",
+    url: "https://chefalarab.com",
+    siteName: "شيف العرب",
+    type: "website",
+    locale: "ar_AR",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "شيف العرب" }],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "شيف العرب",
+    description:
+      "اكتشف ألذ وأحدث الوصفات العربية الأصيلة، مع شيف العرب تجد وصفات شهية للطبخ المنزلي، الحلويات، المشروبات والمأكولات العربية بسهولة خطوة بخطوة.",
+    images: ["/og-image.jpg"],
+  },
+
+  robots: { index: true, follow: true },
+
+  other: {
+    "google-adsense-account": "ca-pub-9717868267549745",
+  },
+
+  verification: {
+    google: "tdSwWzOnOuUsvJhYhKTI616MoDw3Vb4Xvle7no2xtas",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
   children: React.ReactNode;
-}
+}) {
 
-export default function RootClient({ children }: RootClientProps) {
-  // GTM Container ID (لازم يكون متعرّف في env)
   const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID!;
-  const ADSENSE_CLIENT =
-    process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-9717868267549745";
 
   return (
-    <>
-      {/* =========================
-          Consent default (قبل أي Tags)
-          ========================= */}
-      <Script id="consent-default" strategy="beforeInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
+    <html lang="ar" dir="rtl"  data-scroll-behavior="smooth">
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
 
-          // Default consent: denied
-          gtag('consent', 'default', {
-            ad_storage: 'denied',
-            analytics_storage: 'denied',
-            ad_user_data: 'denied',
-            ad_personalization: 'denied'
-          });
-        `}
-      </Script>
+      <body
+        className={`${inter.className} flex flex-col min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100`}
+      >
+        {/* GTM noscript   هنا */}
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
 
-      {/* =========================
-          Cookie Consent Banner
-          (لازم يعمل gtag('consent','update', ...) عند القبول/الرفض)
-          ========================= */}
-      <CookieConsentBanner />
+        {/* 👇 كل السكريبتات  */}
+        <RootClient>
+          <Header />
+          {children}
+          <Footer />
+        </RootClient>
 
-      {/* =========================
-          Google Tag Manager
-          ========================= */}
-      <Script id="gtm" strategy="afterInteractive">
-        {`
-          (function(w,d,s,l,i){w[l]=w[l]||[];
-            w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});
-            var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
-            j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-            f.parentNode.insertBefore(j,f);
-          })(window,document,'script','dataLayer','${GTM_ID}');
-        `}
-      </Script>
-
-      {/* =========================
-          Google AdSense
-          ========================= */}
-      <Script
-        id="adsbygoogle-init"
-        strategy="afterInteractive"
-        async
-        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-        crossOrigin="anonymous"
-      />
-
-      {children}
-    </>
+      </body>
+    </html>
   );
 }

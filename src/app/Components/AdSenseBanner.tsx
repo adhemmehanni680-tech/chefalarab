@@ -1,12 +1,12 @@
-// AdSenseBanner
+// Components/AdSenseBanner.tsx
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { adsEnabled } from "@/lib/ads";
 
 type AdSenseBannerProps = {
   adSlot: string;
-  adFormat?: string;
+  adFormat?: "auto" | "rectangle" | "horizontal" | "vertical" | "fluid";
   style?: React.CSSProperties;
   className?: string;
   layoutKey?: string;
@@ -19,63 +19,56 @@ export default function AdSenseBanner({
   className = "",
   layoutKey,
 }: AdSenseBannerProps) {
-  const adRef = useRef<HTMLDivElement>(null);
-  const loadedRef = useRef(false);
-  const [visible, setVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const adLoaded = useRef(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    //  guard   effect 
-    if (!adsEnabled) return;
-    if (!adRef.current) return;
-
+    if (!adsEnabled || !containerRef.current) return;
     const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry?.isIntersecting) {
-          setVisible(true);
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
           observer.disconnect();
         }
       },
       { threshold: 0.1 }
     );
-
-    observer.observe(adRef.current);
+    observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    if (!adsEnabled) return;
-    if (!visible || loadedRef.current) return;
+    if (!adsEnabled || !isVisible || adLoaded.current || !containerRef.current) return;
+    if (containerRef.current.querySelector("ins")) return;
+
+    const ins = document.createElement("ins");
+    ins.className = "adsbygoogle";
+    ins.style.display = "block";
+    ins.style.width = "100%";
+    ins.style.maxWidth = "100%";
+    ins.style.boxSizing = "border-box";
+    ins.setAttribute("data-ad-client", "ca-pub-9717868267549745");
+    ins.setAttribute("data-ad-slot", adSlot);
+    ins.setAttribute("data-ad-format", adFormat);
+    ins.setAttribute("data-full-width-responsive", "true");
+    if (layoutKey) ins.setAttribute("data-ad-layout-key", layoutKey);
+
+    containerRef.current.appendChild(ins);
 
     try {
-      window.adsbygoogle = window.adsbygoogle || [];
-      window.adsbygoogle.push({});
-      loadedRef.current = true;
-    } catch (e) {
-      console.error("Adsense Error:", e);
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      adLoaded.current = true;
+    } catch (error) {
+      console.error("AdSense error:", error);
     }
-  }, [visible]);
-
-  const responsiveStyle: React.CSSProperties = {
-    display: "block",
-    width: "100%",
-    ...style,
-  };
+  }, [isVisible, adSlot, adFormat, layoutKey]);
 
   return (
-    <div ref={adRef} className={`flex justify-center my-4 w-full ${className}`}>
-      {/*   return  hooks */}
-      {adsEnabled && visible && (
-        <ins
-          className="adsbygoogle"
-          style={responsiveStyle}
-          data-ad-client="ca-pub-9717868267549745"
-          data-ad-slot={adSlot}
-          data-ad-format={adFormat}
-          data-full-width-responsive="true"
-          {...(layoutKey ? { "data-ad-layout-key": layoutKey } : {})}
-        />
-      )}
-    </div>
+    <div
+      ref={containerRef}
+      className={`w-full flex justify-center items-center my-4 ${className}`}
+      style={{ overflow: "hidden", minHeight: "60px", ...style }}
+    />
   );
 }

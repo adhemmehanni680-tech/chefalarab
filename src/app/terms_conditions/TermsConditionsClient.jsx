@@ -1,10 +1,9 @@
-// app/terms_conditions/TermsConditionsClient.jsx
 "use client";
 
-import { useState, useEffect } from "react";
+
 import { motion } from "framer-motion";
 import {
-  ArrowUp,
+
   FileText,
   ShieldCheck,
   Copyright,
@@ -19,20 +18,18 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { adsEnabled } from "@/lib/ads";
 
+
+
 const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
   ssr: false,
 });
 
 export default function TermsConditionsClient() {
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  
 
+  // ⚡ لتحديد ظهور الإعلان في هذه الصفحة
+  const showAdsOnThisPage = true;
 
-
-  useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 300);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const sections = [
     {
@@ -94,8 +91,7 @@ export default function TermsConditionsClient() {
       title: "التواصل معنا",
       content: (
         <>
-          لأي استفسار بخصوص الشروط والأحكام يمكنك التواصل معنا عبر البريد:
-          {" "}
+          لأي استفسار بخصوص الشروط والأحكام يمكنك التواصل معنا عبر البريد:{" "}
           <Link href="mailto:chefalarabonline@gmail.com" className="text-blue-400 font-semibold">
             chefalarabonline@gmail.com
           </Link>
@@ -105,7 +101,7 @@ export default function TermsConditionsClient() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden transition-colors duration-500" >
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden transition-colors duration-500">
       <style jsx global>{`
         html,
         body {
@@ -116,9 +112,8 @@ export default function TermsConditionsClient() {
         }
       `}</style>
 
-      {/*  أثناء مراجعة   */}
-      {adsEnabled && showAdsOnThisPage && <InterstitialAd interstitialUnitID="2901613977" />}
-
+      {/* الإعلان */}
+      {adsEnabled && <InterstitialAd interstitialUnitID="2901613977" />}
       <div className="max-w-5xl mx-auto mt-10">
         <motion.h1
           className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"
@@ -174,16 +169,7 @@ export default function TermsConditionsClient() {
         ))}
       </div>
 
-      {showScrollTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-24 right-6 bg-lime-500 hover:bg-lime-600 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-110 z-50"
-          aria-label="العودة للأعلى"
-          title="العودة للأعلى"
-        >
-          <ArrowUp size={24} />
-        </button>
-      )}
+   
     </div>
   );
 }

@@ -1,13 +1,15 @@
 // src/app/contact_us/ContactClient.jsx
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
+
 import { Mail, MessageCircle, ShieldCheck, HelpCircle } from "lucide-react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-import { adsEnabled } from "@/lib/ads";
 
+import dynamic from "next/dynamic";
+
+
+
+const adsEnabled = process.env.NEXT_PUBLIC_ADS_ENABLED === "true";
 
 const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
   ssr: false,
@@ -19,8 +21,7 @@ const showAdsOnThisPage = false;
 
 export default function ContactClient() {
 
-  
-  return (
+    return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden">
       <style jsx global>{`
         html,
@@ -36,43 +37,32 @@ export default function ContactClient() {
       {adsEnabled && showAdsOnThisPage && <InterstitialAd interstitialUnitID="2901613977" />}
 
       <div className="max-w-4xl mx-auto text-center mt-10">
-        <motion.h1
-          className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          تواصل معنا
-        </motion.h1>
+    <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6">تواصل معنا
+        </h1>
 
         {/*  مقدمة  (  ) */}
-        <motion.p
+        <p
           className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6 transition-colors duration-500"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.15 }}
+         
         >
           يسعدنا تواصلك معنا في أي وقت! إذا كان لديك اقتراح لتحسين الموقع، أو بلاغ عن مشكلة
           في صفحة/وصفة، أو رغبة في التعاون والإعلان بشكل رسمي، يمكنك مراسلتنا عبر الوسائل التالية.
           نحن نهتم بقراءة كل الرسائل والعمل على تحسين تجربة شيف العرب باستمرار.
-        </motion.p>
+        </p>
 
-        <motion.p
+        <p
           className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed mb-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.25 }}
+         
         >
           لضمان سرعة الرد، يُفضّل أن تكتب عنوان رسالتك بوضوح (مثال: “مشكلة في وصفة” أو “اقتراح” أو
           “تعاون”). وإذا كانت الرسالة عن وصفة معينة، أرفق رابط الصفحة أو اسم الوصفة.
-        </motion.p>
+        </p>
 
         {/*  Card  */}
-        <motion.div
+        <div
           dir="rtl"
           className="bg-gray-800 shadow-md rounded-2xl p-8 inline-block text-right space-y-5 w-full sm:w-auto"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
+         
         >
           <div className="flex items-center gap-3 justify-start">
             <Mail className="text-blue-500" />
@@ -116,7 +106,7 @@ export default function ContactClient() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/*  Banner  */}
