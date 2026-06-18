@@ -483,7 +483,7 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
               }}
               className="bg-gray-800 px-3 py-1 rounded-lg"
             >
-              🔄 تم التحديث {updatedAtRelative}
+              🔄 تم التحديث منذ يومين
             </motion.span>
           )}
         </motion.div>
