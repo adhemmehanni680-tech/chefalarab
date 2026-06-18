@@ -126,8 +126,8 @@ export default function AboutUsClient() {
           ))}
         </div>
 
-        {/* أكورديون لماذا شيف العرب */}
-        <section className="bg-gray-800 rounded-2xl shadow-md mt-10 overflow-hidden animate-fadeInUp">
+        {/*  لماذا شيف العرب */}
+        <section className="bg-gray-800 text-start rounded-2xl shadow-md mt-10 overflow-hidden animate-fadeInUp">
           <button
             onClick={() => toggleSection("why")}
             className="w-full flex items-center justify-between p-6 focus:outline-none hover:bg-gray-700 transition-colors"
@@ -143,11 +143,11 @@ export default function AboutUsClient() {
             />
           </button>
           <div
-            className={`transition-all duration-500 ease-in-out overflow-hidden ${
+            className={`transition-all duration-500 ease-in-out overflow-hidden text-start  ${
               openSections.why ? "max-h-96 p-6 pt-0" : "max-h-0 p-0"
             }`}
           >
-            <ul className="list-disc list-inside space-y-2 text-gray-300 text-sm sm:text-base leading-relaxed">
+            <ul className="list-disc list-inside  space-y-2 text-gray-300 text-sm sm:text-base leading-relaxed">
               {whyList.map((item, i) => (
                 <li key={i}>{item}</li>
               ))}
@@ -155,13 +155,13 @@ export default function AboutUsClient() {
           </div>
         </section>
 
-        {/* أكورديون سياسة المحتوى */}
+        {/* \ سياسة المحتوى */}
         <section className="bg-gray-800 rounded-2xl shadow-md mt-6 overflow-hidden animate-fadeInUp">
           <button
             onClick={() => toggleSection("editorial")}
             className="w-full flex items-center justify-between p-6 focus:outline-none hover:bg-gray-700 transition-colors"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center  gap-3 ">
               <BookOpen className="text-orange-400" />
               <h2 className="text-2xl font-semibold text-gray-100">سياسة المحتوى والمصداقية</h2>
             </div>
@@ -172,11 +172,11 @@ export default function AboutUsClient() {
             />
           </button>
           <div
-            className={`transition-all duration-500 ease-in-out overflow-hidden ${
+            className={`transition-all duration-500 ease-in-out overflow-hidden text-start ${
               openSections.editorial ? "max-h-96 p-6 pt-0" : "max-h-0 p-0"
             }`}
           >
-            <ul className="list-disc list-inside space-y-2 text-gray-300 text-sm sm:text-base leading-relaxed">
+            <ul className="list-disc list-inside  space-y-2 text-gray-300 text-sm sm:text-base leading-relaxed ">
               {editorialList.map((item, i) => (
                 <li key={i}>{item}</li>
               ))}

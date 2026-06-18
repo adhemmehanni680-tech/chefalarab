@@ -17,7 +17,7 @@ interface ScrollToTopButtonProps {
 
 export default function ScrollToTopButton({
   threshold = 400,
-  bottom = "bottom-4",
+  bottom = "bottom-10",
   right = "right-6",
   customButton,
 }: ScrollToTopButtonProps) {

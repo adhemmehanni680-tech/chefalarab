@@ -65,7 +65,7 @@ export default function SearchFloating() {
     return results.sort((a, b) => b.score - a.score).slice(0, 20);
   }, [debouncedTerm, recipesIndex, normalize]);
 
-  // highlight مع هروب آمن
+  // highlight   
   const highlight = useCallback((text, query) => {
     if (!query) return text;
     const words = query.split(/\s+/).filter(Boolean);
@@ -74,7 +74,7 @@ export default function SearchFloating() {
     words.forEach((w) => {
       parts = parts.flatMap((part) => {
         if (typeof part !== "string") return [part];
-        const safeWord = escapeRegExp(w); // 👈 استخدام الهروب
+        const safeWord = escapeRegExp(w); // 👈  
         const reg = new RegExp(`(${safeWord})`, "gi");
         return part.split(reg).map((p, i) =>
           p.toLowerCase() === w.toLowerCase() ? (
@@ -109,7 +109,7 @@ export default function SearchFloating() {
     <motion.div
       drag
       dragMomentum={false}
-      className="fixed z-[9999] bottom-52 right-2"
+      className="fixed z-[9999] bottom-24 right-6"
       ref={boxRef}
     >
       {!open && (
@@ -119,7 +119,7 @@ export default function SearchFloating() {
           animate={{ y: [0, -8, 0] }}
           transition={{ repeat: Infinity, duration: 2.2 }}
           onClick={() => setOpen(true)}
-          className="w-14 h-14 rounded-full bg-orange-500 text-white text-2xl shadow-lg"
+          className="w-12 h-12 rounded-full bg-orange-500 text-white text-2xl shadow-lg"
         >
           🔍
         </motion.button>
