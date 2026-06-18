@@ -91,7 +91,7 @@ export default function InstallAppButton() {
 
   if (isIOS) {
     return (
-      <div className="fixed bottom-4 left-1/2 z-[9999] flex w-[92%] max-w-sm -translate-x-1/2 items-center gap-2 rounded-full border border-orange-100 bg-white/95 px-3 py-2 shadow-[0_10px_35px_rgba(0,0,0,0.14)] backdrop-blur-md md:hidden">
+      <div className="fixed bottom-8 left-1/2 z-[9999] flex w-[92%] max-w-sm -translate-x-1/2 items-center gap-2 rounded-full border border-orange-100 bg-white/95 px-3 py-2 shadow-[0_10px_35px_rgba(0,0,0,0.14)] backdrop-blur-md md:hidden">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-600">
           <svg
             width="17"
@@ -135,7 +135,7 @@ export default function InstallAppButton() {
   if (!deferredPrompt) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-[9999] flex -translate-x-1/2 items-center gap-2 rounded-full border border-orange-100 bg-white/95 px-2 py-2 shadow-[0_10px_35px_rgba(0,0,0,0.14)] backdrop-blur-md md:hidden">
+    <div className="fixed bottom-14 left-1/2 z-[9999] flex -translate-x-1/2 items-center gap-2 rounded-full border border-orange-100 bg-white/95 px-2 py-2 shadow-[0_10px_35px_rgba(0,0,0,0.14)] backdrop-blur-md md:hidden">
       <button
         type="button"
         onClick={handleInstall}
