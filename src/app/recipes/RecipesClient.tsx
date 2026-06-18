@@ -22,8 +22,8 @@ type Recipe = {
   category?: string[] | string;
   tags?: string[] | string;
   img: {
-    url: string; // الصورة الكبيرة لصفحة الوصفة
-    "url-card"?: string; // الصورة المصغرة للبطاقات
+    url: string;
+    "url-card"?: string;
     alt?: string;
     width?: number;
     height?: number;
@@ -43,7 +43,7 @@ const isValidImageUrl = (url: string | undefined | null): boolean => {
 };
 
 const getCardImageUrl = (recipe: Recipe): string | undefined => {
-  return recipe.img?.["url-card"];
+  return recipe.img?.["url-card"] || recipe.img?.url;
 };
 
 const hasCategory = (recipe: Recipe, category: string): boolean => {
@@ -124,7 +124,6 @@ const getAvailableTags = (
 const RecipeSkeleton = () => (
   <div className="animate-pulse bg-[#111827] rounded-2xl h-[350px] w-full border border-gray-700">
     <div className="h-56 bg-gray-700 rounded-t-2xl" />
-
     <div className="p-4 text-center space-y-2">
       <div className="h-6 bg-gray-600 rounded w-3/4 mx-auto" />
       <div className="h-4 bg-gray-500 rounded w-1/2 mx-auto" />
@@ -146,18 +145,13 @@ export default function RecipesClient({
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
-
   const [visibleCount, setVisibleCount] = useState(12);
   const [loadingMore, setLoadingMore] = useState(false);
-
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
-
   const [sidebarTop, setSidebarTop] = useState(0);
   const [leftAdTop, setLeftAdTop] = useState(0);
 
@@ -172,7 +166,6 @@ export default function RecipesClient({
   const containerRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const leftAdRef = useRef<HTMLDivElement>(null);
-
   const loadingMoreRef = useRef(false);
 
   useEffect(() => {
@@ -299,7 +292,10 @@ export default function RecipesClient({
         }
       }
 
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 600) {
+      if (
+        window.innerHeight + window.scrollY >=
+        document.body.offsetHeight - 600
+      ) {
         loadMore();
       }
     };
@@ -345,7 +341,7 @@ export default function RecipesClient({
   };
 
   return (
-    <div className="dark:bg-gray-900 min-h-screen text-white pb-24 pt-16 mt-16">
+    <div className="dark:bg-gray-900 min-h-screen dark:text-white pb-24 pt-16 mt-16">
       <h1 className="text-center font-bold text-3xl mb-6 px-4 leading-relaxed">
         استمتع بألذ الوصفات العربية والعالمية الأصيلة: وصفات شهية وسهلة التحضير
         لكل المناسبات اليومية والعائلية، مع خطوات واضحة، نصائح احترافية، وأفكار
@@ -412,7 +408,7 @@ export default function RecipesClient({
                             كل الدول
                           </button>
 
-                          {countriesMap[cat]?.map(({ country, count }) => (
+                          {countriesMap[cat]?.map(({ country }) => (
                             <button
                               type="button"
                               key={country}
@@ -424,12 +420,13 @@ export default function RecipesClient({
                               }}
                               className={clsx(
                                 "block w-full text-right text-sm py-2 px-3 rounded-xl transition",
-                                activeCountry === country && activeCategory === cat
+                                activeCountry === country &&
+                                  activeCategory === cat
                                   ? "bg-yellow-300 text-black font-semibold"
                                   : "text-gray-400 hover:text-yellow-400"
                               )}
                             >
-                              {country} ({count})
+                              {country}
                             </button>
                           ))}
                         </div>
@@ -522,7 +519,7 @@ export default function RecipesClient({
                               width={500}
                               height={350}
                               className="w-full h-56 object-cover group-hover:scale-[1.04] transition duration-500"
-                              loading="eager"
+                              loading={index < 6 ? "eager" : "lazy"}
                               onError={() => handleImageError(recipe.id)}
                               unoptimized={cardImageUrl!.startsWith("http")}
                             />
@@ -659,10 +656,10 @@ export default function RecipesClient({
                                       : "text-gray-400 hover:bg-gray-800 hover:text-yellow-400"
                                   )}
                                 >
-                                  كل الدول {filteredRecipes.length}
+                                  كل الدول
                                 </button>
 
-                                {countriesMap[cat]?.map(({ country, count }) => (
+                                {countriesMap[cat]?.map(({ country }) => (
                                   <button
                                     type="button"
                                     key={country}
@@ -679,7 +676,7 @@ export default function RecipesClient({
                                         : "text-gray-400 hover:bg-gray-800 hover:text-yellow-400"
                                     )}
                                   >
-                                    {country} ({count})
+                                    {country}
                                   </button>
                                 ))}
                               </div>
