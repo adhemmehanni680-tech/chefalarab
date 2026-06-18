@@ -76,7 +76,7 @@ const DEFAULTS = {
       phone: ["+201201928497"],
       description:
         "لافندر  قاعه وسيشن وكافيه شباب وكافيه عائلات وكمان حمام سباحه للاطفال ",
-      address: "مصر , المنيا , مغاغة ⬅ عند اول دائري ميانه بجوار معرض السيارات ",
+      address: "مصر , المنيا , مغاغة ⬅ اول دائري ميانه بجوار معرض السيارات ",
     },
   ],
 };
@@ -157,6 +157,18 @@ export default function AdBannerPro({
     startRotation(); // إعادة تشغيل المؤقت بعد التنقل اليدوي
   };
 
+  const handleClose = useCallback((remember = true) => {
+    setShowAd(false);
+    if (remember) setIsDismissed(true);
+    if (reappearTimer.current) clearTimeout(reappearTimer.current);
+    if (!remember) {
+      reappearTimer.current = setTimeout(() => {
+        setShowAd(true);
+        setCurrentIdx((prev) => (prev + 1) % adsList.length);
+      }, reappearAfterClose);
+    }
+  }, [adsList.length, reappearAfterClose]);
+
   // إغلاق تلقائي
   useEffect(() => {
     if (showAd && autoCloseDelay > 0) {
@@ -165,7 +177,7 @@ export default function AdBannerPro({
     return () => {
       if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current);
     };
-  }, [showAd, autoCloseDelay]);
+  }, [showAd, autoCloseDelay, handleClose]);
 
   // ضبط المسافة في الوضع العائم
   useEffect(() => {
@@ -197,18 +209,6 @@ export default function AdBannerPro({
       document.querySelector("footer")?.setAttribute("style", "margin-bottom: 0px");
     };
   }, []);
-
-  const handleClose = (remember = true) => {
-    setShowAd(false);
-    if (remember) setIsDismissed(true);
-    if (reappearTimer.current) clearTimeout(reappearTimer.current);
-    if (!remember) {
-      reappearTimer.current = setTimeout(() => {
-        setShowAd(true);
-        setCurrentIdx((prev) => (prev + 1) % adsList.length);
-      }, reappearAfterClose);
-    }
-  };
 
   if (!enabled || !showAd || !currentAd || adsList.length === 0) return null;
 

@@ -4,15 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
 import favicon_icon from "../../../../public/favicon.webp";
 
 export default function Header() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState("light");
-  const [scrollY, setScrollY] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
   const lastScroll = useRef(0);
+  const ticking = useRef(false);
   const [hideHeader, setHideHeader] = useState(false);
 
   /* ------------------------------- Theme + Scroll ------------------------------- */
@@ -29,13 +29,19 @@ export default function Header() {
     }
 
     const handleScroll = () => {
-      const current = window.scrollY;
-      if (current > lastScroll.current && current > 80) setHideHeader(true);
-      else setHideHeader(false);
-      lastScroll.current = current;
-      setScrollY(current);
+      if (ticking.current) return;
+      ticking.current = true;
+
+      window.requestAnimationFrame(() => {
+        const current = window.scrollY;
+        setHideHeader(current > lastScroll.current && current > 80);
+        setIsScrolled(current > 10);
+        lastScroll.current = current;
+        ticking.current = false;
+      });
     };
 
+    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -49,7 +55,7 @@ export default function Header() {
 
   /* ------------------------------- Nav Background ------------------------------- */
   const navBg =
-    scrollY > 10
+    isScrolled
       ? "bg-gray-900/95 backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.12)]"
       : "bg-gray-900/80";
 
@@ -91,7 +97,7 @@ export default function Header() {
               loading="eager"
               className="h-16 w-16"
             />
-            <span className="text-2xl font-bold text-white">شيف العرب</span>
+            <span className="font-brand text-3xl md:text-[34px] font-bold text-white leading-none">شيف العرب</span>
           </Link>
         </div>
 

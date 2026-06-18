@@ -25,11 +25,6 @@ const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
 });
 
 export default function TermsConditionsClient() {
-  
-
-  // ⚡ لتحديد ظهور الإعلان في هذه الصفحة
-  const showAdsOnThisPage = true;
-
 
   const sections = [
     {

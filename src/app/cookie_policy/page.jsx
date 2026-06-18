@@ -26,7 +26,7 @@ export const metadata = {
     title: "سياسة ملفات الارتباط (الكوكيز) | شيف العرب",
     description:
       "سياسة الكوكيز لموقع شيف العرب: لماذا نستخدم الكوكيز وكيفية إدارتها وعلاقتها بإعلانات Google.",
-    url: "https://www.chefalarab.com/cookie_policy",
+    url: "https://chefalarab.com/cookie_policy",
     siteName: "شيف العرب",
     type: "article",
     locale: "ar_AR",

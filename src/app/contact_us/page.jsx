@@ -18,7 +18,7 @@ export const metadata = {
     title: "تواصل معنا | شيف العرب",
     description:
       "تواصل مع شيف العرب عبر البريد الإلكتروني أو واتساب. يسعدنا استقبال رسائلك.",
-    url: "https://www.chefalarab.com/contact_us",
+    url: "https://chefalarab.com/contact_us",
     siteName: "شيف العرب",
     type: "website",
     locale: "ar_AR",

@@ -24,6 +24,11 @@ html[dir="rtl"] body { text-align: right; }
 
   /* تأثيرات عالمية سلسة */
   --transition-speed: 0.4s;
+
+  /* خطوط الموقع: خفيفة ومحسّنة عبر next/font */
+  --font-body: var(--font-cairo), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
+  --font-heading: var(--font-cairo), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
+  --font-brand: var(--font-aref-ruqaa), var(--font-cairo), system-ui, sans-serif;
 }
 
 /* إعدادات الدارك مود */
@@ -35,6 +40,7 @@ html.dark {
 
 /* gradient على body فقط */
 body {
+  font-family: var(--font-body);
   min-height: 100vh;
   transition: background-color var(--transition-speed) ease,
               color var(--transition-speed) ease;
@@ -44,9 +50,36 @@ body {
   /* منع أي scroll أفقي زائد */
   overflow-x: hidden;
 
-  font-smooth: always;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+
+
+/* تحسين الخطوط العربية مع الحفاظ على الأداء */
+h1,
+h2,
+h3,
+.font-heading {
+  font-family: var(--font-heading);
+  letter-spacing: -0.025em;
+}
+
+.font-brand {
+  font-family: var(--font-brand);
+  letter-spacing: -0.015em;
+}
+
+.recipe-prose,
+.recipe-content,
+article p,
+li {
+  font-feature-settings: "kern" 1;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(132, 204, 22, 0.25);
 }
 
 @keyframes fadeIn {
@@ -57,6 +90,7 @@ body {
     opacity: 1;
   }
 }
+
 
 @keyframes fadeInUp {
   from {
@@ -115,18 +149,6 @@ button {
 .shadow-smooth:hover {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
-/* أضف في نهاية الملف */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(2rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }

@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import recipes from "@/data/recipes.json";
+import recipes from "@/data/recipes-search.json";
 
 // دالة لهروب الرموز الخاصة (بدون TypeScript annotations)
 function escapeRegExp(str) {

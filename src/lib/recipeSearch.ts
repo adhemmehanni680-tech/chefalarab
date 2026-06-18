@@ -1,5 +1,6 @@
 // lib/recipeSearch.ts
-import recipesData from "@/data/recipes.json";
+import "server-only";
+import { getAllRecipes } from "@/lib/recipesData";
 
 export interface Recipe {
   id: number;
@@ -193,7 +194,7 @@ function formatDirectAnswer(recipe: Recipe, intent: string, query: string): stri
 }
 
 export function getRecipeResponse(query: string): ChatResponse {
-  const recipes = recipesData as Recipe[];
+  const recipes = getAllRecipes() as Recipe[];
   if (!recipes || recipes.length === 0) {
     return {
       answer: "عذراً، لا توجد وصفات متاحة حالياً.",
@@ -204,7 +205,7 @@ export function getRecipeResponse(query: string): ChatResponse {
   
   const bestRecipe = extractRecipeTitle(query, recipes);
   const intent = getIntentFromQuery(query);
-  let answer = formatDirectAnswer(bestRecipe, intent, query);
+  const answer = formatDirectAnswer(bestRecipe, intent, query);
   
   // إضافة رابط الوصفة في نهاية الإجابة (اختياري، لكننا سنتركه أيضاً للمكون الأمامي)
   // المكون الأمامي سيعرض الرابط بشكل منفصل باستخدام recipeSlug، لذا لسنا بحاجة لتكراره هنا.

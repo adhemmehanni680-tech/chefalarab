@@ -22,14 +22,18 @@ type Recipe = {
   category?: string[] | string;
   tags?: string[] | string;
   img: {
-    url: string;
+    url: string; // الصورة الكبيرة لصفحة الوصفة
+    "url-card"?: string; // الصورة المصغرة للبطاقات
     alt?: string;
+    width?: number;
+    height?: number;
   };
 };
 
 const isValidImageUrl = (url: string | undefined | null): boolean => {
   if (!url || typeof url !== "string") return false;
   if (url.trim() === "") return false;
+
   try {
     new URL(url);
     return true;
@@ -38,8 +42,13 @@ const isValidImageUrl = (url: string | undefined | null): boolean => {
   }
 };
 
+const getCardImageUrl = (recipe: Recipe): string | undefined => {
+  return recipe.img?.["url-card"];
+};
+
 const hasCategory = (recipe: Recipe, category: string): boolean => {
   if (!recipe.category) return false;
+
   return Array.isArray(recipe.category)
     ? recipe.category.includes(category)
     : recipe.category === category;
@@ -47,6 +56,7 @@ const hasCategory = (recipe: Recipe, category: string): boolean => {
 
 const hasTag = (recipe: Recipe, tag: string): boolean => {
   if (!recipe.tags) return false;
+
   return Array.isArray(recipe.tags)
     ? recipe.tags.includes(tag)
     : recipe.tags === tag;
@@ -57,19 +67,24 @@ const getCountriesMap = (
   categories: string[]
 ): Record<string, { country: string; count: number }[]> => {
   const map: Record<string, { country: string; count: number }[]> = {};
+
   categories.forEach((cat) => {
     const countryCounts: Record<string, number> = {};
+
     recipes
       .filter((recipe) => hasCategory(recipe, cat))
       .forEach((recipe) => {
         if (recipe.country) {
-          countryCounts[recipe.country] = (countryCounts[recipe.country] || 0) + 1;
+          countryCounts[recipe.country] =
+            (countryCounts[recipe.country] || 0) + 1;
         }
       });
+
     map[cat] = Object.entries(countryCounts)
       .map(([country, count]) => ({ country, count }))
       .sort((a, b) => b.count - a.count);
   });
+
   return map;
 };
 
@@ -79,16 +94,27 @@ const getAvailableTags = (
   activeCountry: string | null
 ): { tag: string; count: number }[] => {
   let filtered = recipes;
-  if (activeCategory) filtered = filtered.filter((r) => hasCategory(r, activeCategory));
-  if (activeCountry) filtered = filtered.filter((r) => r.country === activeCountry);
+
+  if (activeCategory) {
+    filtered = filtered.filter((r) => hasCategory(r, activeCategory));
+  }
+
+  if (activeCountry) {
+    filtered = filtered.filter((r) => r.country === activeCountry);
+  }
+
   const tagCounts: Record<string, number> = {};
+
   filtered.forEach((recipe) => {
     if (!recipe.tags) return;
+
     const tags = Array.isArray(recipe.tags) ? recipe.tags : [recipe.tags];
+
     tags.forEach((tag) => {
       tagCounts[tag] = (tagCounts[tag] || 0) + 1;
     });
   });
+
   return Object.entries(tagCounts)
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count)
@@ -98,6 +124,7 @@ const getAvailableTags = (
 const RecipeSkeleton = () => (
   <div className="animate-pulse bg-[#111827] rounded-2xl h-[350px] w-full border border-gray-700">
     <div className="h-56 bg-gray-700 rounded-t-2xl" />
+
     <div className="p-4 text-center space-y-2">
       <div className="h-6 bg-gray-600 rounded w-3/4 mx-auto" />
       <div className="h-4 bg-gray-500 rounded w-1/2 mx-auto" />
@@ -108,39 +135,59 @@ const RecipeSkeleton = () => (
 interface RecipesClientProps {
   recipes: Recipe[];
   categories: string[];
-  initialCategory?: string | null; // 🆕 الفئة الأولية من الرابط
+  initialCategory?: string | null;
 }
 
-export default function RecipesClient({ recipes, categories, initialCategory = null }: RecipesClientProps) {
+export default function RecipesClient({
+  recipes,
+  categories,
+  initialCategory = null,
+}: RecipesClientProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
+
   const [visibleCount, setVisibleCount] = useState(12);
   const [loadingMore, setLoadingMore] = useState(false);
+
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
+
   const [sidebarTop, setSidebarTop] = useState(0);
   const [leftAdTop, setLeftAdTop] = useState(0);
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
-  const [expandedCategoriesMobile, setExpandedCategoriesMobile] = useState<Record<string, boolean>>({});
+
+  const [expandedCategories, setExpandedCategories] = useState<
+    Record<string, boolean>
+  >({});
+
+  const [expandedCategoriesMobile, setExpandedCategoriesMobile] = useState<
+    Record<string, boolean>
+  >({});
 
   const containerRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const leftAdRef = useRef<HTMLDivElement>(null);
+
   const loadingMoreRef = useRef(false);
 
-  // 🆕 تعيين الفئة الأولية عند التحميل (من الرابط)
   useEffect(() => {
     if (initialCategory && categories.includes(initialCategory)) {
       setActiveCategory(initialCategory);
-      // افتح القسم في الشريط الجانبي (سطح المكتب)
-      setExpandedCategories(prev => ({ ...prev, [initialCategory]: true }));
-      // افتح القسم في القائمة المتنقلة (الموبايل)
-      setExpandedCategoriesMobile(prev => ({ ...prev, [initialCategory]: true }));
+
+      setExpandedCategories((prev) => ({
+        ...prev,
+        [initialCategory]: true,
+      }));
+
+      setExpandedCategoriesMobile((prev) => ({
+        ...prev,
+        [initialCategory]: true,
+      }));
     }
   }, [initialCategory, categories]);
 
@@ -156,9 +203,19 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
 
   const filteredRecipes = useMemo(() => {
     let filtered = recipes;
-    if (activeCategory) filtered = filtered.filter((r) => hasCategory(r, activeCategory));
-    if (activeCountry) filtered = filtered.filter((r) => r.country === activeCountry);
-    if (activeTag) filtered = filtered.filter((r) => hasTag(r, activeTag));
+
+    if (activeCategory) {
+      filtered = filtered.filter((r) => hasCategory(r, activeCategory));
+    }
+
+    if (activeCountry) {
+      filtered = filtered.filter((r) => r.country === activeCountry);
+    }
+
+    if (activeTag) {
+      filtered = filtered.filter((r) => hasTag(r, activeTag));
+    }
+
     return filtered.sort((a, b) => b.id - a.id);
   }, [recipes, activeCategory, activeCountry, activeTag]);
 
@@ -166,14 +223,20 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024);
+
     check();
     window.addEventListener("resize", check);
+
     return () => window.removeEventListener("resize", check);
   }, []);
 
   useEffect(() => {
     setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 450);
+
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 450);
+
     return () => clearTimeout(timer);
   }, [activeCategory, activeCountry, activeTag]);
 
@@ -182,9 +245,17 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
   }, [activeCategory, activeCountry, activeTag]);
 
   const loadMore = useCallback(() => {
-    if (loadingMoreRef.current || loadingMore || visibleCount >= filteredRecipes.length) return;
+    if (
+      loadingMoreRef.current ||
+      loadingMore ||
+      visibleCount >= filteredRecipes.length
+    ) {
+      return;
+    }
+
     loadingMoreRef.current = true;
     setLoadingMore(true);
+
     setTimeout(() => {
       setVisibleCount((v) => Math.min(v + 6, filteredRecipes.length));
       setLoadingMore(false);
@@ -201,6 +272,7 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
           const containerHeight = containerRef.current.offsetHeight;
           const scrollY = window.scrollY + 80;
           const maxTop = containerTop + containerHeight - sidebarHeight - 40;
+
           setSidebarTop(
             scrollY < containerTop
               ? 0
@@ -209,12 +281,14 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
               : scrollY - containerTop
           );
         }
+
         if (leftAdRef.current && containerRef.current) {
           const adHeight = leftAdRef.current.offsetHeight;
           const containerTop = containerRef.current.offsetTop;
           const containerHeight = containerRef.current.offsetHeight;
           const scrollY = window.scrollY + 80;
           const maxTop = containerTop + containerHeight - adHeight - 40;
+
           setLeftAdTop(
             scrollY < containerTop
               ? 0
@@ -224,25 +298,33 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
           );
         }
       }
+
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 600) {
         loadMore();
       }
     };
+
     window.addEventListener("scroll", onScroll, { passive: true });
+
     return () => window.removeEventListener("scroll", onScroll);
   }, [isMobile, loadMore]);
 
   const toggleCategory = useCallback((cat: string, mobile = false) => {
     const setter = mobile ? setExpandedCategoriesMobile : setExpandedCategories;
+
     setter((prev) => {
       const isOpen = !!prev[cat];
       const newState: Record<string, boolean> = {};
+
       Object.keys(prev).forEach((key) => {
         newState[key] = false;
       });
+
       newState[cat] = !isOpen;
+
       return newState;
     });
+
     setActiveCategory(cat);
     setActiveCountry(null);
     setActiveTag(null);
@@ -256,7 +338,10 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
   };
 
   const handleImageError = (id: number) => {
-    setImageErrors((prev) => ({ ...prev, [id.toString()]: true }));
+    setImageErrors((prev) => ({
+      ...prev,
+      [id.toString()]: true,
+    }));
   };
 
   return (
@@ -270,11 +355,13 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
       {isMobile && (
         <div className="fixed bottom-0 left-0 w-full z-50">
           <button
+            type="button"
             onClick={() => setSidebarMobileOpen(!sidebarMobileOpen)}
             className="w-full bg-yellow-400 p-3 text-black text-center font-bold rounded-t-xl"
           >
             {sidebarMobileOpen ? "إغلاق القائمة 🍽️" : "قائمة التصنيفات"}
           </button>
+
           {sidebarMobileOpen && (
             <div className="bg-gray-900 border-t border-gray-700 p-3 space-y-3 rounded-t-xl max-h-[60vh] overflow-y-auto shadow-2xl">
               {categories.map((cat) => (
@@ -283,6 +370,7 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
                   className="bg-[#111827] border border-gray-800 rounded-2xl overflow-hidden"
                 >
                   <button
+                    type="button"
                     onClick={() => toggleCategory(cat, true)}
                     className={clsx(
                       "w-full flex justify-between items-center px-4 py-3 text-right transition",
@@ -292,18 +380,22 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
                     )}
                   >
                     <span>{cat.replace(/-/g, " ")}</span>
+
                     {expandedCategoriesMobile[cat] ? (
                       <ChevronUp size={16} />
                     ) : (
                       <ChevronDown size={16} />
                     )}
                   </button>
+
                   {expandedCategoriesMobile[cat] && (
                     <div className="p-3 border-t border-gray-800">
                       <div className="mb-3">
                         <div className="text-xs text-gray-400 mb-2">الدول</div>
+
                         <div className="space-y-1">
                           <button
+                            type="button"
                             onClick={() => {
                               setActiveCategory(cat);
                               setActiveCountry(null);
@@ -319,8 +411,10 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
                           >
                             كل الدول
                           </button>
+
                           {countriesMap[cat]?.map(({ country, count }) => (
                             <button
+                              type="button"
                               key={country}
                               onClick={() => {
                                 setActiveCategory(cat);
@@ -340,12 +434,17 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
                           ))}
                         </div>
                       </div>
+
                       {activeCategory === cat && availableTags.length > 0 && (
                         <div>
-                          <div className="text-xs text-gray-400 mb-2">وسوم مرتبطة</div>
+                          <div className="text-xs text-gray-400 mb-2">
+                            وسوم مرتبطة
+                          </div>
+
                           <div className="flex flex-wrap gap-2">
                             {availableTags.map(({ tag }) => (
                               <button
+                                type="button"
                                 key={tag}
                                 onClick={() => {
                                   setActiveTag(tag);
@@ -383,14 +482,14 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
         )}
 
         <main className="flex-1">
-          {!isLoading && (
+          {/* {!isLoading && (
             <div className="mb-5 bg-[#111827] rounded-2xl border border-gray-700 overflow-hidden text-center p-4">
               عدد الوصفات:{" "}
               <span className="text-yellow-400 font-semibold mr-2">
                 {filteredRecipes.length}
               </span>
             </div>
-          )}
+          )} */}
 
           <div
             className={clsx(
@@ -402,52 +501,76 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
             )}
           >
             {isLoading
-              ? Array.from({ length: 8 }).map((_, i) => <RecipeSkeleton key={i} />)
-              : visibleRecipes.map((recipe, index) => (
-                  <div key={recipe.id}>
-                    <Link
-                      href={`/recipe/${recipe.slug}`}
-                      className="group block bg-[#111827] rounded-2xl overflow-hidden border border-gray-700 hover:border-yellow-400 hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-[0_12px_28px_rgba(0,0,0,0.25)]"
-                    >
-                      <div className="overflow-hidden">
-                        {isValidImageUrl(recipe.img.url) && !imageErrors[recipe.id.toString()] ? (
-                          <Image
-                            src={recipe.img.url}
-                            alt={recipe.title || recipe.img.alt || "وصفة"}
-                            width={500}
-                            height={350}
-                            className="w-full h-56 object-cover group-hover:scale-[1.04] transition duration-500"
-                            loading="eager"
-                            onError={() => handleImageError(recipe.id)}
-                            unoptimized={recipe.img.url.startsWith("http")}
-                          />
-                        ) : (
-                          <div className="w-full h-56 bg-gray-700 flex items-center justify-center">
-                            <UtensilsCrossed size={48} className="text-gray-500" />
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <RecipeSkeleton key={i} />
+                ))
+              : visibleRecipes.map((recipe, index) => {
+                  const cardImageUrl = getCardImageUrl(recipe);
+                  const hasImageError = imageErrors[recipe.id.toString()];
+
+                  return (
+                    <div key={recipe.id}>
+                      <Link
+                        href={`/recipe/${recipe.slug}`}
+                        className="group block bg-[#111827] rounded-2xl overflow-hidden border border-gray-700 hover:border-yellow-400 hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-[0_12px_28px_rgba(0,0,0,0.25)]"
+                      >
+                        <div className="overflow-hidden">
+                          {isValidImageUrl(cardImageUrl) && !hasImageError ? (
+                            <Image
+                              src={cardImageUrl!}
+                              alt={recipe.img?.alt || recipe.title || "وصفة"}
+                              width={500}
+                              height={350}
+                              className="w-full h-56 object-cover group-hover:scale-[1.04] transition duration-500"
+                              loading="eager"
+                              onError={() => handleImageError(recipe.id)}
+                              unoptimized={cardImageUrl!.startsWith("http")}
+                            />
+                          ) : (
+                            <div className="w-full h-56 bg-gray-700 flex items-center justify-center">
+                              <UtensilsCrossed
+                                size={48}
+                                className="text-gray-500"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="p-4 text-center">
+                          <h3 className="text-yellow-400 font-semibold leading-7 line-clamp-2 min-h-[56px]">
+                            {recipe.title}
+                          </h3>
+
+                          <p className="text-gray-400 text-sm mt-1">
+                            {recipe.country}
+                          </p>
+                        </div>
+                      </Link>
+
+                      {adsEnabled &&
+                        isMobile &&
+                        (index + 1) % MOBILE_AD_INTERVAL === 0 && (
+                          <div className="mt-3">
+                            <AdSenseBanner adSlot="2901613977" />
                           </div>
                         )}
-                      </div>
-                      <div className="p-4 text-center">
-                        <h3 className="text-yellow-400 font-semibold leading-7 line-clamp-2 min-h-[56px]">
-                          {recipe.title}
-                        </h3>
-                        <p className="text-gray-400 text-sm mt-1">{recipe.country}</p>
-                      </div>
-                    </Link>
-                    {adsEnabled && isMobile && (index + 1) % MOBILE_AD_INTERVAL === 0 && (
-                      <div className="mt-3">
-                        <AdSenseBanner adSlot="2901613977" />
-                      </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
           </div>
 
           {!isLoading && filteredRecipes.length === 0 && (
             <div className="bg-[#111827] border border-gray-700 rounded-2xl p-8 text-center">
-              <h3 className="text-xl font-bold text-yellow-400 mb-2">لا توجد وصفات مطابقة</h3>
-              <p className="text-gray-400 mb-4">جرّب تغيير التصنيف أو الدولة أو الوسم.</p>
+              <h3 className="text-xl font-bold text-yellow-400 mb-2">
+                لا توجد وصفات مطابقة
+              </h3>
+
+              <p className="text-gray-400 mb-4">
+                جرّب تغيير التصنيف أو الدولة أو الوسم.
+              </p>
+
               <button
+                type="button"
                 onClick={clearAllFilters}
                 className="px-4 py-2 rounded-lg bg-yellow-400 text-black font-semibold hover:opacity-90 transition"
               >
@@ -468,6 +591,7 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
               style={{ position: "relative", top: sidebarTop }}
             >
               <button
+                type="button"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                 className="w-full bg-yellow-400 text-black p-3 flex justify-center"
               >
@@ -479,9 +603,13 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
                   )}
                 />
               </button>
+
               {!sidebarCollapsed && (
                 <div className="p-3 max-h-[calc(100vh-150px)] overflow-y-auto">
-                  <div className="font-bold text-lg mb-3 text-center text-white">التصنيفات</div>
+                  <div className="font-bold text-lg mb-3 text-center text-white">
+                    التصنيفات
+                  </div>
+
                   <div className="space-y-3">
                     {categories.map((cat) => (
                       <div
@@ -489,6 +617,7 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
                         className="bg-[#111827] border border-gray-800 rounded-2xl overflow-hidden"
                       >
                         <button
+                          type="button"
                           onClick={() => toggleCategory(cat)}
                           className={clsx(
                             "w-full flex justify-between items-center px-4 py-3 text-right transition",
@@ -497,19 +626,27 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
                               : "text-white hover:bg-gray-700"
                           )}
                         >
-                          <span className="leading-7">{cat.replace(/-/g, " ")}</span>
+                          <span className="leading-7">
+                            {cat.replace(/-/g, " ")}
+                          </span>
+
                           {expandedCategories[cat] ? (
                             <ChevronUp size={18} />
                           ) : (
                             <ChevronDown size={18} />
                           )}
                         </button>
+
                         {expandedCategories[cat] && (
                           <div className="p-3 border-t border-gray-800">
                             <div className="mb-3">
-                              <div className="text-xs text-gray-400 mb-2">الدول</div>
+                              <div className="text-xs text-gray-400 mb-2">
+                                الدول
+                              </div>
+
                               <div className="space-y-1">
                                 <button
+                                  type="button"
                                   onClick={() => {
                                     setActiveCategory(cat);
                                     setActiveCountry(null);
@@ -524,8 +661,10 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
                                 >
                                   كل الدول {filteredRecipes.length}
                                 </button>
+
                                 {countriesMap[cat]?.map(({ country, count }) => (
                                   <button
+                                    type="button"
                                     key={country}
                                     onClick={() => {
                                       setActiveCategory(cat);
@@ -534,7 +673,8 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
                                     }}
                                     className={clsx(
                                       "block w-full text-right text-sm py-2 px-3 rounded-xl transition",
-                                      activeCountry === country && activeCategory === cat
+                                      activeCountry === country &&
+                                        activeCategory === cat
                                         ? "bg-gray-800 text-yellow-400 font-semibold"
                                         : "text-gray-400 hover:bg-gray-800 hover:text-yellow-400"
                                     )}
@@ -544,27 +684,33 @@ export default function RecipesClient({ recipes, categories, initialCategory = n
                                 ))}
                               </div>
                             </div>
-                            {activeCategory === cat && availableTags.length > 0 && (
-                              <div>
-                                <div className="text-xs text-gray-400 mb-2">وسوم مرتبطة</div>
-                                <div className="flex flex-wrap gap-2">
-                                  {availableTags.map(({ tag }) => (
-                                    <button
-                                      key={tag}
-                                      onClick={() => setActiveTag(tag)}
-                                      className={clsx(
-                                        "px-3 py-1.5 rounded-full text-xs border transition",
-                                        activeTag === tag
-                                          ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
-                                          : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-400 hover:text-yellow-400"
-                                      )}
-                                    >
-                                      {tag}
-                                    </button>
-                                  ))}
+
+                            {activeCategory === cat &&
+                              availableTags.length > 0 && (
+                                <div>
+                                  <div className="text-xs text-gray-400 mb-2">
+                                    وسوم مرتبطة
+                                  </div>
+
+                                  <div className="flex flex-wrap gap-2">
+                                    {availableTags.map(({ tag }) => (
+                                      <button
+                                        type="button"
+                                        key={tag}
+                                        onClick={() => setActiveTag(tag)}
+                                        className={clsx(
+                                          "px-3 py-1.5 rounded-full text-xs border transition",
+                                          activeTag === tag
+                                            ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
+                                            : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-400 hover:text-yellow-400"
+                                        )}
+                                      >
+                                        {tag}
+                                      </button>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
                           </div>
                         )}
                       </div>

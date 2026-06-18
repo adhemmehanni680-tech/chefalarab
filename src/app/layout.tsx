@@ -1,14 +1,26 @@
 // src/app/layout.tsx
 
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Cairo, Aref_Ruqaa } from "next/font/google";
 import "./globals.css";
 
 import Header from "./Components/header/Header";
 import Footer from "./Components/footer/Footer";
 import RootClient from "./RootClient"; // 👈 مهم
 
-const inter = Inter({ subsets: ["latin"] });
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  variable: "--font-cairo",
+  display: "swap",
+});
+
+const arefRuqaa = Aref_Ruqaa({
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  variable: "--font-aref-ruqaa",
+  display: "swap",
+});
+
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chefalarab.com"),
@@ -63,7 +75,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
 
-  const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID!;
+  const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
   return (
     <html lang="ar" dir="rtl"  data-scroll-behavior="smooth">
@@ -73,17 +85,18 @@ export default function RootLayout({
       </head>
 
       <body
-        className={`${inter.className} flex flex-col min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100`}
+        className={`${cairo.variable} ${arefRuqaa.variable} flex flex-col min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100`}
       >
-        {/* GTM noscript   هنا */}
-        <noscript>
-          <iframe
-            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-          />
-        </noscript>
+        {GTM_ID && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        )}
 
         {/* 👇 كل السكريبتات  */}
         <RootClient>

@@ -1,7 +1,7 @@
-// app/recipes/[slug]/page.tsx
+// app/recipe/[slug]/page.tsx
 import Script from "next/script";
 import { notFound } from "next/navigation";
-import recipes from "@/data/recipes.json"
+import { getAllRecipes } from "@/lib/recipesData";
 import RecipeClient from "./RecipeClient";
 import { buildRecipeJsonLd } from "@/lib/buildRecipeJsonLd";
 
@@ -11,17 +11,81 @@ type PageProps = {
 
 const BASE_URL = "https://chefalarab.com";
 
-/* ===============================
-   ✅ SEO Title Generator
-================================ */
 function generateSeoTitle(title: string) {
   return `طريقة عمل ${title}`;
 }
 
+function normalizeSlug(slug: string) {
+  return slug
+    .normalize("NFD")
+    .replace(/[\u064B-\u065F]/g, "")
+    .replace(/[-_]/g, " ")
+    .toLowerCase()
+    .trim();
+}
+
+function getCardImageUrl(recipe: any) {
+  if (!recipe?.img || typeof recipe.img === "string") return null;
+  return recipe.img["url-card"] || recipe.img.url || null;
+}
+
+function getRelatedRecipes(currentRecipe: any) {
+  const scoreRecipe = (candidate: any) => {
+    let score = 0;
+
+    const categoriesA = currentRecipe.category || [];
+    const categoriesB = candidate.category || [];
+    score += categoriesA.filter((cat: string) => categoriesB.includes(cat)).length * 4;
+
+    const tagsA = currentRecipe.tags || [];
+    const tagsB = candidate.tags || [];
+    score += tagsA.filter((tag: string) => tagsB.includes(tag)).length * 3;
+
+    if (currentRecipe.data_box?.meal_type && currentRecipe.data_box.meal_type === candidate.data_box?.meal_type) score += 5;
+    if (currentRecipe.data_box?.dish_type && currentRecipe.data_box.dish_type === candidate.data_box?.dish_type) score += 5;
+    if (currentRecipe.country && currentRecipe.country === candidate.country) score += 2;
+    if (currentRecipe.data_box?.difficulty && currentRecipe.data_box.difficulty === candidate.data_box?.difficulty) score += 1;
+
+    return score;
+  };
+
+  return getAllRecipes()
+    .filter((recipe) => recipe.status === "published" && recipe.slug !== currentRecipe.slug)
+    .map((recipe) => ({ recipe, score: scoreRecipe(recipe) }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4)
+    .map(({ recipe }) => ({
+      id: recipe.id,
+      title: recipe.title,
+      slug: recipe.slug,
+      country: recipe.country,
+      category: recipe.category || [],
+      tags: recipe.tags || [],
+      img: {
+        url: recipe.img?.url,
+        "url-card": getCardImageUrl(recipe),
+        alt: recipe.img?.alt,
+        width: recipe.img?.width,
+        height: recipe.img?.height,
+      },
+    }));
+}
+
+function findRecipe(slug: string) {
+  const decodedSlug = decodeURIComponent(slug);
+  const normalized = normalizeSlug(decodedSlug);
+
+  return getAllRecipes().find(
+    (recipe) =>
+      recipe.status === "published" &&
+      normalizeSlug(String(recipe.slug || "")) === normalized
+  );
+}
+
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const decodedSlug = decodeURIComponent(slug);
-  const recipe = (recipes as any[]).find(r => r.slug === decodedSlug);
+  const recipe = findRecipe(slug);
 
   if (!recipe) {
     return {
@@ -31,15 +95,11 @@ export async function generateMetadata({ params }: PageProps) {
   }
 
   const seoTitle = generateSeoTitle(recipe.title);
-
   const title = `${seoTitle} | شيف العرب`;
-
-  const description = `طريقة عمل ${recipe.title} بسهولة في المنزل، تعرف أيضًا على طريقه عمل ${recipe.title} بخطوات احترافية وأسرار نجاح الوصفة. ${
+  const description = `طريقة عمل ${recipe.title} بسهولة في المنزل، تعرف أيضًا على طريقة عمل ${recipe.title} بخطوات احترافية وأسرار نجاح الوصفة. ${
     (recipe.description || recipe.intro || "").slice(0, 120)
   }`;
-
-  const url = `${BASE_URL}/recipes/${encodeURIComponent(recipe.slug)}`;
-
+  const url = `${BASE_URL}/recipe/${encodeURIComponent(recipe.slug)}`;
   const imageUrl = recipe.img?.url ? `${BASE_URL}${recipe.img.url}` : undefined;
   const imageAlt = recipe.img?.alt || recipe.title;
 
@@ -80,24 +140,22 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function Page({ params }: PageProps) {
   const { slug } = await params;
-  const decodedSlug = decodeURIComponent(slug);
-  const recipe = (recipes as any[]).find(r => r.slug === decodedSlug);
+  const recipe = findRecipe(slug);
 
   if (!recipe) notFound();
 
   const jsonLd = buildRecipeJsonLd(recipe);
+  const relatedRecipes = getRelatedRecipes(recipe);
 
   return (
     <>
-      {/* ✅ Schema JSON-LD */}
       <Script
         id="recipe-jsonld"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* ✅ Client Component */}
-      <RecipeClient params={{ slug }} />
+      <RecipeClient recipe={recipe} relatedRecipes={relatedRecipes} />
     </>
   );
 }

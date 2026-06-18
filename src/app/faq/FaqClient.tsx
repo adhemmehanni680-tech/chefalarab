@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
-import { ChevronDown, Search, ArrowUp, HelpCircle } from "lucide-react";
+import { ChevronDown, Search, HelpCircle } from "lucide-react";
 
 
 type Item = {

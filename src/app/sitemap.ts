@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import recipesData from "@/data/recipes.json";
+import { getAllRecipes } from "@/lib/recipesData";
 
 const SITE_URL = "https://chefalarab.com";
 
@@ -19,7 +19,6 @@ interface Recipe {
   alt?: string;
 }
 
-const recipes: Recipe[] = recipesData as Recipe[];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
@@ -33,10 +32,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/terms_conditions`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.4 },
   ];
 
-  const recipePages: MetadataRoute.Sitemap = recipes
+  const recipePages: MetadataRoute.Sitemap = (getAllRecipes() as Recipe[])
     .filter((recipe) => recipe.status === "published")
     .map((recipe) => {
-      const url = `${SITE_URL}/recipes/${encodeURIComponent(recipe.slug)}`;
+      const url = `${SITE_URL}/recipe/${encodeURIComponent(recipe.slug)}`;
       const lastModified = recipe.updated_at ? new Date(recipe.updated_at) : new Date();
 
       // الصورة كـ string array

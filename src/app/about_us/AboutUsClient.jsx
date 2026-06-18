@@ -1,11 +1,10 @@
 // /src/app/about_us/AboutUsClient.jsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
-  ArrowUp,
   Target,
   HeartHandshake,
   ShieldCheck,
@@ -28,12 +27,6 @@ export default function AboutUsClient() {
   });
 
   const adsEnabled = process.env.NEXT_PUBLIC_ADS_ENABLED === "true";
-
-  useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 300);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const toggleSection = (section) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));

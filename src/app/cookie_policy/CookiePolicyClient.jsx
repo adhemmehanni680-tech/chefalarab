@@ -1,8 +1,6 @@
 // CookiePolicyClient
 
 "use client";
-import { useState, useEffect } from "react";
-
 import {
   Cookie,
   Info,
@@ -10,7 +8,6 @@ import {
   Settings,
   Link2,
   RefreshCw,
-  ArrowUp,
   Mail,
 } from "lucide-react";
 import Link from "next/link";

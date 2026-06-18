@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
-import recipes from "@/data/recipes.json";
+import recipes from "@/data/recipes-search.json";
 
 // دالة هروب الرموز الخاصة (JavaScript عادي)
 function escapeRegExp(str) {

@@ -33,20 +33,15 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "src/types/**/*.d.ts",
+    "**/*.js",
+    "**/*.jsx",
     ".next/types/**/*.ts",
-    "src/app/privacy_policy/page.jsx",
-    "src/app/about_us/page.jsx",
-    "src/app/terms_conditions/page.jsx",
-    "src/app/page.jsx",
-    "src/app/recipes/[slug]/page.tsx",
-    "src/app/recipe/page.tsx",
-    "src/app/contact_us/page.jsx",
-    "src/app/recipes/[slug]/RecipeClient.tsx",
-    "src/app/Components/footer/Footer.jsx",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".next",
+    "out",
+    "build"
   ]
 }

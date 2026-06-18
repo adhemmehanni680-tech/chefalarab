@@ -1,7 +1,7 @@
 // app/recipes/page.jsx
 import React from "react";
 import RecipesClient from "./RecipesClient";
-import recipesData from "@/data/recipes.json";
+import recipesData from "@/data/recipes-index.json";
 
 type Recipe = {
   id: number;
@@ -14,13 +14,6 @@ type Recipe = {
     url: string;
     alt?: string;
   };
-};
-
-const hasCategory = (recipe: Recipe, category: string): boolean => {
-  if (!recipe.category) return false;
-  return Array.isArray(recipe.category)
-    ? recipe.category.includes(category)
-    : recipe.category === category;
 };
 
 const getCategories = (recipes: Recipe[]): string[] => {
@@ -73,8 +66,7 @@ export const metadata = {
   description:
     "تصفح جميع وصفات شيف العرب: أطباق عربية وغربية، سلطات، حلويات، ومشروبات. اختر التصنيف واستكشف وصفات مجربة وسهلة.",
   alternates: {
-    canonical: "https://chefalarab.com/recipe",
-    url: "https://chefalarab.com/recipe",
+    canonical: "https://chefalarab.com/recipes",
   },
   robots: {
     index: true,
@@ -91,7 +83,7 @@ export const metadata = {
     title: "الوصفات | شيف العرب",
     description:
       "تصفح جميع وصفات شيف العرب حسب التصنيف: العربي، الغربي، سلطات، حلويات، ومشروبات.",
-    url: "https://www.chefalarab.com/recipe",
+    url: "https://chefalarab.com/recipes",
     siteName: "شيف العرب",
     type: "website",
     locale: "ar_AR",
