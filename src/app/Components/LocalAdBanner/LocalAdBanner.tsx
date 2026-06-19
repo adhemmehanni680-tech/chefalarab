@@ -4,10 +4,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 
 import Image, { StaticImageData } from "next/image";
 import { X, Phone, ExternalLink, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
-import icon_Ad from "../../../../public/ads/youssef-Z.jpeg";
-import icon_qasr from "../../../../public/ads/qasr-alsiyramik.jpeg";
-import icon_elmaher from "../../../../public/ads/elmaher.jpeg";
-import icon_lavender from "../../../../public/ads/lavender.jpg";
+import icon_Ad from "../../../../public/ads/youssef-Z.webp";
+import icon_qasr from "../../../../public/ads/qasr-alsiyramik.webp";
+import icon_elmaher from "../../../../public/ads/elmaher.webp";
+import icon_lavender from "../../../../public/ads/lavender.webp";
 import Link from "next/link";
 
 // ========== أنواع البيانات ==========
@@ -54,9 +54,9 @@ const DEFAULTS = {
       imageSrc: icon_qasr,
       link: "",
       altText: "قصر السراميك",
-       phone: ["+201150500288", "+201010515400"],
+      phone: ["+201150500288", "+201010515400"],
       description:
-         "مع قصر السراميك، جدد منزلك بأحدث التصاميم وأفضل الأسعار. اكتشف تشكيلتنا الواسعة من سيراميك و بورسلين مستورد و بورسلين محلي و باركيه اطقم حمامات و اكسسوارات .زورونا في فرعنا واستمتعوا بخدمة عملاء ممتازة وعروض خاصة لا تفوت!",
+        "مع قصر السراميك، جدد منزلك بأحدث التصاميم وأفضل الأسعار. اكتشف تشكيلتنا الواسعة من سيراميك و بورسلين مستورد و بورسلين محلي و باركيه اطقم حمامات و اكسسوارات .زورونا في فرعنا واستمتعوا بخدمة عملاء ممتازة وعروض خاصة لا تفوت!",
       address: "مصر , المنيا , العدوة ⬅ شارع مصطفي كامل بجوار جامع الحاج عدوى",
     },
     {
@@ -68,11 +68,11 @@ const DEFAULTS = {
       description:
         "فواكه وخضروات طازجة يوميًا من الماهر، مع خدمة توصيل سريعة 24 ساعة . زورونا في فرعنا واستمتعوا بأفضل جودة وأفضل الأسعار!",
       address: "مصر , المنيا , مغاغة ⬅ مول باريس",
-    },{
+    }, {
       id: 4,
       imageSrc: icon_lavender,
-      link: "https://www.facebook.com/share/1BZYsQV38t/",
-      altText: "Lavender",
+      link: "",
+      altText: "لافندر",
       phone: ["+201201928497"],
       description:
         "لافندر  قاعه وسيشن وكافيه شباب وكافيه عائلات وكمان حمام سباحه للاطفال ",
@@ -255,9 +255,8 @@ export default function AdBannerPro({
             {adsList.map((_, idx) => (
               <span
                 key={idx}
-                className={`h-1 rounded-full transition-all ${
-                  idx === currentIdx ? "w-6 bg-yellow-400" : "w-3 bg-white/30"
-                }`}
+                className={`h-1 rounded-full transition-all ${idx === currentIdx ? "w-6 bg-orange-400" : "w-3 bg-white/30"
+                  }`}
               />
             ))}
           </div>
@@ -283,7 +282,7 @@ export default function AdBannerPro({
         href={currentAd.link}
         target="_blank"
         rel="nofollow sponsored"
-        className="bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-300 rounded-full p-2 transition-colors"
+        className="bg-orange-400/20 hover:bg-orange-400/30 text-yellow-300 rounded-full p-2 transition-colors"
         title="زيارة الرابط"
       >
         <ExternalLink size={isMobile ? 16 : 18} />
@@ -324,12 +323,11 @@ export default function AdBannerPro({
     return (
       <div
         ref={bannerRef}
-        className={`fixed left-0 right-0 z-[100] transition-all duration-700 ease-out ${
-          isMobile ? "bottom-16" : "bottom-0"
-        } ${showAd ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"} ${className}`}
+        className={`fixed left-0 right-0 z-[100] transition-all duration-700 ease-out ${isMobile ? "bottom-16" : "bottom-0"
+          } ${showAd ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"} ${className}`}
       >
         <div className="flex justify-center">
-          <span className="bg-yellow-400 text-black text-[10px] px-3 py-0.5 rounded-full font-bold mb-1 shadow-lg">
+          <span className="bg-orange-400 text-black text-[10px] px-3 py-0.5 rounded-full font-bold mb-1 shadow-lg">
             إعلان
           </span>
         </div>
@@ -348,7 +346,7 @@ export default function AdBannerPro({
     <div
       className={`my-4 mx-3 sm:mx-5 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border border-yellow-400/30 rounded-2xl shadow-xl ${className}`}
     >
-      <div className="flex justify-between items-center bg-yellow-400/10 px-4 py-1">
+      <div className="flex justify-between items-center bg-orange-400/10 px-4 py-1">
         <span className="text-yellow-400 text-xs font-bold tracking-wider">إعلان</span>
         <button onClick={() => handleClose(false)} className="text-white/50 hover:text-white">
           <X size={14} />

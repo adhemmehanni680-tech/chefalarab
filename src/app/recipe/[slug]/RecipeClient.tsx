@@ -501,7 +501,7 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
                 onClick={() => setActiveTab("data")}
                 className={`flex-1 p-3 rounded-xl font-bold ${
                   activeTab === "data"
-                    ? "bg-orange-500 text-white"
+                    ? "bg-orange-400 text-white"
                     : "bg-gray-800 text-white"
                 }`}
               >
@@ -516,7 +516,7 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
                 onClick={() => setActiveTab("ingredients")}
                 className={`flex-1 p-3 rounded-xl font-bold ${
                   activeTab === "ingredients"
-                    ? "bg-orange-500 text-white"
+                    ? "bg-orange-400 text-white"
                     : "bg-gray-800 text-white"
                 }`}
               >
@@ -613,7 +613,7 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
                             whileHover={{
                               scale: 1.015,
                             }}
-                            className="bg-gray-700 p-2 rounded-lg text-white hover:bg-lime-500 hover:text-black break-words"
+                            className="bg-gray-700 p-2 rounded-lg text-white hover:bg-orange-500 hover:text-black break-words"
                           >
                             {item}
                           </motion.li>
@@ -652,7 +652,7 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
                   whileHover={{
                     scale: 1.01,
                   }}
-                  className="bg-gray-700 p-2 rounded-lg text-white hover:bg-lime-500 hover:text-black break-words"
+                  className="bg-gray-700 p-2 rounded-lg text-white hover:bg-orange-500 hover:text-black break-words"
                 >
                   {step}
                 </motion.li>
@@ -684,7 +684,7 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
                   whileHover={{
                     scale: 1.01,
                   }}
-                  className="bg-gray-700 p-2 rounded-lg text-white hover:bg-lime-500 hover:text-black text-lg break-words"
+                  className="bg-gray-700 p-2 rounded-lg text-white hover:bg-orange-500 hover:text-black text-lg break-words"
                 >
                   {t}
                 </motion.li>
@@ -716,7 +716,7 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
                   whileHover={{
                     scale: 1.01,
                   }}
-                  className="bg-gray-700 p-2 rounded-lg text-white hover:bg-lime-500 hover:text-black text-lg break-words"
+                  className="bg-gray-700 p-2 rounded-lg text-white hover:bg-orange-500 hover:text-black text-lg break-words"
                 >
                   {m}
                 </motion.li>
@@ -748,7 +748,7 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
                   whileHover={{
                     scale: 1.01,
                   }}
-                  className="bg-gray-700 p-2 rounded-lg text-white hover:bg-lime-500 hover:text-black text-lg break-words"
+                  className="bg-gray-700 p-2 rounded-lg text-white hover:bg-orange-500 hover:text-black text-lg break-words"
                 >
                   {k}: {v}
                 </motion.li>
@@ -791,7 +791,7 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
                     <button
                       type="button"
                       onClick={() => setOpenFaqIndex(isOpen ? null : i)}
-                      className="w-full p-3 text-right flex items-center justify-between hover:bg-lime-500 hover:text-black transition-colors"
+                      className="w-full p-3 text-right flex items-center justify-between hover:bg-orange-500 hover:text-black transition-colors"
                     >
                       <span className="font-bold text-lg">{f.question}</span>
 

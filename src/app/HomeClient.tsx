@@ -144,14 +144,14 @@ export default function HomeClient({ sectionsData }: { sectionsData: HomeSection
               <div className="mt-7 flex justify-center gap-3 flex-wrap">
                 <Link
                   href="/recipes"
-                  className="px-5 py-3 bg-lime-400 text-black font-semibold rounded-lg shadow-md hover:scale-[1.03] transition"
+                  className="px-5 py-3 bg-orange-500 text-black font-semibold rounded-lg shadow-md hover:scale-[1.03] transition"
                 >
                   المزيد من الوصفات
                 </Link>
 
                 <a
                   href="#sections"
-                  className="px-5 py-3 bg-lime-400 text-black font-semibold rounded-lg shadow-md hover:scale-[1.03] transition"
+                  className="px-5 py-3 bg-orange-500 text-black font-semibold rounded-lg shadow-md hover:scale-[1.03] transition"
                 >
                   تصفح الأقسام
                 </a>
@@ -193,7 +193,7 @@ export default function HomeClient({ sectionsData }: { sectionsData: HomeSection
 
                   <Link
                     href={`/recipes?category=${encodeURIComponent(sec.cat)}`}
-                    className="inline-flex px-4 py-2 rounded-lg bg-lime-400 text-black font-semibold hover:scale-[1.02] transition whitespace-nowrap"
+                    className="inline-flex px-4 py-2 rounded-lg bg-orange-500 text-black font-semibold hover:scale-[1.02] transition whitespace-nowrap"
                   >
                     شاهد المزيد
                   </Link>

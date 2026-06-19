@@ -353,7 +353,7 @@ export default function RecipesClient({
           <button
             type="button"
             onClick={() => setSidebarMobileOpen(!sidebarMobileOpen)}
-            className="w-full bg-yellow-400 p-3 text-black text-center font-bold rounded-t-xl"
+            className="w-full bg-lime-400 p-3 text-black text-center font-bold rounded-t-xl"
           >
             {sidebarMobileOpen ? "إغلاق القائمة 🍽️" : "قائمة التصنيفات"}
           </button>
@@ -371,7 +371,7 @@ export default function RecipesClient({
                     className={clsx(
                       "w-full flex justify-between items-center px-4 py-3 text-right transition",
                       activeCategory === cat
-                        ? "bg-yellow-400 text-black font-semibold"
+                        ? "bg-lime-400 text-black font-semibold"
                         : "text-white hover:bg-gray-800"
                     )}
                   >
@@ -450,7 +450,7 @@ export default function RecipesClient({
                                 className={clsx(
                                   "px-3 py-1.5 rounded-full text-xs border transition",
                                   activeTag === tag
-                                    ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
+                                    ? "bg-lime-400 text-black border-yellow-400 font-semibold"
                                     : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-400 hover:text-yellow-400"
                                 )}
                               >
@@ -569,7 +569,7 @@ export default function RecipesClient({
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="px-4 py-2 rounded-lg bg-yellow-400 text-black font-semibold hover:opacity-90 transition"
+                className="px-4 py-2 rounded-lg bg-lime-400 text-black font-semibold hover:opacity-90 transition"
               >
                 عرض كل الوصفات
               </button>
@@ -590,7 +590,7 @@ export default function RecipesClient({
               <button
                 type="button"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="w-full bg-yellow-400 text-black p-3 flex justify-center"
+                className="w-full bg-lime-400 text-black p-3 flex justify-center"
               >
                 <UtensilsCrossed
                   size={20}
@@ -619,7 +619,7 @@ export default function RecipesClient({
                           className={clsx(
                             "w-full flex justify-between items-center px-4 py-3 text-right transition",
                             activeCategory === cat
-                              ? "bg-yellow-400 text-black font-semibold"
+                              ? "bg-lime-400 text-black font-semibold"
                               : "text-white hover:bg-gray-700"
                           )}
                         >
@@ -698,7 +698,7 @@ export default function RecipesClient({
                                         className={clsx(
                                           "px-3 py-1.5 rounded-full text-xs border transition",
                                           activeTag === tag
-                                            ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
+                                            ? "bg-lime-400 text-black border-yellow-400 font-semibold"
                                             : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-400 hover:text-yellow-400"
                                         )}
                                       >

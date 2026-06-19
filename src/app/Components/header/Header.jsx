@@ -119,7 +119,7 @@ export default function Header() {
                   >
                     {link.title}
                     <span
-                      className={`absolute bottom-0 left-0 h-0.5 bg-orange-400 rounded transition-all duration-300 ${
+                      className={`absolute bottom-0 left-0 h-0.5 bg-orange-400 rounded transition-all duration-300  ${
                         isActive
                           ? "w-full opacity-100"
                           : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100"
@@ -157,29 +157,31 @@ export default function Header() {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-sm transition-colors">
-          <div className="p-4 flex flex-col space-y-3">
+          <div className="p-4 flex flex-col space-y-3 text-center">
             {/* Mobile Theme Button */}
             <button
               onClick={toggleTheme}
               type="button"
-              className="text-gray-700 dark:text-yellow-300 hover:text-orange-500 transition-all duration-500 text-xl w-full text-right"
+              className="text-gray-700 text-center dark:text-yellow-300 hover:text-orange-500 transition-all duration-500 text-xl w-full "
               aria-label="تبديل الوضع الليلي"
             >
               {theme === "light" ? "🌙" : "☀️"}
             </button>
 
             {/* Mobile Links */}
-            <ul className="flex flex-col space-y-2 text-gray-900 dark:text-white font-medium mt-3">
+            <ul className="flex flex-col space-y-2  text-gray-900 dark:text-white font-bold mt-3  ">
               {links.map((link) => (
-                <li key={link.href}>
                   <Link
                     href={link.href}
                     aria-current={isActiveLink(link.href) ? "page" : undefined}
                     onClick={() => setIsMenuOpen(false)}
                   >
+                <li key={link.href} className="hover:bg-orange-400 hover:text-gray-900 rounded-full font-bold text-lg " >
+                
                     {link.title}
-                  </Link>
+                
                 </li>
+                  </Link>
               ))}
             </ul>
           </div>
