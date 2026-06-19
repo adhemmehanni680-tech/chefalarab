@@ -131,12 +131,12 @@ export default function CookiePolicyClient() {
               </h2>
             </div>
 
-            <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
+            <p className="text-gray-300 text-lg sm:text-base leading-relaxed bg-gray-700 p-2 rounded-lg  hover:bg-orange-500 hover:text-black break-words">
               {section.content}
             </p>
 
             {section.links?.length > 0 && (
-              <div className="mt-4 flex flex-col gap-2">
+              <div className="mt-4 flex flex-col gap-2  ">
                 {section.links.map((l, i) =>
                   l.internal ? (
                     <Link

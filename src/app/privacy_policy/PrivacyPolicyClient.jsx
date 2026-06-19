@@ -133,9 +133,9 @@ export default function PrivacyPolicyClient() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
+          <p className="text-gray-300 text-sm sm:text-base leading-relaxed ">
             نحن في موقع{" "}
-            <Link href="/" className="font-semibold text-blue-400">
+            <Link href="/" className="font-semibold text-blue-400 ">
               شيف العرب
             </Link>{" "}
             نلتزم بحماية خصوصية زوارنا، ونسعى لتوفير تجربة آمنة وموثوقة لجميع المستخدمين.
@@ -149,12 +149,12 @@ export default function PrivacyPolicyClient() {
             className="bg-gray-800 rounded-2xl shadow-md p-8 mb-6"
        
           >
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3 mb-3 ">
               <section.icon className="text-blue-400 dark:text-blue-400" />
               <h2 className="text-2xl font-semibold text-gray-100">{section.title}</h2>
             </div>
 
-            <p className="text-gray-300 text-sm sm:text-base leading-relaxed">{section.content}</p>
+            <p className="text-gray-300 text-sm sm:text-base leading-relaxed    p-2 rounded-lg  hover:bg-orange-500 hover:text-black break-words">{section.content}</p>
 
             {section.links?.length > 0 && (
               <div className="mt-4 flex flex-col gap-2">

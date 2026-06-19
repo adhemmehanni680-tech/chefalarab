@@ -149,7 +149,7 @@ export default function AboutUsClient() {
           >
             <ul className="list-disc list-inside  space-y-2 text-gray-300 text-sm sm:text-base leading-relaxed">
               {whyList.map((item, i) => (
-                <li key={i}>{item}</li>
+                <li key={i} className="bg-gray-700 p-2 rounded-lg text-white hover:bg-orange-500 hover:text-black break-words">{item}</li>
               ))}
             </ul>
           </div>
@@ -178,7 +178,9 @@ export default function AboutUsClient() {
           >
             <ul className="list-disc list-inside  space-y-2 text-gray-300 text-sm sm:text-base leading-relaxed ">
               {editorialList.map((item, i) => (
-                <li key={i}>{item}</li>
+                <li key={i} className="bg-gray-700 p-2 rounded-lg text-white hover:bg-orange-500 hover:text-black break-words">
+                  {item}
+                </li>
               ))}
             </ul>
             <p className="text-gray-400 text-xs sm:text-sm mt-4 leading-relaxed">

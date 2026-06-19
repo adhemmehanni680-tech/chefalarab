@@ -87,7 +87,7 @@ export default function TermsConditionsClient() {
       content: (
         <>
           لأي استفسار بخصوص الشروط والأحكام يمكنك التواصل معنا عبر البريد:{" "}
-          <Link href="mailto:chefalarabonline@gmail.com" className="text-blue-400 font-semibold">
+          <Link href="mailto:chefalarabonline@gmail.com" className="text-white font-semibold">
             chefalarabonline@gmail.com
           </Link>
         </>
@@ -131,7 +131,7 @@ export default function TermsConditionsClient() {
               <h2 className="text-2xl font-semibold text-gray-100">{section.title}</h2>
             </div>
 
-            <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
+            <p className="text-gray-300 text-sm sm:text-base leading-relaxed   p-2 rounded-lg  hover:bg-orange-500 hover:text-black break-words">
               {section.content}
             </p>
 

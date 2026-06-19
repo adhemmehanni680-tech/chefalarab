@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import AdSenseBanner from "@/app/Components/AdSenseBanner";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -95,7 +95,7 @@ function normalizeDataBox(data?: any): string[] {
     .map((key) => {
       const value = data[key];
 
-      if (value === undefined || value === null) return null;
+      if (value === undefined || value === null || value === "") return null;
 
       return key.includes("time")
         ? `${mapping[key]}: ${value} دقيقة`
@@ -215,12 +215,17 @@ type Props = {
   relatedRecipes: Recipe[];
 };
 
+/* =============================== */
+/* تحسين الصور */
+/* =============================== */
+
 function normalizeImageUrl(url: any): string | null {
   if (typeof url !== "string") return null;
 
   const cleanUrl = url.trim().replace(/\\/g, "/");
 
   if (!cleanUrl) return null;
+
   if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
     return cleanUrl;
   }
@@ -245,6 +250,7 @@ function uniqueImageSources(sources: Array<string | null | undefined>) {
     .filter((source): source is string => Boolean(source))
     .filter((source) => {
       if (seen.has(source)) return false;
+
       seen.add(source);
       return true;
     });
@@ -252,39 +258,76 @@ function uniqueImageSources(sources: Array<string | null | undefined>) {
 
 function getMainImageSources(recipe: Recipe) {
   const mainUrl = typeof recipe.img === "string" ? recipe.img : recipe.img?.url;
-  const cardUrl = typeof recipe.img === "string" ? null : recipe.img?.["url-card"];
-  const fileName = getImageFileName(normalizeImageUrl(mainUrl) || normalizeImageUrl(cardUrl));
 
-  return uniqueImageSources([
-    mainUrl,
-    cardUrl,
-    fileName ? `/uploads/${fileName}` : null,
-    fileName ? `/card/${fileName}` : null,
-    "/Heeder.webp",
-  ]);
+  const cardUrl =
+    typeof recipe.img === "string" ? null : recipe.img?.["url-card"];
+
+  const main = normalizeImageUrl(mainUrl);
+  const card = normalizeImageUrl(cardUrl);
+
+  const fileName = getImageFileName(main || card);
+
+  const sources: Array<string | null> = [];
+
+  if (main) {
+    sources.push(main);
+  } else if (fileName) {
+    sources.push(`/uploads/${fileName}`);
+  }
+
+  if (card) {
+    sources.push(card);
+  } else if (fileName) {
+    sources.push(`/card/${fileName}`);
+  }
+
+  sources.push("/Heeder.webp");
+
+  return uniqueImageSources(sources);
 }
 
 function getRelatedImageSources(recipe: Recipe) {
   const mainUrl = typeof recipe.img === "string" ? recipe.img : recipe.img?.url;
-  const cardUrl = typeof recipe.img === "string" ? null : recipe.img?.["url-card"];
-  const fileName = getImageFileName(normalizeImageUrl(cardUrl) || normalizeImageUrl(mainUrl));
 
-  return uniqueImageSources([
-    cardUrl,
-    mainUrl,
-    fileName ? `/card/${fileName}` : null,
-    fileName ? `/uploads/${fileName}` : null,
-    "/Heeder.webp",
-  ]);
+  const cardUrl =
+    typeof recipe.img === "string" ? null : recipe.img?.["url-card"];
+
+  const main = normalizeImageUrl(mainUrl);
+  const card = normalizeImageUrl(cardUrl);
+
+  const fileName = getImageFileName(card || main);
+
+  const sources: Array<string | null> = [];
+
+  if (card) {
+    sources.push(card);
+  } else if (fileName) {
+    sources.push(`/card/${fileName}`);
+  }
+
+  if (main) {
+    sources.push(main);
+  } else if (fileName) {
+    sources.push(`/uploads/${fileName}`);
+  }
+
+  sources.push("/Heeder.webp");
+
+  return uniqueImageSources(sources);
 }
+
+const IMAGE_BLUR_DATA =
+  "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23f3f4f6'/%3E%3Crect x='0' y='6' width='16' height='3' fill='%23fed7aa'/%3E%3C/svg%3E";
 
 function InlineImageFallback({ alt }: { alt: string }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-orange-100 via-amber-50 to-orange-200 text-center text-orange-950 p-4">
       <span className="text-4xl mb-2">🍽️</span>
+
       <span className="text-sm sm:text-base font-bold leading-relaxed">
         {alt || "صورة الوصفة"}
       </span>
+
       <span className="mt-2 text-xs text-orange-900/70">
         تأكد من وجود الصورة داخل public/uploads أو public/card
       </span>
@@ -298,6 +341,7 @@ type SmartImageProps = {
   className?: string;
   sizes: string;
   priority?: boolean;
+  quality?: number;
 };
 
 function SmartRecipeImage({
@@ -306,11 +350,26 @@ function SmartRecipeImage({
   className = "object-cover",
   sizes,
   priority = false,
+  quality = 72,
 }: SmartImageProps) {
+  const sourcesKey = sources.join("|");
+
+  const stableSources = useMemo(() => {
+    return sources.filter(Boolean);
+  }, [sourcesKey]);
+
   const [sourceIndex, setSourceIndex] = useState(0);
-  const currentSource = sources[sourceIndex];
+
+  useEffect(() => {
+    setSourceIndex(0);
+  }, [sourcesKey]);
+
+  const currentSource = stableSources[sourceIndex];
 
   if (!currentSource) return <InlineImageFallback alt={alt} />;
+
+  const isRemote =
+    currentSource.startsWith("http://") || currentSource.startsWith("https://");
 
   return (
     <Image
@@ -318,25 +377,110 @@ function SmartRecipeImage({
       src={currentSource}
       alt={alt}
       fill
-      className={className}
-      priority={priority}
+      className={`${className} transition-opacity duration-300`}
       sizes={sizes}
-      unoptimized={currentSource.startsWith("http")}
+      quality={quality}
+      placeholder="blur"
+      blurDataURL={IMAGE_BLUR_DATA}
+      decoding="async"
+      unoptimized={isRemote}
+      {...(priority
+        ? {
+            priority: true,
+            fetchPriority: "high" as const,
+          }
+        : {
+            loading: "lazy" as const,
+            fetchPriority: "auto" as const,
+          })}
       onError={() => {
         setSourceIndex((current) =>
-          current < sources.length - 1 ? current + 1 : current
+          current < stableSources.length - 1 ? current + 1 : current
         );
       }}
     />
   );
 }
 
+/* =============================== */
+/* كارت الوصفات المشابهة */
+/* =============================== */
+
+const RelatedRecipeCard = memo(function RelatedRecipeCard({
+  recipe,
+  index,
+}: {
+  recipe: Recipe;
+  index: number;
+}) {
+  const relatedImageSources = useMemo(
+    () => getRelatedImageSources(recipe),
+    [recipe]
+  );
+
+  const imgAlt =
+    typeof recipe.img === "string"
+      ? recipe.title
+      : recipe.img?.alt || recipe.title;
+
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 18,
+      }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+      }}
+      viewport={{
+        once: true,
+        amount: 0.15,
+      }}
+      transition={{
+        duration: 0.35,
+        delay: index * 0.03,
+      }}
+      whileHover={{
+        scale: 1.03,
+        y: -3,
+      }}
+      className="bg-gray-800 rounded-xl overflow-hidden flex flex-col hover:shadow-lg transition-transform"
+    >
+      <Link href={`/recipe/${recipe.slug}`} prefetch={false}>
+        <div className="relative w-full aspect-[16/9] bg-gray-700">
+          <SmartRecipeImage
+            sources={relatedImageSources}
+            alt={imgAlt}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 260px"
+            quality={60}
+          />
+        </div>
+
+        <div className="p-2 text-white text-sm sm:text-base font-semibold break-words">
+          {recipe.title}
+        </div>
+      </Link>
+    </motion.div>
+  );
+});
+
+/* =============================== */
+
 export default function RecipeClient({ recipe, relatedRecipes }: Props) {
   const [activeTab, setActiveTab] = useState<"data" | "ingredients">("data");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
-  const dataBoxItems = normalizeDataBox(recipe.data_box);
-  const ingredientSections = normalizeIngredients(recipe.ingredients);
+  const dataBoxItems = useMemo(
+    () => normalizeDataBox(recipe.data_box),
+    [recipe.data_box]
+  );
+
+  const ingredientSections = useMemo(
+    () => normalizeIngredients(recipe.ingredients),
+    [recipe.ingredients]
+  );
+
   const steps = recipe.steps ?? [];
   const tips = recipe.tips ?? [];
   const commonMistakes = recipe.common_mistakes ?? [];
@@ -344,7 +488,9 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
   const faq = recipe.faq ?? [];
 
   const imageAlt =
-    typeof recipe.img === "string" ? recipe.title : recipe.img?.alt || recipe.title;
+    typeof recipe.img === "string"
+      ? recipe.title
+      : recipe.img?.alt || recipe.title;
 
   const mainImageSources = useMemo(() => getMainImageSources(recipe), [recipe]);
 
@@ -356,11 +502,16 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
 
   return (
     <>
-      <main className="max-w-full sm:max-w-5xl mx-auto mt-20 px-4 sm:px-6 text-black dark:text-white bg-white dark:bg-gray-900">
+      <main
+        dir="rtl"
+        className="max-w-full sm:max-w-5xl mx-auto mt-20 px-4 sm:px-6 text-black dark:text-white bg-white dark:bg-gray-900"
+      >
         <motion.h1
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true }}
+          viewport={{
+            once: true,
+          }}
           variants={{
             hidden: {},
             visible: {
@@ -390,28 +541,31 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
               >
                 {word}
               </motion.span>
+
               {index < arr.length - 1 && " "}
             </span>
           ))}
         </motion.h1>
 
-        <motion.h4
-          initial={{
-            opacity: 0,
-            y: 18,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.5,
-            delay: 0.08,
-          }}
-          className="text-xl sm:text-xl md:text-2xl font-bold text-orange-500 mb-5 text-center leading-snug"
-        >
-          {recipe.country}
-        </motion.h4>
+        {recipe.country && (
+          <motion.h4
+            initial={{
+              opacity: 0,
+              y: 18,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.5,
+              delay: 0.08,
+            }}
+            className="text-xl sm:text-xl md:text-2xl font-bold text-orange-500 mb-5 text-center leading-snug"
+          >
+            {recipe.country}
+          </motion.h4>
+        )}
 
         <motion.div
           initial={{
@@ -432,7 +586,8 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
               sources={mainImageSources}
               alt={imageAlt}
               priority
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 900px"
+              quality={75}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 85vw, 900px"
             />
           </div>
         </motion.div>
@@ -461,32 +616,34 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
           </motion.div>
         )}
 
-        <motion.div
-          {...fadeUp}
-          className="flex flex-col sm:flex-row justify-center items-center gap-2 mb-4 text-sm text-gray-200"
-        >
-          {createdAt && (
-            <motion.span
-              whileHover={{
-                scale: 1.03,
-              }}
-              className="bg-gray-800 px-3 py-1 rounded-lg"
-            >
-              📅 تاريخ النشر: {createdAt}
-            </motion.span>
-          )}
+        {(createdAt || updatedAtRelative) && (
+          <motion.div
+            {...fadeUp}
+            className="flex flex-col sm:flex-row justify-center items-center gap-2 mb-4 text-sm text-gray-200"
+          >
+            {createdAt && (
+              <motion.span
+                whileHover={{
+                  scale: 1.03,
+                }}
+                className="bg-gray-800 px-3 py-1 rounded-lg"
+              >
+                📅 تاريخ النشر: {createdAt}
+              </motion.span>
+            )}
 
-          {updatedAtRelative && (
-            <motion.span
-              whileHover={{
-                scale: 1.03,
-              }}
-              className="bg-gray-800 px-3 py-1 rounded-lg"
-            >
-              🔄 تم التحديث منذ يومين
-            </motion.span>
-          )}
-        </motion.div>
+            {updatedAtRelative && (
+              <motion.span
+                whileHover={{
+                  scale: 1.03,
+                }}
+                className="bg-gray-800 px-3 py-1 rounded-lg"
+              >
+               🔄 تم التحديث منذ يومين
+              </motion.span>
+            )}
+          </motion.div>
+        )}
 
         <AdSenseBanner adSlot="2901613977" />
 
@@ -795,7 +952,11 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
                     >
                       <span className="font-bold text-lg">{f.question}</span>
 
-                      {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                      {isOpen ? (
+                        <ChevronUp size={20} />
+                      ) : (
+                        <ChevronDown size={20} />
+                      )}
                     </button>
 
                     <AnimatePresence initial={false}>
@@ -838,53 +999,9 @@ export default function RecipeClient({ recipe, relatedRecipes }: Props) {
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {relatedRecipes.map((r, i) => {
-                const relatedImageSources = getRelatedImageSources(r);
-
-                const imgAlt =
-                  typeof r.img === "string" ? r.title : r.img?.alt || r.title;
-
-                return (
-                  <motion.div
-                    key={r.slug || i}
-                    initial={{
-                      opacity: 0,
-                      y: 18,
-                    }}
-                    whileInView={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    viewport={{
-                      once: true,
-                      amount: 0.15,
-                    }}
-                    transition={{
-                      duration: 0.35,
-                      delay: i * 0.05,
-                    }}
-                    whileHover={{
-                      scale: 1.05,
-                      y: -4,
-                    }}
-                    className="bg-gray-800 rounded-xl overflow-hidden flex flex-col hover:shadow-lg transition-transform"
-                  >
-                    <Link href={`/recipe/${r.slug}`}>
-                      <div className="relative w-full aspect-[16/9] bg-gray-700">
-                        <SmartRecipeImage
-                          sources={relatedImageSources}
-                          alt={imgAlt}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 260px"
-                        />
-                      </div>
-
-                      <div className="p-2 text-white text-sm sm:text-base font-semibold break-words">
-                        {r.title}
-                      </div>
-                    </Link>
-                  </motion.div>
-                );
-              })}
+              {relatedRecipes.map((r, i) => (
+                <RelatedRecipeCard key={r.slug || i} recipe={r} index={i} />
+              ))}
             </div>
           </motion.section>
         )}

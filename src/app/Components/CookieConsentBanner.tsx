@@ -54,7 +54,7 @@ export default function CookieConsentBanner() {
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 onClick={() => choose("accepted")}
-                className="px-4 py-2 rounded-lg bg-lime-400 text-black font-semibold"
+                className="px-4 py-2 rounded-lg bg-orange-500 text-black font-semibold"
               >
                 موافق
               </button>
