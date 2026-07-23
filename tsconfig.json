@@ -36,7 +36,7 @@
     "**/*.jsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
-  ],
+, "src/app/Components/ConsentModeScript"  ],
   "exclude": [
     "node_modules",
     ".next",

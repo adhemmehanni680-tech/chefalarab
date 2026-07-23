@@ -109,7 +109,7 @@ export default function SearchFloating() {
     <motion.div
       drag
       dragMomentum={false}
-      className="fixed z-[9999] bottom-24 right-6"
+      className="fixed z-[9999] bottom-40 right-6"
       ref={boxRef}
     >
       {!open && (

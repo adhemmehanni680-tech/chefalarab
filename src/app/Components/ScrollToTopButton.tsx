@@ -17,7 +17,7 @@ interface ScrollToTopButtonProps {
 
 export default function ScrollToTopButton({
   threshold = 400,
-  bottom = "bottom-10",
+  bottom = "bottom-28",
   right = "right-6",
   customButton,
 }: ScrollToTopButtonProps) {
@@ -45,7 +45,7 @@ export default function ScrollToTopButton({
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed ${bottom} ${right} z-[9999] bg-lime-500 hover:bg-lime-600 text-white p-3 rounded-full shadow-xl transition-transform duration-300 hover:scale-110`}
+      className={`fixed ${bottom} ${right} z-[9999] bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-full shadow-xl transition-transform duration-300 hover:scale-110`}
       aria-label="العودة للأعلى"
     >
       <ArrowUp size={22} />
