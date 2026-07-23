@@ -18,7 +18,7 @@ const nextConfig = {
     maximumResponseBody: 8_000_000,
     deviceSizes: [360, 414, 640, 768, 1024, 1280],
     imageSizes: [64, 128, 256, 384],
-    qualities: [70],
+         qualities: [68, 70, 72],
     formats: ["image/webp"],
     localPatterns: [
       { pathname: "/uploads/**", search: "" },

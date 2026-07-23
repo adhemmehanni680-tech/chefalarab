@@ -43,18 +43,33 @@ export default function CookieConsentBanner() {
   const pathname = usePathname();
 
   /*
-   * تبدأ بـ true حتى تظهر شاشة الحماية مباشرة،
-   * ولا توجد لحظة يستطيع فيها المستخدم الضغط على الموقع.
+   * تبدأ بـ false حتى لا تظهر النافذة لحظيًا
+   * قبل قراءة اختيار المستخدم المحفوظ.
    */
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
+
+  /*
+   * mounted لمعرفة أن الكومبوننت أصبح داخل المتصفح.
+   */
   const [mounted, setMounted] = useState(false);
-  const [manuallyOpened, setManuallyOpened] = useState(false);
+
+  /*
+   * يمنع رسم نافذة الموافقة قبل انتهاء فحص localStorage.
+   */
+  const [consentChecked, setConsentChecked] =
+    useState(false);
+
+  const [manuallyOpened, setManuallyOpened] =
+    useState(false);
 
   const dialogRef = useRef<HTMLDivElement>(null);
-  const acceptButtonRef = useRef<HTMLButtonElement>(null);
+  const acceptButtonRef =
+    useRef<HTMLButtonElement>(null);
 
   const isLegalPage = LEGAL_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
+    (route) =>
+      pathname === route ||
+      pathname.startsWith(`${route}/`),
   );
 
   /*
@@ -62,7 +77,9 @@ export default function CookieConsentBanner() {
    * عند الانتقال لأي صفحة أخرى تعود شاشة الاختيار.
    */
   const shouldShow =
-    open && (!isLegalPage || manuallyOpened);
+    consentChecked &&
+    open &&
+    (!isLegalPage || manuallyOpened);
 
   /* =========================================================
      قراءة الاختيار المحفوظ
@@ -71,18 +88,42 @@ export default function CookieConsentBanner() {
   useEffect(() => {
     setMounted(true);
 
-    const storedConsent = getStoredConsent();
+    try {
+      const storedConsent = getStoredConsent();
 
-    if (storedConsent) {
-      applyConsent(storedConsent);
-      setOpen(false);
-    } else {
+      if (storedConsent) {
+        /*
+         * المستخدم اختار من قبل.
+         * نطبّق اختياره ولا نظهر النافذة.
+         */
+        applyConsent(storedConsent);
+        setOpen(false);
+      } else {
+        /*
+         * لا يوجد اختيار محفوظ.
+         * نرفض الكوكيز غير الضرورية مؤقتًا،
+         * ثم نظهر نافذة الاختيار.
+         */
+        applyConsent("rejected");
+        setOpen(true);
+      }
+    } catch (error) {
+      console.error(
+        "Failed to read cookie consent:",
+        error,
+      );
+
       /*
-       * رفض مبدئي للكوكيز غير الضرورية إلى أن يختار المستخدم.
-       * لا يتم حفظ هذا الرفض كاختيار للمستخدم.
+       * في حالة حدوث مشكلة في التخزين،
+       * نستخدم الوضع الآمن ونظهر الاختيار.
        */
       applyConsent("rejected");
       setOpen(true);
+    } finally {
+      /*
+       * لا يتم رسم النافذة إلا بعد اكتمال الفحص.
+       */
+      setConsentChecked(true);
     }
 
     const openHandler = () => {
@@ -90,10 +131,16 @@ export default function CookieConsentBanner() {
       setOpen(true);
     };
 
-    window.addEventListener("open-consent-manager", openHandler);
+    window.addEventListener(
+      "open-consent-manager",
+      openHandler,
+    );
 
     return () => {
-      window.removeEventListener("open-consent-manager", openHandler);
+      window.removeEventListener(
+        "open-consent-manager",
+        openHandler,
+      );
     };
   }, []);
 
@@ -102,20 +149,30 @@ export default function CookieConsentBanner() {
      ========================================================= */
 
   useEffect(() => {
-    if (!mounted || !shouldShow) return;
+    if (
+      !mounted ||
+      !consentChecked ||
+      !shouldShow
+    ) {
+      return;
+    }
 
     const html = document.documentElement;
     const body = document.body;
 
     const previousHtmlOverflow = html.style.overflow;
     const previousBodyOverflow = body.style.overflow;
-    const previousBodyPaddingRight = body.style.paddingRight;
+    const previousBodyOverscrollBehavior =
+      body.style.overscrollBehavior;
+    const previousBodyPaddingRight =
+      body.style.paddingRight;
 
     /*
      * منع تحرك الصفحة عند اختفاء شريط التمرير.
      */
     const scrollbarWidth =
-      window.innerWidth - document.documentElement.clientWidth;
+      window.innerWidth -
+      document.documentElement.clientWidth;
 
     html.style.overflow = "hidden";
     body.style.overflow = "hidden";
@@ -128,7 +185,9 @@ export default function CookieConsentBanner() {
     /*
      * تعطيل جميع عناصر الصفحة الموجودة خلف نافذة الموافقة.
      */
-    const overlay = document.getElementById("cookie-consent-overlay");
+    const overlay = document.getElementById(
+      "cookie-consent-overlay",
+    );
 
     const disabledElements: Array<{
       element: HTMLElement;
@@ -137,34 +196,40 @@ export default function CookieConsentBanner() {
     }> = [];
 
     if (overlay) {
-      Array.from(document.body.children).forEach((child) => {
-        if (!(child instanceof HTMLElement)) return;
-        if (child === overlay) return;
-        if (child.contains(overlay)) return;
+      Array.from(document.body.children).forEach(
+        (child) => {
+          if (!(child instanceof HTMLElement)) return;
+          if (child === overlay) return;
+          if (child.contains(overlay)) return;
 
-        disabledElements.push({
-          element: child,
-          hadInert: child.hasAttribute("inert"),
-          previousAriaHidden: child.getAttribute("aria-hidden"),
-        });
+          disabledElements.push({
+            element: child,
+            hadInert: child.hasAttribute("inert"),
+            previousAriaHidden:
+              child.getAttribute("aria-hidden"),
+          });
 
-        child.setAttribute("inert", "");
-        child.setAttribute("aria-hidden", "true");
-      });
+          child.setAttribute("inert", "");
+          child.setAttribute("aria-hidden", "true");
+        },
+      );
     }
 
     /*
      * وضع المؤشر داخل النافذة تلقائيًا.
      */
-    const focusFrame = window.requestAnimationFrame(() => {
-      acceptButtonRef.current?.focus();
-    });
+    const focusFrame =
+      window.requestAnimationFrame(() => {
+        acceptButtonRef.current?.focus();
+      });
 
     /*
      * حبس التنقل بالكيبورد داخل نافذة الموافقة،
      * ومنع إغلاقها بزر Escape.
      */
-    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+    const handleKeyDown = (
+      event: globalThis.KeyboardEvent,
+    ) => {
       if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
@@ -174,6 +239,7 @@ export default function CookieConsentBanner() {
       if (event.key !== "Tab") return;
 
       const dialog = dialogRef.current;
+
       if (!dialog) return;
 
       const focusableElements = Array.from(
@@ -201,7 +267,9 @@ export default function CookieConsentBanner() {
 
       const firstElement = focusableElements[0];
       const lastElement =
-        focusableElements[focusableElements.length - 1];
+        focusableElements[
+          focusableElements.length - 1
+        ];
 
       if (
         event.shiftKey &&
@@ -221,16 +289,27 @@ export default function CookieConsentBanner() {
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener(
+      "keydown",
+      handleKeyDown,
+      true,
+    );
 
     return () => {
       window.cancelAnimationFrame(focusFrame);
-      document.removeEventListener("keydown", handleKeyDown, true);
+
+      document.removeEventListener(
+        "keydown",
+        handleKeyDown,
+        true,
+      );
 
       html.style.overflow = previousHtmlOverflow;
       body.style.overflow = previousBodyOverflow;
-      body.style.overscrollBehavior = "";
-      body.style.paddingRight = previousBodyPaddingRight;
+      body.style.overscrollBehavior =
+        previousBodyOverscrollBehavior;
+      body.style.paddingRight =
+        previousBodyPaddingRight;
 
       disabledElements.forEach(
         ({
@@ -253,7 +332,7 @@ export default function CookieConsentBanner() {
         },
       );
     };
-  }, [mounted, shouldShow]);
+  }, [mounted, consentChecked, shouldShow]);
 
   /* =========================================================
      حفظ الاختيار
@@ -268,12 +347,15 @@ export default function CookieConsentBanner() {
       setOpen(false);
       setManuallyOpened(false);
     } catch (error) {
-      console.error("Failed to save cookie consent:", error);
+      console.error(
+        "Failed to save cookie consent:",
+        error,
+      );
     }
   };
 
   /*
-   * منع الضغط على الخلفية أو أي حدث قد يغلق النافذة.
+   * منع زر Escape من إغلاق النافذة.
    */
   const preventDialogClose = (
     event: ReactKeyboardEvent<HTMLDivElement>,
@@ -284,7 +366,18 @@ export default function CookieConsentBanner() {
     }
   };
 
-  if (!shouldShow) return null;
+  /*
+   * لا نعرض أي شيء أثناء SSR أو أثناء فحص الاختيار.
+   * هذا هو الجزء الذي يمنع ظهور النافذة لعدة ثوانٍ
+   * للمستخدم الذي سبق له الاختيار.
+   */
+  if (
+    !mounted ||
+    !consentChecked ||
+    !shouldShow
+  ) {
+    return null;
+  }
 
   const consentContent = (
     <div
@@ -652,15 +745,10 @@ export default function CookieConsentBanner() {
     </div>
   );
 
-  /*
-   * أثناء SSR يظهر العنصر في مكان الكومبوننت مباشرة،
-   * وبعد تحميل الصفحة يتم نقله إلى body لضمان أعلى z-index.
-   */
-  if (!mounted) {
-    return consentContent;
-  }
-
-  return createPortal(consentContent, document.body);
+  return createPortal(
+    consentContent,
+    document.body,
+  );
 }
 
 /* =========================================================
@@ -670,6 +758,7 @@ export default function CookieConsentBanner() {
 function logConsent(choice: ConsentChoice) {
   try {
     const storageKey = "consent_logs";
+
     const currentLogs = JSON.parse(
       localStorage.getItem(storageKey) || "[]",
     );

@@ -152,11 +152,15 @@ type GuideSection = {
 /* =============================== */
 
 function normalizeImageUrl(url: unknown): string | null {
-  if (typeof url !== "string") return null;
+  if (typeof url !== "string") {
+    return null;
+  }
 
   const cleanUrl = url.trim().replace(/\\/g, "/");
 
-  if (!cleanUrl) return null;
+  if (!cleanUrl) {
+    return null;
+  }
 
   if (
     cleanUrl.startsWith("http://") ||
@@ -165,13 +169,21 @@ function normalizeImageUrl(url: unknown): string | null {
     return cleanUrl;
   }
 
-  return cleanUrl.startsWith("/") ? cleanUrl : `/${cleanUrl}`;
+  return cleanUrl.startsWith("/")
+    ? cleanUrl
+    : `/${cleanUrl}`;
 }
 
-function getImageFileName(url?: string | null): string | null {
-  if (!url) return null;
+function getImageFileName(
+  url?: string | null,
+): string | null {
+  if (!url) {
+    return null;
+  }
 
-  const cleanUrl = url.split("?")[0].split("#")[0];
+  const cleanUrl = url
+    .split("?")[0]
+    .split("#")[0];
 
   const fileName = cleanUrl
     .split("/")
@@ -188,9 +200,14 @@ function uniqueImageSources(
 
   return sources
     .map(normalizeImageUrl)
-    .filter((source): source is string => Boolean(source))
+    .filter(
+      (source): source is string =>
+        Boolean(source),
+    )
     .filter((source) => {
-      if (seen.has(source)) return false;
+      if (seen.has(source)) {
+        return false;
+      }
 
       seen.add(source);
 
@@ -198,7 +215,9 @@ function uniqueImageSources(
     });
 }
 
-function getMainImageSources(recipe: Recipe): string[] {
+function getMainImageSources(
+  recipe: Recipe,
+): string[] {
   const mainUrl =
     typeof recipe.img === "string"
       ? recipe.img
@@ -212,7 +231,9 @@ function getMainImageSources(recipe: Recipe): string[] {
   const main = normalizeImageUrl(mainUrl);
   const card = normalizeImageUrl(cardUrl);
 
-  const fileName = getImageFileName(main || card);
+  const fileName = getImageFileName(
+    main || card,
+  );
 
   const sources: Array<string | null> = [];
 
@@ -233,7 +254,9 @@ function getMainImageSources(recipe: Recipe): string[] {
   return uniqueImageSources(sources);
 }
 
-function getRelatedImageSources(recipe: Recipe): string[] {
+function getRelatedImageSources(
+  recipe: Recipe,
+): string[] {
   const mainUrl =
     typeof recipe.img === "string"
       ? recipe.img
@@ -247,7 +270,9 @@ function getRelatedImageSources(recipe: Recipe): string[] {
   const main = normalizeImageUrl(mainUrl);
   const card = normalizeImageUrl(cardUrl);
 
-  const fileName = getImageFileName(card || main);
+  const fileName = getImageFileName(
+    card || main,
+  );
 
   const sources: Array<string | null> = [];
 
@@ -273,16 +298,24 @@ function getImageAlt(recipe: Recipe): string {
     return recipe.title;
   }
 
-  return recipe.img?.alt || recipe.title || "صورة الوصفة";
+  return (
+    recipe.img?.alt ||
+    recipe.title ||
+    "صورة الوصفة"
+  );
 }
 
 function normalizeDataBox(
   data?: Recipe["data_box"],
 ): DataBoxItem[] {
-  if (!data) return [];
+  if (!data) {
+    return [];
+  }
 
   const items: Array<{
-    key: keyof NonNullable<Recipe["data_box"]>;
+    key: keyof NonNullable<
+      Recipe["data_box"]
+    >;
     icon: string;
     label: string;
     suffix?: string;
@@ -328,43 +361,61 @@ function normalizeDataBox(
   ];
 
   return items
-    .map(({ key, icon, label, suffix }) => {
-      const value = data[key];
-
-      if (
-        value === undefined ||
-        value === null ||
-        value === ""
-      ) {
-        return null;
-      }
-
-      return {
+    .map(
+      ({
+        key,
         icon,
         label,
-        value: suffix
-          ? `${String(value)} ${suffix}`
-          : String(value),
-      };
-    })
-    .filter((item): item is DataBoxItem => Boolean(item));
+        suffix,
+      }) => {
+        const value = data[key];
+
+        if (
+          value === undefined ||
+          value === null ||
+          value === ""
+        ) {
+          return null;
+        }
+
+        return {
+          icon,
+          label,
+          value: suffix
+            ? `${String(value)} ${suffix}`
+            : String(value),
+        };
+      },
+    )
+    .filter(
+      (item): item is DataBoxItem =>
+        Boolean(item),
+    );
 }
 
 function normalizeIngredients(
   data: unknown,
 ): IngredientSection[] {
-  if (!data) return [];
+  if (!data) {
+    return [];
+  }
 
   if (Array.isArray(data)) {
     const sections: IngredientSection[] = [];
 
-    let currentTitle: string | undefined;
+    let currentTitle:
+      | string
+      | undefined;
+
     let currentItems: string[] = [];
 
     data.forEach((line) => {
-      const lineString = String(line).trim();
+      const lineString =
+        String(line).trim();
 
-      if (!lineString) return;
+      if (!lineString) {
+        return;
+      }
 
       const isTitle =
         lineString.endsWith(":") ||
@@ -378,7 +429,12 @@ function normalizeIngredients(
           });
         }
 
-        currentTitle = lineString.replace(/[:：]\s*$/, "");
+        currentTitle =
+          lineString.replace(
+            /[:：]\s*$/,
+            "",
+          );
+
         currentItems = [];
       } else {
         currentItems.push(lineString);
@@ -397,7 +453,9 @@ function normalizeIngredients(
       : [
           {
             items: data
-              .map((item) => String(item).trim())
+              .map((item) =>
+                String(item).trim(),
+              )
               .filter(Boolean),
           },
         ];
@@ -410,21 +468,30 @@ function normalizeIngredients(
       .map(([key, value]) => {
         const items = Array.isArray(value)
           ? value
-              .map((item) => String(item).trim())
+              .map((item) =>
+                String(item).trim(),
+              )
               .filter(Boolean)
-          : [String(value).trim()].filter(Boolean);
+          : [String(value).trim()].filter(
+              Boolean,
+            );
 
         return {
           title: key,
           items,
         };
       })
-      .filter((section) => section.items.length > 0);
+      .filter(
+        (section) =>
+          section.items.length > 0,
+      );
   }
 
   return [
     {
-      items: [String(data).trim()].filter(Boolean),
+      items: [String(data).trim()].filter(
+        Boolean,
+      ),
     },
   ];
 }
@@ -432,23 +499,42 @@ function normalizeIngredients(
 function getRelativeDateArabic(
   dateString?: string,
 ): string {
-  if (!dateString) return "";
+  if (!dateString) {
+    return "";
+  }
 
   const date = new Date(dateString);
 
-  if (Number.isNaN(date.getTime())) return "";
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
 
-  const diffInMs = Date.now() - date.getTime();
+  const diffInMs =
+    Date.now() - date.getTime();
 
   const diffInDays = Math.max(
     0,
-    Math.floor(diffInMs / (1000 * 60 * 60 * 24)),
+    Math.floor(
+      diffInMs /
+        (1000 * 60 * 60 * 24),
+    ),
   );
 
-  if (diffInDays === 0) return "اليوم";
-  if (diffInDays === 1) return "منذ يوم";
-  if (diffInDays === 2) return "منذ يومين";
-  if (diffInDays <= 10) return `منذ ${diffInDays} أيام`;
+  if (diffInDays === 0) {
+    return "اليوم";
+  }
+
+  if (diffInDays === 1) {
+    return "منذ يوم";
+  }
+
+  if (diffInDays === 2) {
+    return "منذ يومين";
+  }
+
+  if (diffInDays <= 10) {
+    return `منذ ${diffInDays} أيام`;
+  }
 
   return `منذ ${diffInDays} يومًا`;
 }
@@ -456,12 +542,97 @@ function getRelativeDateArabic(
 function getInitialOpenSection(
   recipe: Recipe,
 ): SectionKey {
-  if (recipe.intro) return "intro";
-  if (recipe.description) return "description";
-  if (recipe.data_box) return "data";
-  if (recipe.ingredients) return "ingredients";
+  if (recipe.intro) {
+    return "intro";
+  }
+
+  if (recipe.description) {
+    return "description";
+  }
+
+  if (recipe.data_box) {
+    return "data";
+  }
+
+  if (recipe.ingredients) {
+    return "ingredients";
+  }
 
   return null;
+}
+
+/* =============================== */
+/* Footer detection                */
+/* =============================== */
+
+function useFooterVisibility(): boolean {
+  const [
+    isFooterVisible,
+    setIsFooterVisible,
+  ] = useState(false);
+
+  useEffect(() => {
+    let observer:
+      | IntersectionObserver
+      | null = null;
+
+    let retryTimer:
+      | number
+      | null = null;
+
+    let isCancelled = false;
+
+    const observeFooter = () => {
+      if (isCancelled) {
+        return;
+      }
+
+      const footer =
+        document.getElementById(
+          "site-footer",
+        ) ||
+        document.querySelector("footer");
+
+      if (!footer) {
+        retryTimer = window.setTimeout(
+          observeFooter,
+          500,
+        );
+
+        return;
+      }
+
+      observer =
+        new IntersectionObserver(
+          ([entry]) => {
+            setIsFooterVisible(
+              entry.isIntersecting,
+            );
+          },
+          {
+            threshold: 0.01,
+            rootMargin:
+              "0px 0px 80px 0px",
+          },
+        );
+
+      observer.observe(footer);
+    };
+
+    observeFooter();
+
+    return () => {
+      isCancelled = true;
+
+      observer?.disconnect();
+
+      if (retryTimer !== null) {
+        window.clearTimeout(retryTimer);
+      }
+    };
+  }, []);
+
+  return isFooterVisible;
 }
 
 /* =============================== */
@@ -522,14 +693,17 @@ function InlineImageFallback({
 }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#1f2b3b] via-[#172235] to-[#2a211c] p-4 text-center text-white">
-      <span className="mb-2 text-4xl">🍽️</span>
+      <span className="mb-2 text-4xl">
+        🍽️
+      </span>
 
       <span className="text-sm font-black leading-relaxed sm:text-base">
         {alt || "صورة الوصفة"}
       </span>
 
       <span className="mt-2 text-xs font-medium text-white/60">
-        تأكد من وجود الصورة داخل public/uploads أو public/card
+        تأكد من وجود الصورة داخل
+        public/uploads أو public/card
       </span>
     </div>
   );
@@ -559,23 +733,33 @@ function SmartRecipeImage({
     [sources],
   );
 
-  const [sourceIndex, setSourceIndex] = useState(0);
-  const [hasFailed, setHasFailed] = useState(false);
+  const [sourceIndex, setSourceIndex] =
+    useState(0);
+
+  const [hasFailed, setHasFailed] =
+    useState(false);
 
   useEffect(() => {
     setSourceIndex(0);
     setHasFailed(false);
   }, [sourcesKey]);
 
-  const currentSource = stableSources[sourceIndex];
+  const currentSource =
+    stableSources[sourceIndex];
 
   if (!currentSource || hasFailed) {
-    return <InlineImageFallback alt={alt} />;
+    return (
+      <InlineImageFallback alt={alt} />
+    );
   }
 
   const isRemote =
-    currentSource.startsWith("http://") ||
-    currentSource.startsWith("https://");
+    currentSource.startsWith(
+      "http://",
+    ) ||
+    currentSource.startsWith(
+      "https://",
+    );
 
   return (
     <Image
@@ -586,7 +770,9 @@ function SmartRecipeImage({
       sizes={sizes}
       quality={quality}
       priority={priority}
-      loading={priority ? "eager" : "lazy"}
+      loading={
+        priority ? "eager" : "lazy"
+      }
       placeholder="blur"
       blurDataURL={IMAGE_BLUR_DATA}
       decoding="async"
@@ -594,15 +780,20 @@ function SmartRecipeImage({
       unoptimized={isRemote}
       className={`${className} transition-opacity duration-300`}
       onError={() => {
-        setSourceIndex((currentIndex) => {
-          if (currentIndex < stableSources.length - 1) {
-            return currentIndex + 1;
-          }
+        setSourceIndex(
+          (currentIndex) => {
+            if (
+              currentIndex <
+              stableSources.length - 1
+            ) {
+              return currentIndex + 1;
+            }
 
-          setHasFailed(true);
+            setHasFailed(true);
 
-          return currentIndex;
-        });
+            return currentIndex;
+          },
+        );
       }}
     />
   );
@@ -648,48 +839,32 @@ function RecipeSectionGuide({
   sections,
   activeSection,
   onNavigate,
+  isFooterVisible,
 }: {
   sections: GuideSection[];
-  activeSection: GuideSectionId | null;
-  onNavigate: (id: GuideSectionId) => void;
+  activeSection:
+    | GuideSectionId
+    | null;
+  onNavigate: (
+    id: GuideSectionId,
+  ) => void;
+  isFooterVisible: boolean;
 }) {
-  const [isFooterVisible, setIsFooterVisible] =
-    useState(false);
-
-  useEffect(() => {
-    const footer = document.getElementById("site-footer");
-
-    if (!footer) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsFooterVisible(entry.isIntersecting);
-      },
-      {
-        threshold: 0.01,
-        rootMargin: "0px 0px 150px 0px",
-      },
-    );
-
-    observer.observe(footer);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  if (sections.length === 0) return null;
-
-  const guideVisibilityClass = isFooterVisible
-    ? "pointer-events-none -translate-x-full opacity-0"
-    : "translate-x-0 opacity-100";
+  if (sections.length === 0) {
+    return null;
+  }
 
   return (
     <aside
-      className={`fixed bottom-5 left-0 top-28 z-30 hidden w-[225px] transition-all duration-300 ease-out xl:block ${guideVisibilityClass}`}
+      className={`fixed bottom-5 left-0 top-28 z-30 hidden w-[225px] transition-all duration-300 ease-out xl:block ${
+        isFooterVisible
+          ? "pointer-events-none -translate-x-full opacity-0"
+          : "translate-x-0 opacity-100"
+      }`}
       aria-label="دليل أقسام الوصفة"
+      aria-hidden={isFooterVisible}
     >
-      <div className="flex h-full max-h-[calc(100dvh-8.25rem)] flex-col overflow-hidden rounded-r-3xl border border-l-0 border-white/10 bg-[#162235]/95 shadow-2xl shadow-black/30 backdrop-blur-xl">
+      <div className="flex h-full max-h-[calc(100vh-8.25rem)] flex-col overflow-hidden rounded-r-3xl border border-l-0 border-white/10 bg-[#162235]/95 shadow-2xl shadow-black/30 backdrop-blur-xl">
         <div className="flex shrink-0 items-center justify-center gap-2 bg-orange-500 px-4 py-3 text-white">
           <ListTree size={17} />
 
@@ -699,50 +874,59 @@ function RecipeSectionGuide({
         </div>
 
         <nav className="custom-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto p-2.5">
-          {sections.map((section, index) => {
-            const isActive =
-              activeSection === section.id;
+          {sections.map(
+            (section, index) => {
+              const isActive =
+                activeSection ===
+                section.id;
 
-            return (
-              <button
-                key={section.id}
-                type="button"
-                onClick={() => onNavigate(section.id)}
-                aria-current={
-                  isActive ? "true" : undefined
-                }
-                className={`flex w-full items-center gap-2.5 rounded-2xl px-2.5 py-2.5 text-right text-xs font-black transition-all duration-200 ${
-                  isActive
-                    ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                    : "bg-[#1d2a3c] text-slate-200 hover:-translate-y-0.5 hover:bg-[#26364b] hover:text-white"
-                }`}
-              >
-                <span
-                  className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-lg ${
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() =>
+                    onNavigate(
+                      section.id,
+                    )
+                  }
+                  aria-current={
                     isActive
-                      ? "bg-white/20"
-                      : "bg-[#101827]"
+                      ? "true"
+                      : undefined
+                  }
+                  className={`flex w-full items-center gap-2.5 rounded-2xl px-2.5 py-2.5 text-right text-xs font-black transition-all duration-200 ${
+                    isActive
+                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                      : "bg-[#1d2a3c] text-slate-200 hover:-translate-y-0.5 hover:bg-[#26364b] hover:text-white"
                   }`}
                 >
-                  {section.icon}
-                </span>
+                  <span
+                    className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-lg ${
+                      isActive
+                        ? "bg-white/20"
+                        : "bg-[#101827]"
+                    }`}
+                  >
+                    {section.icon}
+                  </span>
 
-                <span className="min-w-0 flex-1 truncate text-[19px]">
-                  {section.title}
-                </span>
+                  <span className="min-w-0 flex-1 truncate text-[15px]">
+                    {section.title}
+                  </span>
 
-                <span
-                  className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] ${
-                    isActive
-                      ? "bg-white font-black text-orange-500"
-                      : "bg-[#2c3c51] text-slate-300"
-                  }`}
-                >
-                  {index + 1}
-                </span>
-              </button>
-            );
-          })}
+                  <span
+                    className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] ${
+                      isActive
+                        ? "bg-white font-black text-orange-500"
+                        : "bg-[#2c3c51] text-slate-300"
+                    }`}
+                  >
+                    {index + 1}
+                  </span>
+                </button>
+              );
+            },
+          )}
         </nav>
       </div>
     </aside>
@@ -757,180 +941,198 @@ function RecipeFloatingGuide({
   sections,
   activeSection,
   onNavigate,
+  isFooterVisible,
 }: {
   sections: GuideSection[];
-  activeSection: GuideSectionId | null;
-  onNavigate: (id: GuideSectionId) => void;
+  activeSection:
+    | GuideSectionId
+    | null;
+  onNavigate: (
+    id: GuideSectionId,
+  ) => void;
+  isFooterVisible: boolean;
 }) {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion =
+    useReducedMotion();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [isFooterVisible, setIsFooterVisible] =
+  const [isOpen, setIsOpen] =
     useState(false);
 
   useEffect(() => {
-    const footer = document.getElementById("site-footer");
+    if (isFooterVisible) {
+      setIsOpen(false);
+    }
+  }, [isFooterVisible]);
 
-    if (!footer) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsFooterVisible(entry.isIntersecting);
-
-        if (entry.isIntersecting) {
-          setIsOpen(false);
-        }
-      },
-      {
-        threshold: 0.01,
-        rootMargin: "0px 0px 120px 0px",
-      },
-    );
-
-    observer.observe(footer);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  if (sections.length === 0) return null;
+  if (sections.length === 0) {
+    return null;
+  }
 
   const activeSectionData =
     sections.find(
-      (section) => section.id === activeSection,
+      (section) =>
+        section.id === activeSection,
     ) ?? sections[0];
-
-  const visibilityClass = isFooterVisible
-    ? "pointer-events-none translate-y-20 opacity-0"
-    : "translate-y-0 opacity-100";
 
   return (
     <div
-      className={`fixed left-3 z-50 flex w-[400px] max-w-[1015px]  flex-col items-start gap- transition-all duration-300 xl:hidden ${visibilityClass}`}
+      className={`fixed left-3 z-[70] flex w-[calc(100vw-5.25rem)] max-w-[340px] min-w-0 flex-col items-start gap-2 transition-all duration-300 xl:hidden ${
+        isFooterVisible
+          ? "pointer-events-none translate-y-24 opacity-0"
+          : "translate-y-0 opacity-100"
+      }`}
       style={{
         bottom:
-          "max(0.75rem, env(safe-area-inset-bottom))",
+          "calc(env(safe-area-inset-bottom, 0px) + 12px)",
       }}
+      aria-hidden={isFooterVisible}
     >
       <AnimatePresence initial={false}>
-        {isOpen && !isFooterVisible && (
-          <m.div
-            initial={
-              shouldReduceMotion
-                ? false
-                : {
-                    opacity: 0,
-                    y: 14,
-                    scale: 0.97,
-                  }
-            }
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: 1,
-            }}
-            exit={
-              shouldReduceMotion
-                ? undefined
-                : {
-                    opacity: 0,
-                    y: 12,
-                    scale: 0.97,
-                  }
-            }
-            transition={{
-              duration: 0.2,
-            }}
-            className="w-full overflow-hidden rounded-2xl border border-white/10 bg-[#162235]/98 shadow-2xl shadow-black/40 backdrop-blur-xl"
-          >
-            <div className="flex items-center justify-between bg-orange-500 px-3 py-2.5 text-white">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/15">
-                  <ListTree size={15} />
-                </span>
-
-                <div className="min-w-0">
-                  <span className="block text-xs font-black">
-                    دليل أقسام الوصفة
+        {isOpen &&
+          !isFooterVisible && (
+            <m.div
+              initial={
+                shouldReduceMotion
+                  ? false
+                  : {
+                      opacity: 0,
+                      y: 14,
+                      scale: 0.97,
+                    }
+              }
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+              }}
+              exit={
+                shouldReduceMotion
+                  ? undefined
+                  : {
+                      opacity: 0,
+                      y: 12,
+                      scale: 0.97,
+                    }
+              }
+              transition={{
+                duration: 0.2,
+              }}
+              className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#162235]/98 shadow-2xl shadow-black/40 backdrop-blur-xl"
+            >
+              <div className="flex items-center justify-between gap-2 bg-orange-500 px-3 py-2.5 text-white">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/15">
+                    <ListTree
+                      size={15}
+                    />
                   </span>
 
-                  {activeSectionData && (
-                    <span className="block max-w-[180px] truncate text-[9px] font-bold text-white/80">
-                      القسم الحالي:{" "}
-                      {activeSectionData.title}
+                  <div className="min-w-0">
+                    <span className="block truncate text-xs font-black">
+                      دليل أقسام الوصفة
                     </span>
-                  )}
+
+                    {activeSectionData && (
+                      <span className="block max-w-[180px] truncate text-[9px] font-bold text-white/80">
+                        القسم الحالي:{" "}
+                        {
+                          activeSectionData.title
+                        }
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setIsOpen(false)
+                  }
+                  aria-label="إغلاق دليل الوصفة"
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/15 transition hover:bg-white/25"
+                >
+                  <X size={15} />
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                aria-label="إغلاق دليل الوصفة"
-                className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/15 transition hover:bg-white/25"
-              >
-                <X size={15} />
-              </button>
-            </div>
+              <nav className="recipe-guide-scrollbar grid max-h-[55vh] grid-cols-2 gap-1.5 overflow-y-auto overscroll-contain p-2">
+                {sections.map(
+                  (
+                    section,
+                    index,
+                  ) => {
+                    const isActive =
+                      activeSection ===
+                      section.id;
 
-            <nav className="recipe-guide-scrollbar grid max-h-[36dvh] grid-cols-2 gap-1.5 overflow-y-auto p-2">
-              {sections.map((section, index) => {
-                const isActive =
-                  activeSection === section.id;
+                    return (
+                      <button
+                        key={
+                          section.id
+                        }
+                        type="button"
+                        onClick={() => {
+                          onNavigate(
+                            section.id,
+                          );
 
-                return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => {
-                      onNavigate(section.id);
-                      setIsOpen(false);
-                    }}
-                    aria-current={
-                      isActive ? "true" : undefined
-                    }
-                    className={`flex min-w-0 items-center gap-1.5 rounded-xl border px-2 py-2 text-right text-[10px] font-black transition ${
-                      isActive
-                        ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20"
-                        : "border-white/[0.07] bg-[#1e2b3d] text-slate-100 hover:border-orange-500/40 hover:bg-[#29394e]"
-                    }`}
-                  >
-                    <span
-                      className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] ${
-                        isActive
-                          ? "bg-white/20"
-                          : "bg-[#101827]"
-                      }`}
-                    >
-                      {section.icon}
-                    </span>
+                          setIsOpen(
+                            false,
+                          );
+                        }}
+                        aria-current={
+                          isActive
+                            ? "true"
+                            : undefined
+                        }
+                        className={`flex min-w-0 items-center gap-1.5 rounded-xl border px-2 py-2 text-right text-[10px] font-black transition ${
+                          isActive
+                            ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20"
+                            : "border-white/[0.07] bg-[#1e2b3d] text-slate-100 hover:border-orange-500/40 hover:bg-[#29394e]"
+                        }`}
+                      >
+                        <span
+                          className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] ${
+                            isActive
+                              ? "bg-white/20"
+                              : "bg-[#101827]"
+                          }`}
+                        >
+                          {
+                            section.icon
+                          }
+                        </span>
 
-                    <span className="min-w-0 flex-1 truncate text-[14px] ">
-                      {section.title}
-                    </span>
+                        <span className="min-w-0 flex-1 truncate text-[12px]">
+                          {
+                            section.title
+                          }
+                        </span>
 
-                    <span
-                      className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[10px] ${
-                        isActive
-                          ? "bg-white text-orange-500"
-                          : "bg-[#304158] text-slate-300"
-                      }`}
-                    >
-                      {index + 1}
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-          </m.div>
-        )}
+                        <span
+                          className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] ${
+                            isActive
+                              ? "bg-white text-orange-500"
+                              : "bg-[#304158] text-slate-300"
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                      </button>
+                    );
+                  },
+                )}
+              </nav>
+            </m.div>
+          )}
       </AnimatePresence>
 
       <button
         type="button"
         onClick={() =>
-          setIsOpen((current) => !current)
+          setIsOpen(
+            (current) => !current,
+          )
         }
         aria-label={
           isOpen
@@ -963,12 +1165,17 @@ function RecipeFloatingGuide({
             دليل الوصفة
           </span>
 
-          {!isOpen && activeSectionData && (
-            <span className="block max-w-[120px] truncate text-[9px] font-bold text-white/80">
-              {activeSectionData.icon}{" "}
-              {activeSectionData.title}
-            </span>
-          )}
+          {!isOpen &&
+            activeSectionData && (
+              <span className="block max-w-[120px] truncate text-[9px] font-bold text-white/80">
+                {
+                  activeSectionData.icon
+                }{" "}
+                {
+                  activeSectionData.title
+                }
+              </span>
+            )}
         </span>
       </button>
     </div>
@@ -994,30 +1201,45 @@ function CollapsibleSection({
   onToggle: () => void;
   sectionId: GuideSectionId;
 }) {
-  const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef =
+    useRef<HTMLDivElement>(null);
 
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion =
+    useReducedMotion();
 
-  const [isOverflowing, setIsOverflowing] =
-    useState(false);
+  const [
+    isOverflowing,
+    setIsOverflowing,
+  ] = useState(false);
 
   useEffect(() => {
-    if (!isOpen || !contentRef.current) {
+    if (
+      !isOpen ||
+      !contentRef.current
+    ) {
       setIsOverflowing(false);
       return;
     }
 
-    const timer = window.setTimeout(() => {
-      if (!contentRef.current) return;
+    const timer = window.setTimeout(
+      () => {
+        if (!contentRef.current) {
+          return;
+        }
 
-      const maxHeight = window.innerHeight * 0.64;
+        const maxHeight =
+          window.innerHeight * 0.64;
 
-      setIsOverflowing(
-        contentRef.current.scrollHeight > maxHeight,
-      );
-    }, 120);
+        setIsOverflowing(
+          contentRef.current
+            .scrollHeight > maxHeight,
+        );
+      },
+      120,
+    );
 
-    return () => window.clearTimeout(timer);
+    return () =>
+      window.clearTimeout(timer);
   }, [children, isOpen]);
 
   return (
@@ -1047,7 +1269,9 @@ function CollapsibleSection({
             shouldReduceMotion
               ? undefined
               : {
-                  rotate: isOpen ? 180 : 0,
+                  rotate: isOpen
+                    ? 180
+                    : 0,
                 }
           }
           transition={{
@@ -1116,14 +1340,20 @@ const RelatedRecipeCard = memo(
     recipe: Recipe;
     index: number;
   }) {
-    const shouldReduceMotion = useReducedMotion();
+    const shouldReduceMotion =
+      useReducedMotion();
 
-    const relatedImageSources = useMemo(
-      () => getRelatedImageSources(recipe),
-      [recipe],
-    );
+    const relatedImageSources =
+      useMemo(
+        () =>
+          getRelatedImageSources(
+            recipe,
+          ),
+        [recipe],
+      );
 
-    const imageAlt = getImageAlt(recipe);
+    const imageAlt =
+      getImageAlt(recipe);
 
     return (
       <m.article
@@ -1149,7 +1379,10 @@ const RelatedRecipeCard = memo(
         }}
         transition={{
           duration: 0.25,
-          delay: Math.min(index * 0.025, 0.1),
+          delay: Math.min(
+            index * 0.025,
+            0.1,
+          ),
         }}
         className="group overflow-hidden rounded-xl border border-white/[0.06] bg-[#1b2839] shadow-sm shadow-black/20 transition hover:-translate-y-1 hover:border-orange-500/30 hover:shadow-xl"
       >
@@ -1160,10 +1393,12 @@ const RelatedRecipeCard = memo(
         >
           <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#263449]">
             <SmartRecipeImage
-              sources={relatedImageSources}
+              sources={
+                relatedImageSources
+              }
               alt={imageAlt}
               sizes="(max-width: 640px) 46vw, (max-width: 1024px) 23vw, 180px"
-              quality={68}
+            quality={70}
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
@@ -1187,277 +1422,395 @@ export default function RecipeClient({
   recipe,
   relatedRecipes = [],
 }: Props) {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion =
+    useReducedMotion();
 
-  const [openFaqIndex, setOpenFaqIndex] = useState<
-    number | null
-  >(0);
+  const isFooterVisible =
+    useFooterVisibility();
 
-  const [openSection, setOpenSection] =
-    useState<SectionKey>(() =>
+  const [
+    openFaqIndex,
+    setOpenFaqIndex,
+  ] = useState<number | null>(0);
+
+  const [
+    openSection,
+    setOpenSection,
+  ] = useState<SectionKey>(() =>
+    getInitialOpenSection(recipe),
+  );
+
+  const [
+    activeSection,
+    setActiveSection,
+  ] =
+    useState<GuideSectionId | null>(
+      null,
+    );
+
+  useEffect(() => {
+    setOpenSection(
       getInitialOpenSection(recipe),
     );
 
-  const [activeSection, setActiveSection] =
-    useState<GuideSectionId | null>(null);
-
-  useEffect(() => {
-    setOpenSection(getInitialOpenSection(recipe));
     setOpenFaqIndex(0);
   }, [recipe.slug]);
 
-  const toggleSection = useCallback(
-    (section: Exclude<SectionKey, null>) => {
-      setOpenSection((current) =>
-        current === section ? null : section,
-      );
-    },
-    [],
-  );
+  const toggleSection =
+    useCallback(
+      (
+        section: Exclude<
+          SectionKey,
+          null
+        >,
+      ) => {
+        setOpenSection((current) =>
+          current === section
+            ? null
+            : section,
+        );
+      },
+      [],
+    );
 
   const dataBoxItems = useMemo(
-    () => normalizeDataBox(recipe.data_box),
+    () =>
+      normalizeDataBox(
+        recipe.data_box,
+      ),
     [recipe.data_box],
   );
 
-  const ingredientSections = useMemo(
-    () => normalizeIngredients(recipe.ingredients),
-    [recipe.ingredients],
-  );
+  const ingredientSections =
+    useMemo(
+      () =>
+        normalizeIngredients(
+          recipe.ingredients,
+        ),
+      [recipe.ingredients],
+    );
 
   const steps = recipe.steps ?? [];
 
   const tips =
-    recipe.tips && recipe.tips.length > 0
+    recipe.tips &&
+    recipe.tips.length > 0
       ? recipe.tips
-      : (recipe.cooking_tips ?? []);
+      : recipe.cooking_tips ?? [];
 
   const commonMistakes =
     recipe.common_mistakes ?? [];
 
   const faq = recipe.faq ?? [];
 
-  const nutritionEntries = useMemo(
-    () => Object.entries(recipe.nutrition ?? {}),
-    [recipe.nutrition],
-  );
+  const nutritionEntries =
+    useMemo(
+      () =>
+        Object.entries(
+          recipe.nutrition ?? {},
+        ),
+      [recipe.nutrition],
+    );
 
-  const imageAlt = getImageAlt(recipe);
+  const imageAlt =
+    getImageAlt(recipe);
 
-  const mainImageSources = useMemo(
-    () => getMainImageSources(recipe),
-    [recipe],
-  );
+  const mainImageSources =
+    useMemo(
+      () =>
+        getMainImageSources(
+          recipe,
+        ),
+      [recipe],
+    );
 
-  const createdAt = recipe.created_at
-    ? new Date(
-        recipe.created_at,
-      ).toLocaleDateString("ar-EG")
-    : "";
+  const createdAt =
+    recipe.created_at
+      ? new Date(
+          recipe.created_at,
+        ).toLocaleDateString(
+          "ar-EG",
+        )
+      : "";
 
-  const updatedAtRelative = getRelativeDateArabic(
-    recipe.updated_at,
-  );
+  const updatedAtRelative =
+    getRelativeDateArabic(
+      recipe.updated_at,
+    );
 
-  const visibleRelatedRecipes = useMemo(
-    () =>
-      relatedRecipes
-        .filter(Boolean)
-        .slice(0, 8),
-    [relatedRecipes],
-  );
+  const visibleRelatedRecipes =
+    useMemo(
+      () =>
+        relatedRecipes
+          .filter(Boolean)
+          .slice(0, 8),
+      [relatedRecipes],
+    );
 
-  const guideSections = useMemo<GuideSection[]>(
-    () => {
-      const sections: GuideSection[] = [
-        {
-          id: "intro",
-          title: "المقدمة",
-          icon: "📖",
-          available: Boolean(recipe.intro),
-        },
-        {
-          id: "description",
-          title: "الوصف",
-          icon: "🍽️",
-          available: Boolean(recipe.description),
-        },
-        {
-          id: "data",
-          title: "المعلومات",
-          icon: "📊",
-          available: dataBoxItems.length > 0,
-        },
-        {
-          id: "ingredients",
-          title: "المكونات",
-          icon: "🧂",
-          available: ingredientSections.length > 0,
-        },
-        {
-          id: "steps",
-          title: "الخطوات",
-          icon: "🍳",
-          available: steps.length > 0,
-        },
-        {
-          id: "tips",
-          title: "النصائح",
-          icon: "💡",
-          available: tips.length > 0,
-        },
-        {
-          id: "mistakes",
-          title: "الأخطاء",
-          icon: "⚠️",
-          available: commonMistakes.length > 0,
-        },
-        {
-          id: "nutrition",
-          title: "القيمة الغذائية",
-          icon: "🍏",
-          available: nutritionEntries.length > 0,
-        },
-        {
-          id: "faq",
-          title: "الأسئلة",
-          icon: "❓",
-          available: faq.length > 0,
-        },
-        {
-          id: "related",
-          title: "وصفات مشابهة",
-          icon: "🍽️",
-          available:
-            visibleRelatedRecipes.length > 0,
-        },
-      ];
+  const guideSections =
+    useMemo<GuideSection[]>(
+      () => {
+        const sections: GuideSection[] =
+          [
+            {
+              id: "intro",
+              title: "المقدمة",
+              icon: "📖",
+              available: Boolean(
+                recipe.intro,
+              ),
+            },
+            {
+              id: "description",
+              title: "الوصف",
+              icon: "🍽️",
+              available: Boolean(
+                recipe.description,
+              ),
+            },
+            {
+              id: "data",
+              title: "المعلومات",
+              icon: "📊",
+              available:
+                dataBoxItems.length > 0,
+            },
+            {
+              id: "ingredients",
+              title: "المكونات",
+              icon: "🧂",
+              available:
+                ingredientSections.length >
+                0,
+            },
+            {
+              id: "steps",
+              title: "الخطوات",
+              icon: "🍳",
+              available:
+                steps.length > 0,
+            },
+            {
+              id: "tips",
+              title: "النصائح",
+              icon: "💡",
+              available:
+                tips.length > 0,
+            },
+            {
+              id: "mistakes",
+              title: "الأخطاء",
+              icon: "⚠️",
+              available:
+                commonMistakes.length >
+                0,
+            },
+            {
+              id: "nutrition",
+              title:
+                "القيمة الغذائية",
+              icon: "🍏",
+              available:
+                nutritionEntries.length >
+                0,
+            },
+            {
+              id: "faq",
+              title: "الأسئلة",
+              icon: "❓",
+              available:
+                faq.length > 0,
+            },
+            {
+              id: "related",
+              title: "وصفات مشابهة",
+              icon: "🍽️",
+              available:
+                visibleRelatedRecipes.length >
+                0,
+            },
+          ];
 
-      return sections.filter(
-        (section) => section.available,
-      );
-    },
-    [
-      recipe.intro,
-      recipe.description,
-      dataBoxItems.length,
-      ingredientSections.length,
-      steps.length,
-      tips.length,
-      commonMistakes.length,
-      nutritionEntries.length,
-      faq.length,
-      visibleRelatedRecipes.length,
-    ],
-  );
+        return sections.filter(
+          (section) =>
+            section.available,
+        );
+      },
+      [
+        recipe.intro,
+        recipe.description,
+        dataBoxItems.length,
+        ingredientSections.length,
+        steps.length,
+        tips.length,
+        commonMistakes.length,
+        nutritionEntries.length,
+        faq.length,
+        visibleRelatedRecipes.length,
+      ],
+    );
 
-  const guideIdsKey = useMemo(
-    () =>
-      guideSections
-        .map((section) => section.id)
-        .join("|"),
-    [guideSections],
-  );
+  const guideIdsKey =
+    useMemo(
+      () =>
+        guideSections
+          .map(
+            (section) =>
+              section.id,
+          )
+          .join("|"),
+      [guideSections],
+    );
 
   useEffect(() => {
     setActiveSection(
-      guideSections[0]?.id ?? null,
+      guideSections[0]?.id ??
+        null,
     );
-  }, [recipe.slug, guideIdsKey]);
+  }, [
+    recipe.slug,
+    guideIdsKey,
+    guideSections,
+  ]);
 
   useEffect(() => {
-    const sectionIds = guideSections.map(
-      (section) => section.id,
-    );
+    const sectionIds =
+      guideSections.map(
+        (section) => section.id,
+      );
 
-    if (sectionIds.length === 0) return;
+    if (
+      sectionIds.length === 0
+    ) {
+      return;
+    }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort(
-            (a, b) =>
-              b.intersectionRatio -
-              a.intersectionRatio,
-          )[0];
+    const observer =
+      new IntersectionObserver(
+        (entries) => {
+          const visibleEntry =
+            entries
+              .filter(
+                (entry) =>
+                  entry.isIntersecting,
+              )
+              .sort(
+                (a, b) =>
+                  b.intersectionRatio -
+                  a.intersectionRatio,
+              )[0];
 
-        if (!visibleEntry) return;
+          if (!visibleEntry) {
+            return;
+          }
 
-        const id = visibleEntry.target.id.replace(
-          "recipe-section-",
-          "",
-        ) as GuideSectionId;
+          const id =
+            visibleEntry.target.id.replace(
+              "recipe-section-",
+              "",
+            ) as GuideSectionId;
 
-        setActiveSection(id);
-      },
-      {
-        root: null,
-        rootMargin: "-22% 0px -62% 0px",
-        threshold: [0.08, 0.2, 0.45, 0.7],
-      },
-    );
+          setActiveSection(id);
+        },
+        {
+          root: null,
+          rootMargin:
+            "-22% 0px -62% 0px",
+          threshold: [
+            0.08,
+            0.2,
+            0.45,
+            0.7,
+          ],
+        },
+      );
 
     sectionIds.forEach((id) => {
-      const element = document.getElementById(
-        `recipe-section-${id}`,
-      );
+      const element =
+        document.getElementById(
+          `recipe-section-${id}`,
+        );
 
       if (element) {
         observer.observe(element);
       }
     });
 
-    return () => observer.disconnect();
-  }, [guideIdsKey, guideSections]);
+    return () =>
+      observer.disconnect();
+  }, [
+    guideIdsKey,
+    guideSections,
+  ]);
 
-  const handleGuideNavigate = useCallback(
-    (id: GuideSectionId) => {
-      if (
-        id === "intro" ||
-        id === "description" ||
-        id === "data" ||
-        id === "ingredients"
-      ) {
-        setOpenSection(id);
-      }
+  const handleGuideNavigate =
+    useCallback(
+      (id: GuideSectionId) => {
+        if (
+          id === "intro" ||
+          id === "description" ||
+          id === "data" ||
+          id === "ingredients"
+        ) {
+          setOpenSection(id);
+        }
 
-      setActiveSection(id);
+        setActiveSection(id);
 
-      window.setTimeout(() => {
-        const element = document.getElementById(
-          `recipe-section-${id}`,
-        );
+        window.setTimeout(() => {
+          const element =
+            document.getElementById(
+              `recipe-section-${id}`,
+            );
 
-        if (!element) return;
+          if (!element) {
+            return;
+          }
 
-        element.scrollIntoView({
-          behavior: shouldReduceMotion
-            ? "auto"
-            : "smooth",
-          block: "start",
-        });
-      }, 40);
-    },
-    [shouldReduceMotion],
-  );
+          element.scrollIntoView({
+            behavior:
+              shouldReduceMotion
+                ? "auto"
+                : "smooth",
+            block: "start",
+          });
+        }, 40);
+      },
+      [shouldReduceMotion],
+    );
 
   return (
-    <LazyMotion features={domAnimation}>
+    <LazyMotion
+      features={domAnimation}
+    >
       <main
         dir="rtl"
         className="min-h-screen pb-28 pt-20 dark:bg-[#101827] sm:pb-24 sm:pt-24 xl:pb-16"
       >
         <RecipeSectionGuide
           sections={guideSections}
-          activeSection={activeSection}
-          onNavigate={handleGuideNavigate}
+          activeSection={
+            activeSection
+          }
+          onNavigate={
+            handleGuideNavigate
+          }
+          isFooterVisible={
+            isFooterVisible
+          }
         />
 
         <RecipeFloatingGuide
           sections={guideSections}
-          activeSection={activeSection}
-          onNavigate={handleGuideNavigate}
+          activeSection={
+            activeSection
+          }
+          onNavigate={
+            handleGuideNavigate
+          }
+          isFooterVisible={
+            isFooterVisible
+          }
         />
 
         <div className="mx-auto w-full max-w-[760px] px-3 sm:px-4">
@@ -1532,10 +1885,14 @@ export default function RecipeClient({
           >
             <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-[#1d2a3c] shadow-2xl shadow-black/25">
               <SmartRecipeImage
-                sources={mainImageSources}
+                sources={
+                  mainImageSources
+                }
                 alt={imageAlt}
                 priority
-                quality={NEXT_IMAGE_QUALITY}
+                quality={
+                  NEXT_IMAGE_QUALITY
+                }
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, 720px"
                 className="object-cover"
               />
@@ -1551,9 +1908,14 @@ export default function RecipeClient({
               sectionId="intro"
               title="مقدمة الوصفة"
               icon="📖"
-              isOpen={openSection === "intro"}
+              isOpen={
+                openSection ===
+                "intro"
+              }
               onToggle={() =>
-                toggleSection("intro")
+                toggleSection(
+                  "intro",
+                )
               }
             >
               <div className="rounded-lg border border-orange-500/25 bg-[#131d2c] p-3 shadow-inner shadow-black/10">
@@ -1572,15 +1934,20 @@ export default function RecipeClient({
               title="وصف الوصفة"
               icon="🍽️"
               isOpen={
-                openSection === "description"
+                openSection ===
+                "description"
               }
               onToggle={() =>
-                toggleSection("description")
+                toggleSection(
+                  "description",
+                )
               }
             >
               <div className="rounded-lg border border-amber-500/20 bg-[#171d27] p-3">
                 <p className="text-[13px] font-bold leading-7 text-slate-100 sm:text-sm sm:leading-8">
-                  {recipe.description}
+                  {
+                    recipe.description
+                  }
                 </p>
               </div>
             </CollapsibleSection>
@@ -1588,14 +1955,16 @@ export default function RecipeClient({
 
           {/* Dates */}
 
-          {(createdAt || updatedAtRelative) && (
+          {(createdAt ||
+            updatedAtRelative) && (
             <m.div
               {...fadeUp}
               className="mb-3 flex flex-wrap items-center justify-center gap-2 py-1 text-[11px] font-bold text-slate-200"
             >
               {createdAt && (
                 <span className="rounded-full border border-white/[0.07] bg-[#1b2839] px-3 py-1.5">
-                  📅 تاريخ النشر: {createdAt}
+                  📅 تاريخ النشر:{" "}
+                  {createdAt}
                 </span>
               )}
 
@@ -1611,19 +1980,26 @@ export default function RecipeClient({
 
           {/* Data box */}
 
-          {dataBoxItems.length > 0 && (
+          {dataBoxItems.length >
+            0 && (
             <CollapsibleSection
               sectionId="data"
               title="معلومات الوصفة"
               icon="📊"
-              isOpen={openSection === "data"}
+              isOpen={
+                openSection ===
+                "data"
+              }
               onToggle={() =>
                 toggleSection("data")
               }
             >
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                 {dataBoxItems.map(
-                  (item, index) => (
+                  (
+                    item,
+                    index,
+                  ) => (
                     <m.div
                       key={`${item.label}-${index}`}
                       whileHover={
@@ -1636,15 +2012,21 @@ export default function RecipeClient({
                       className="rounded-lg border border-white/[0.06] bg-[#121b29] p-2.5 text-center"
                     >
                       <span className="mb-1 block text-xl">
-                        {item.icon}
+                        {
+                          item.icon
+                        }
                       </span>
 
                       <span className="block text-[10px] font-black text-slate-400 sm:text-xs">
-                        {item.label}
+                        {
+                          item.label
+                        }
                       </span>
 
                       <span className="mt-1 block text-xs font-black text-white sm:text-sm">
-                        {item.value}
+                        {
+                          item.value
+                        }
                       </span>
                     </m.div>
                   ),
@@ -1655,43 +2037,60 @@ export default function RecipeClient({
 
           {/* Ingredients */}
 
-          {ingredientSections.length > 0 && (
+          {ingredientSections.length >
+            0 && (
             <CollapsibleSection
               sectionId="ingredients"
               title="المكونات"
               icon="🧂"
               isOpen={
-                openSection === "ingredients"
+                openSection ===
+                "ingredients"
               }
               onToggle={() =>
-                toggleSection("ingredients")
+                toggleSection(
+                  "ingredients",
+                )
               }
             >
               <div className="space-y-4">
                 {ingredientSections.map(
-                  (section, sectionIndex) => (
+                  (
+                    section,
+                    sectionIndex,
+                  ) => (
                     <div
                       key={`${
-                        section.title || "section"
+                        section.title ||
+                        "section"
                       }-${sectionIndex}`}
                     >
                       {section.title && (
                         <h3 className="mb-2 text-sm font-black text-orange-400 sm:text-base">
-                          {section.title}
+                          {
+                            section.title
+                          }
                         </h3>
                       )}
 
                       <m.ul
-                        variants={staggerContainer}
+                        variants={
+                          staggerContainer
+                        }
                         initial="hidden"
                         animate="show"
                         className="space-y-1.5"
                       >
                         {section.items.map(
-                          (item, itemIndex) => (
+                          (
+                            item,
+                            itemIndex,
+                          ) => (
                             <m.li
                               key={`${item}-${itemIndex}`}
-                              variants={staggerItem}
+                              variants={
+                                staggerItem
+                              }
                               className="rounded-lg border border-white/[0.06] bg-[#111a28] px-3 py-2 text-[12px] font-bold leading-6 text-slate-100 sm:text-sm"
                             >
                               <span className="ml-1.5 text-orange-500">
@@ -1725,7 +2124,9 @@ export default function RecipeClient({
               </SectionTitle>
 
               <m.ol
-                variants={staggerContainer}
+                variants={
+                  staggerContainer
+                }
                 initial="hidden"
                 whileInView="show"
                 viewport={{
@@ -1734,19 +2135,26 @@ export default function RecipeClient({
                 }}
                 className="space-y-2"
               >
-                {steps.map((step, index) => (
-                  <m.li
-                    key={`${step}-${index}`}
-                    variants={staggerItem}
-                    className="relative rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
-                  >
-                    <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full bg-orange-500 text-sm font-black text-white">
-                      {index + 1}
-                    </span>
+                {steps.map(
+                  (
+                    step,
+                    index,
+                  ) => (
+                    <m.li
+                      key={`${step}-${index}`}
+                      variants={
+                        staggerItem
+                      }
+                      className="relative rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
+                    >
+                      <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full bg-orange-500 text-sm font-black text-white">
+                        {index + 1}
+                      </span>
 
-                    {step}
-                  </m.li>
-                ))}
+                      {step}
+                    </m.li>
+                  ),
+                )}
               </m.ol>
             </m.section>
           )}
@@ -1764,7 +2172,9 @@ export default function RecipeClient({
               </SectionTitle>
 
               <m.ul
-                variants={staggerContainer}
+                variants={
+                  staggerContainer
+                }
                 initial="hidden"
                 whileInView="show"
                 viewport={{
@@ -1773,26 +2183,34 @@ export default function RecipeClient({
                 }}
                 className="space-y-2"
               >
-                {tips.map((tip, index) => (
-                  <m.li
-                    key={`${tip}-${index}`}
-                    variants={staggerItem}
-                    className="relative rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
-                  >
-                    <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black text-orange-500">
-                      ✓
-                    </span>
+                {tips.map(
+                  (
+                    tip,
+                    index,
+                  ) => (
+                    <m.li
+                      key={`${tip}-${index}`}
+                      variants={
+                        staggerItem
+                      }
+                      className="relative rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
+                    >
+                      <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black text-orange-500">
+                        ✓
+                      </span>
 
-                    {tip}
-                  </m.li>
-                ))}
+                      {tip}
+                    </m.li>
+                  ),
+                )}
               </m.ul>
             </m.section>
           )}
 
           {/* Common mistakes */}
 
-          {commonMistakes.length > 0 && (
+          {commonMistakes.length >
+            0 && (
             <m.section
               id="recipe-section-mistakes"
               {...fadeUp}
@@ -1803,7 +2221,9 @@ export default function RecipeClient({
               </SectionTitle>
 
               <m.ul
-                variants={staggerContainer}
+                variants={
+                  staggerContainer
+                }
                 initial="hidden"
                 whileInView="show"
                 viewport={{
@@ -1813,10 +2233,15 @@ export default function RecipeClient({
                 className="space-y-2"
               >
                 {commonMistakes.map(
-                  (mistake, index) => (
+                  (
+                    mistake,
+                    index,
+                  ) => (
                     <m.li
                       key={`${mistake}-${index}`}
-                      variants={staggerItem}
+                      variants={
+                        staggerItem
+                      }
                       className="relative rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
                     >
                       <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black">
@@ -1833,7 +2258,8 @@ export default function RecipeClient({
 
           {/* Nutrition */}
 
-          {nutritionEntries.length > 0 && (
+          {nutritionEntries.length >
+            0 && (
             <m.section
               id="recipe-section-nutrition"
               {...fadeUp}
@@ -1845,10 +2271,15 @@ export default function RecipeClient({
 
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {nutritionEntries.map(
-                  ([key, value], index) => (
+                  (
+                    [key, value],
+                    index,
+                  ) => (
                     <m.div
                       key={`${key}-${index}`}
-                      variants={staggerItem}
+                      variants={
+                        staggerItem
+                      }
                       className="rounded-xl border border-slate-200 bg-gray-900 px-3 py-3 text-center text-white shadow-sm dark:bg-white dark:text-gray-900"
                     >
                       <span className="block text-[11px] font-black text-orange-500 sm:text-sm">
@@ -1878,82 +2309,111 @@ export default function RecipeClient({
               </SectionTitle>
 
               <div className="space-y-2">
-                {faq.map((item, index) => {
-                  const isOpen =
-                    openFaqIndex === index;
+                {faq.map(
+                  (
+                    item,
+                    index,
+                  ) => {
+                    const isOpen =
+                      openFaqIndex ===
+                      index;
 
-                  return (
-                    <div
-                      key={`${item.question}-${index}`}
-                      className="overflow-hidden rounded-xl border border-slate-200 bg-gray-900 shadow-sm dark:bg-white"
-                    >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setOpenFaqIndex(
-                            isOpen ? null : index,
-                          )
-                        }
-                        aria-expanded={isOpen}
-                        className="flex w-full items-center justify-between gap-3 bg-gray-900 px-3 py-2.5 text-right transition dark:bg-white"
+                    return (
+                      <div
+                        key={`${item.question}-${index}`}
+                        className="overflow-hidden rounded-xl border border-slate-200 bg-gray-900 shadow-sm dark:bg-white"
                       >
-                        <span className="text-[12px] font-black leading-6 text-white dark:text-gray-900 sm:text-base">
-                          {item.question}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenFaqIndex(
+                              isOpen
+                                ? null
+                                : index,
+                            )
+                          }
+                          aria-expanded={
+                            isOpen
+                          }
+                          className="flex w-full items-center justify-between gap-3 bg-gray-900 px-3 py-2.5 text-right transition dark:bg-white"
+                        >
+                          <span className="text-[12px] font-black leading-6 text-white dark:text-gray-900 sm:text-base">
+                            {
+                              item.question
+                            }
+                          </span>
 
-                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/10 text-white dark:bg-gray-100 dark:text-gray-900">
-                          {isOpen ? (
-                            <ChevronUp size={14} />
-                          ) : (
-                            <ChevronDown size={14} />
+                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/10 text-white dark:bg-gray-100 dark:text-gray-900">
+                            {isOpen ? (
+                              <ChevronUp
+                                size={
+                                  14
+                                }
+                              />
+                            ) : (
+                              <ChevronDown
+                                size={
+                                  14
+                                }
+                              />
+                            )}
+                          </span>
+                        </button>
+
+                        <AnimatePresence
+                          initial={
+                            false
+                          }
+                        >
+                          {isOpen && (
+                            <m.div
+                              initial={
+                                shouldReduceMotion
+                                  ? false
+                                  : {
+                                      height: 0,
+                                      opacity: 0,
+                                    }
+                              }
+                              animate={{
+                                height:
+                                  "auto",
+                                opacity: 1,
+                              }}
+                              exit={
+                                shouldReduceMotion
+                                  ? undefined
+                                  : {
+                                      height: 0,
+                                      opacity: 0,
+                                    }
+                              }
+                              transition={{
+                                duration:
+                                  0.2,
+                              }}
+                              className="overflow-hidden"
+                            >
+                              <div className="border-t border-slate-700 px-3 pb-3 pt-2 text-[12px] font-bold leading-6 text-white dark:border-slate-200 dark:text-gray-900 sm:text-sm sm:leading-7">
+                                {
+                                  item.answer
+                                }
+                              </div>
+                            </m.div>
                           )}
-                        </span>
-                      </button>
-
-                      <AnimatePresence initial={false}>
-                        {isOpen && (
-                          <m.div
-                            initial={
-                              shouldReduceMotion
-                                ? false
-                                : {
-                                    height: 0,
-                                    opacity: 0,
-                                  }
-                            }
-                            animate={{
-                              height: "auto",
-                              opacity: 1,
-                            }}
-                            exit={
-                              shouldReduceMotion
-                                ? undefined
-                                : {
-                                    height: 0,
-                                    opacity: 0,
-                                  }
-                            }
-                            transition={{
-                              duration: 0.2,
-                            }}
-                            className="overflow-hidden"
-                          >
-                            <div className="border-t border-slate-700 px-3 pb-3 pt-2 text-[12px] font-bold leading-6 text-white dark:border-slate-200 dark:text-gray-900 sm:text-sm sm:leading-7">
-                              {item.answer}
-                            </div>
-                          </m.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  },
+                )}
               </div>
             </m.section>
           )}
 
           {/* Related recipes */}
 
-          {visibleRelatedRecipes.length > 0 && (
+          {visibleRelatedRecipes.length >
+            0 && (
             <m.section
               id="recipe-section-related"
               {...fadeUp}
@@ -1965,14 +2425,19 @@ export default function RecipeClient({
 
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {visibleRelatedRecipes.map(
-                  (relatedRecipe, index) => (
+                  (
+                    relatedRecipe,
+                    index,
+                  ) => (
                     <RelatedRecipeCard
                       key={
                         relatedRecipe.slug
                           ? `${relatedRecipe.slug}-${index}`
                           : `related-recipe-${index}`
                       }
-                      recipe={relatedRecipe}
+                      recipe={
+                        relatedRecipe
+                      }
                       index={index}
                     />
                   ),
@@ -1985,7 +2450,9 @@ export default function RecipeClient({
         <style jsx global>{`
           .custom-scrollbar {
             scrollbar-width: thin;
-            scrollbar-color: #f97316 transparent;
+            scrollbar-color: #f97316
+              transparent;
+            overscroll-behavior: contain;
           }
 
           .custom-scrollbar::-webkit-scrollbar {
@@ -2003,7 +2470,10 @@ export default function RecipeClient({
 
           .recipe-guide-scrollbar {
             scrollbar-width: thin;
-            scrollbar-color: #f97316 transparent;
+            scrollbar-color: #f97316
+              transparent;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
           }
 
           .recipe-guide-scrollbar::-webkit-scrollbar {
@@ -2017,6 +2487,24 @@ export default function RecipeClient({
           .recipe-guide-scrollbar::-webkit-scrollbar-thumb {
             border-radius: 999px;
             background: #f97316;
+          }
+
+          @supports (
+            height: 100dvh
+          ) {
+            .recipe-guide-scrollbar {
+              max-height: 55dvh;
+            }
+          }
+
+          @media (max-width: 360px) {
+            .recipe-guide-scrollbar {
+              grid-template-columns: minmax(
+                0,
+                1fr
+              );
+              max-height: 50vh;
+            }
           }
 
           @media (max-width: 640px) {
