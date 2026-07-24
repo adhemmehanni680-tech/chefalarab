@@ -210,8 +210,8 @@ function RecipeCardImage({
       placeholder="blur"
       blurDataURL={IMAGE_BLUR_DATA}
       className="object-cover transition-transform duration-500 group-hover:scale-105"
-      priority={priority}
-      loading={priority ? "eager" : "lazy"}
+      preload={priority}
+      loading={priority ? undefined : "lazy"}
       decoding="async"
       draggable={false}
       unoptimized={isRemote}
@@ -240,7 +240,7 @@ const RecipeCard = memo(function RecipeCard({
   recipe: Recipe;
   priority?: boolean;
 }) {
-  const recipeUrl = `/recipe/${String(recipe.slug)}`;
+  const recipeUrl = `/recipe/${encodeURIComponent(String(recipe.slug))}`;
   const categories = normalizeList(recipe.category).slice(0, 3);
   const tags = normalizeList(recipe.tags).slice(0, 3);
 
@@ -275,7 +275,7 @@ const RecipeCard = memo(function RecipeCard({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full  px-2.5 py-1 text-[11px] font-bold text-orange-600 bg-gray-900  dark:text-orange-00"
+                  className="rounded-full bg-orange-500/10 px-2.5 py-1 text-[11px] font-bold text-orange-400"
                 >
                   #{formatLabel(tag)}
                 </span>
@@ -335,7 +335,7 @@ function HomeHero() {
         <Image
           src={ChefImage}
           alt="شيف العرب – وصفات طبخ عربية وعالمية"
-          priority
+          preload
           fill
           sizes="100vw"
           placeholder="blur"
@@ -430,7 +430,11 @@ export default function HomeClient({ sectionsData }: HomeClientProps) {
           {safeSections.length === 0 && <EmptyHomeState />}
 
           {safeSections.map((section, sectionIndex) => (
-            <section key={section.cat} aria-label={section.cat}>
+            <section
+              key={section.cat}
+              aria-label={section.cat}
+              className="content-visibility-auto"
+            >
               <SectionHeader section={section} />
 
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

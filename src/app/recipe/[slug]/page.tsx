@@ -1,7 +1,6 @@
-// app/recipe/[slug]/page.tsx
-import Script from "next/script";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getAllRecipes } from "@/lib/recipesData";
+import { getAllRecipes, type RecipeData } from "@/lib/recipesData";
 import RecipeClient from "./RecipeClient";
 import { buildRecipeJsonLd } from "@/lib/buildRecipeJsonLd";
 
@@ -11,50 +10,96 @@ type PageProps = {
 
 const BASE_URL = "https://chefalarab.com";
 
-function generateSeoTitle(title: string) {
-  return `طريقة عمل ${title}`;
+function generateSeoTitle(title: string): string {
+  return title.startsWith("طريقة عمل") ? title : `طريقة عمل ${title}`;
 }
 
-function normalizeSlug(slug: string) {
-  return slug
+function safelyDecodeSlug(slug: string): string {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
+}
+
+function normalizeSlug(slug: string): string {
+  return safelyDecodeSlug(slug)
     .normalize("NFD")
     .replace(/[\u064B-\u065F]/g, "")
-    .replace(/[-_]/g, " ")
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
     .toLowerCase()
     .trim();
 }
 
-function getCardImageUrl(recipe: any) {
+function absoluteUrl(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  if (/^https?:\/\//i.test(value)) return value;
+  return `${BASE_URL}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
+function getCardImageUrl(recipe: RecipeData): string | null {
   if (!recipe?.img || typeof recipe.img === "string") return null;
   return recipe.img["url-card"] || recipe.img.url || null;
 }
 
-function getRelatedRecipes(currentRecipe: any) {
-  const scoreRecipe = (candidate: any) => {
+function getRelatedRecipes(currentRecipe: RecipeData) {
+  const currentCategories = Array.isArray(currentRecipe.category)
+    ? currentRecipe.category
+    : [];
+  const currentTags = Array.isArray(currentRecipe.tags) ? currentRecipe.tags : [];
+
+  const scoreRecipe = (candidate: RecipeData): number => {
     let score = 0;
+    const candidateCategories = Array.isArray(candidate.category)
+      ? candidate.category
+      : [];
+    const candidateTags = Array.isArray(candidate.tags) ? candidate.tags : [];
 
-    const categoriesA = currentRecipe.category || [];
-    const categoriesB = candidate.category || [];
-    score += categoriesA.filter((cat: string) => categoriesB.includes(cat)).length * 4;
+    score +=
+      currentCategories.filter((category: string) =>
+        candidateCategories.includes(category),
+      ).length * 4;
+    score +=
+      currentTags.filter((tag: string) => candidateTags.includes(tag)).length * 3;
 
-    const tagsA = currentRecipe.tags || [];
-    const tagsB = candidate.tags || [];
-    score += tagsA.filter((tag: string) => tagsB.includes(tag)).length * 3;
+    if (
+      currentRecipe.data_box?.meal_type &&
+      currentRecipe.data_box.meal_type === candidate.data_box?.meal_type
+    ) {
+      score += 5;
+    }
 
-    if (currentRecipe.data_box?.meal_type && currentRecipe.data_box.meal_type === candidate.data_box?.meal_type) score += 5;
-    if (currentRecipe.data_box?.dish_type && currentRecipe.data_box.dish_type === candidate.data_box?.dish_type) score += 5;
-    if (currentRecipe.country && currentRecipe.country === candidate.country) score += 2;
-    if (currentRecipe.data_box?.difficulty && currentRecipe.data_box.difficulty === candidate.data_box?.difficulty) score += 1;
+    if (
+      currentRecipe.data_box?.dish_type &&
+      currentRecipe.data_box.dish_type === candidate.data_box?.dish_type
+    ) {
+      score += 5;
+    }
+
+    if (currentRecipe.country && currentRecipe.country === candidate.country) {
+      score += 2;
+    }
+
+    if (
+      currentRecipe.data_box?.difficulty &&
+      currentRecipe.data_box.difficulty === candidate.data_box?.difficulty
+    ) {
+      score += 1;
+    }
 
     return score;
   };
 
   return getAllRecipes()
-    .filter((recipe) => recipe.status === "published" && recipe.slug !== currentRecipe.slug)
+    .filter(
+      (recipe) =>
+        recipe.status === "published" && recipe.slug !== currentRecipe.slug,
+    )
     .map((recipe) => ({ recipe, score: scoreRecipe(recipe) }))
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 4)
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || Number(b.recipe.id) - Number(a.recipe.id))
+    .slice(0, 8)
     .map(({ recipe }) => ({
       id: recipe.id,
       title: recipe.title,
@@ -63,45 +108,53 @@ function getRelatedRecipes(currentRecipe: any) {
       category: recipe.category || [],
       tags: recipe.tags || [],
       img: {
-        url: recipe.img?.url,
-        "url-card": getCardImageUrl(recipe),
-        alt: recipe.img?.alt,
-        width: recipe.img?.width,
-        height: recipe.img?.height,
+        url: typeof recipe.img === "string" ? recipe.img : recipe.img?.url,
+        "url-card": getCardImageUrl(recipe) || undefined,
+        alt: typeof recipe.img === "string" ? recipe.title : recipe.img?.alt,
+        width: typeof recipe.img === "string" ? undefined : recipe.img?.width,
+        height: typeof recipe.img === "string" ? undefined : recipe.img?.height,
       },
     }));
 }
 
-function findRecipe(slug: string) {
-  const decodedSlug = decodeURIComponent(slug);
-  const normalized = normalizeSlug(decodedSlug);
+function findRecipe(slug: string): RecipeData | undefined {
+  const normalized = normalizeSlug(slug);
 
   return getAllRecipes().find(
     (recipe) =>
       recipe.status === "published" &&
-      normalizeSlug(String(recipe.slug || "")) === normalized
+      normalizeSlug(String(recipe.slug || "")) === normalized,
   );
 }
 
-export async function generateMetadata({ params }: PageProps) {
+function serializeJsonLd(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const recipe = findRecipe(slug);
 
   if (!recipe) {
     return {
-      title: "وصفة غير موجودة | شيف العرب",
+      title: "وصفة غير موجودة",
       robots: { index: false, follow: false },
     };
   }
 
-  const seoTitle = generateSeoTitle(recipe.title);
-  const title = `${seoTitle} | شيف العرب`;
-  const description = `طريقة عمل ${recipe.title} بسهولة في المنزل، تعرف أيضًا على طريقة عمل ${recipe.title} بخطوات احترافية وأسرار نجاح الوصفة. ${
-    (recipe.description || recipe.intro || "").slice(0, 120)
-  }`;
-  const url = `${BASE_URL}/recipe/${encodeURIComponent(recipe.slug)}`;
-  const imageUrl = recipe.img?.url ? `${BASE_URL}${recipe.img.url}` : undefined;
-  const imageAlt = recipe.img?.alt || recipe.title;
+  const title = recipe.seo?.meta_title || generateSeoTitle(recipe.title);
+  const baseDescription =
+    recipe.seo?.meta_description || recipe.description || recipe.intro || "";
+  const description = baseDescription.trim().slice(0, 160);
+  const url = `${BASE_URL}/recipe/${encodeURIComponent(String(recipe.slug))}`;
+  const imageValue =
+    recipe.seo?.og_image ||
+    (typeof recipe.img === "string" ? recipe.img : recipe.img?.url);
+  const imageUrl = absoluteUrl(imageValue);
+  const imageAlt =
+    typeof recipe.img === "string"
+      ? recipe.title
+      : recipe.img?.alt || recipe.title;
 
   return {
     title,
@@ -126,7 +179,14 @@ export async function generateMetadata({ params }: PageProps) {
       type: "article",
       locale: "ar_AR",
       images: imageUrl
-        ? [{ url: imageUrl, width: 1200, height: 630, alt: imageAlt }]
+        ? [
+            {
+              url: imageUrl,
+              width: 1200,
+              height: 800,
+              alt: imageAlt,
+            },
+          ]
         : undefined,
     },
     twitter: {
@@ -138,7 +198,7 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-export default async function Page({ params }: PageProps) {
+export default async function RecipePage({ params }: PageProps) {
   const { slug } = await params;
   const recipe = findRecipe(slug);
 
@@ -149,12 +209,11 @@ export default async function Page({ params }: PageProps) {
 
   return (
     <>
-      <Script
+      <script
         id="recipe-jsonld"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
-
       <RecipeClient recipe={recipe} relatedRecipes={relatedRecipes} />
     </>
   );

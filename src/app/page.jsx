@@ -1,7 +1,6 @@
 //Page.jsx
 import HomeClient from "./HomeClient";
-import ChefImage from "../../public/Heeder.webp";
-import recipesData from "@/data/recipes-index.json";
+import recipesData from "@/data/recipes-catalog.json";
 
 
 const ITEMS_PER_SECTION = 4;
@@ -102,13 +101,13 @@ function buildHomeSections() {
   }));
 }
 
-export async function generateMetadata() {
+export function generateMetadata() {
   const title = "شيف العرب | وصفات طبخ عربية وعالمية خطوة بخطوة";
   const description =
     "اكتشف أفضل وصفات الطبخ العربية والعالمية في شيف العرب: وصفات سهلة، مجربة، مجمعة لكل المناسبات، سلطات، حلويات، ومشروبات، مع تصفح سريع وتصنيفات واضحة وأفكار مبتكرة للطبخ.";
   
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: "https://chefalarab.com/" },
     robots: { index: true, follow: true },
@@ -120,14 +119,14 @@ export async function generateMetadata() {
       type: "website",
       locale: "ar_AR",
       images: [
-        { url: ChefImage.src, width: 1200, height: 630, alt: "شيف العرب – وصفات طبخ عربية وعالمية سهلة" }
+        { url: "/og-image.jpg", width: 1200, height: 630, alt: "شيف العرب – وصفات طبخ عربية وعالمية سهلة" }
       ]
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [ChefImage.src]
+      images: ["/og-image.jpg"]
     }
   };
 }

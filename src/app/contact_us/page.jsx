@@ -2,12 +2,11 @@
 import ContactClient from "./ContactClient";
 
 export const metadata = {
-  title: "تواصل معنا | شيف العرب",
+  title: "تواصل معنا",
   description:
     "تواصل مع فريق شيف العرب عبر البريد الإلكتروني أو واتساب. يسعدنا استقبال الاقتراحات والاستفسارات والتعاون.",
   alternates: {
   canonical: "https://chefalarab.com/contact_us",
-  url: "https://chefalarab.com/contact_us"
 
   },
   robots: {

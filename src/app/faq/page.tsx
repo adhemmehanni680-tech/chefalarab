@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import FAQClient from "./FaqClient";
 
 export const metadata: Metadata = {
-  title: "الأسئلة الشائعة | شيف العرب",
+  title: "الأسئلة الشائعة",
   description:
     "إجابات على الأسئلة الشائعة حول موقع شيف العرب: استخدام الموقع، الوصفات، الصور، الإعلانات، الخصوصية، الكوكيز، والتواصل.",
   alternates: {

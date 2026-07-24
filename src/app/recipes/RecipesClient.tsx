@@ -52,7 +52,7 @@ type Recipe = {
   tags?: string[] | string;
 
   img: {
-    url: string;
+    url?: string;
     "url-card"?: string;
     alt?: string;
     width?: number;
@@ -306,11 +306,20 @@ function useFooterDock(): FooterDockState {
               )
             : 0;
 
-          setFooterState({
-            isFooterVisible:
-              footerIsInsideViewport,
-            footerOffset:
-              overlap > 0 ? overlap + 12 : 0,
+          const nextOffset = overlap > 0 ? Math.round(overlap + 12) : 0;
+
+          setFooterState((current) => {
+            if (
+              current.isFooterVisible === footerIsInsideViewport &&
+              current.footerOffset === nextOffset
+            ) {
+              return current;
+            }
+
+            return {
+              isFooterVisible: footerIsInsideViewport,
+              footerOffset: nextOffset,
+            };
           });
         });
     };
@@ -1011,7 +1020,7 @@ function RecipeCard({
   return (
     <article className="group h-full">
       <Link
-        href={`/recipe/${recipe.slug}`}
+        href={`/recipe/${encodeURIComponent(recipe.slug)}`}
         prefetch={false}
         className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/[0.07] bg-[#121c2b] shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1.5 hover:border-orange-500/40 hover:shadow-2xl hover:shadow-black/25"
       >
@@ -1028,10 +1037,8 @@ function RecipeCard({
               fill
               sizes="(max-width: 640px) 94vw, (max-width: 1024px) 46vw, (max-width: 1536px) 31vw, 360px"
               quality={70}
-              priority={index < 4}
-              loading={
-                index < 4 ? "eager" : "lazy"
-              }
+              preload={index < 4}
+              loading={index < 4 ? undefined : "lazy"}
               decoding="async"
               draggable={false}
               unoptimized={cardImageUrl!.startsWith(
@@ -1120,8 +1127,7 @@ export default function RecipesClient({
   const [loadingMore, setLoadingMore] =
     useState(false);
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const isLoading = false;
 
   const [imageErrors, setImageErrors] =
     useState<Record<string, boolean>>({});
@@ -1253,21 +1259,8 @@ export default function RecipesClient({
   }, [desktopCategoriesOpen]);
 
   useEffect(() => {
-    setIsLoading(true);
     setVisibleCount(INITIAL_VISIBLE_COUNT);
-
-    const timer = window.setTimeout(() => {
-      setIsLoading(false);
-    }, 350);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [
-    activeCategory,
-    activeCountry,
-    activeTag,
-  ]);
+  }, [activeCategory, activeCountry, activeTag]);
 
   const loadMore = useCallback(() => {
     if (
@@ -1281,7 +1274,7 @@ export default function RecipesClient({
     loadingMoreRef.current = true;
     setLoadingMore(true);
 
-    window.setTimeout(() => {
+    window.requestAnimationFrame(() => {
       setVisibleCount((currentCount) =>
         Math.min(
           currentCount + LOAD_MORE_COUNT,
@@ -1291,7 +1284,7 @@ export default function RecipesClient({
 
       setLoadingMore(false);
       loadingMoreRef.current = false;
-    }, 350);
+    });
   }, [
     loadingMore,
     hasMoreRecipes,

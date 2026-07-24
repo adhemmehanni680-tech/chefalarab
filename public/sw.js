@@ -1,25 +1,38 @@
-const CACHE_NAME = "chefalarab-static-v2";
+const CACHE_NAME = "chefalarab-static-v4";
 
-const STATIC_ASSETS = [
+const STATIC_ASSETS = new Set([
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/maskable-512.png",
-  "/favicon.ico"
-];
+  "/favicon.ico",
+  "/apple-touch-icon.png",
+]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await Promise.allSettled(
+        [...STATIC_ASSETS].map((asset) =>
+          cache.add(new Request(asset, { cache: "reload" })),
+        ),
+      );
+    }),
   );
+
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
-    )
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key)),
+      ),
+    ),
   );
+
   self.clients.claim();
 });
 
@@ -27,21 +40,13 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
-
-  if (url.origin !== self.location.origin) return;
-
-  // لا نكاش صفحات HTML أو ملفات Next أو صور الوصفات داخل Service Worker.
-  // المتصفح/Next/CDN يتولوا الكاش بدل ما نملأ Cache Storage عند المستخدم.
-  if (
-    event.request.mode === "navigate" ||
-    url.pathname.startsWith("/_next/") ||
-    url.pathname.startsWith("/uploads/") ||
-    url.pathname.startsWith("/card/")
-  ) {
+  if (url.origin !== self.location.origin || !STATIC_ASSETS.has(url.pathname)) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => cachedResponse || fetch(event.request))
+    caches.match(event.request).then((cachedResponse) => {
+      return cachedResponse || fetch(event.request);
+    }),
   );
 });

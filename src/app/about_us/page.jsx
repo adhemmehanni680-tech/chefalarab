@@ -2,7 +2,7 @@
 import AboutUsClient from "./AboutUsClient";
 
 export const metadata = {
-  title: "من نحن – شيف العرب | وصفات عربية موثوقة",
+  title: "من نحن – وصفات عربية موثوقة",
   description:
     "تعرف على شيف العرب، موقع وصفات الطبخ العربي والعالمي. نقدم وصفات واضحة ومجرّبة، نصائح عملية، وتجربة تصفح سريعة. رسالتنا، رؤيتنا، وقيمنا في مكان واحد.",
   keywords: [
@@ -20,7 +20,7 @@ export const metadata = {
     siteName: "شيف العرب",
     images: [
       {
-        url: "https://chefalarab.com/og-about.jpg", // استبدلها بمسار صورتك
+        url: "https://chefalarab.com/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "شيف العرب - من نحن",
@@ -34,7 +34,7 @@ export const metadata = {
     title: "من نحن – شيف العرب",
     description:
       "موقع وصفات عربية وعالمية بطريقة بسيطة وعملية. تعرف على قصتنا ورسالتنا وقيمنا.",
-    images: ["https://chefalarab.com/og-about.jpg"],
+    images: ["https://chefalarab.com/og-image.jpg"],
   },
   alternates: {
     canonical: "https://chefalarab.com/about_us",
@@ -48,7 +48,7 @@ export default function AboutPage() {
     "@type": "Organization",
     name: "شيف العرب",
     url: "https://chefalarab.com",
-    logo: "https://chefalarab.com/logo.png",
+    logo: "https://chefalarab.com/favicon.webp",
     description:
       "موقع وصفات الطبخ العربية والعالمية. وصفات واضحة ومجرّبة، نصائح عملية، وتجربة استخدام سريعة.",
     sameAs: [

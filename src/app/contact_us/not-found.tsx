@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "الصفحة غير موجودة | شيف العرب",
+  title: "الصفحة غير موجودة",
   description:
     "عذرًا، الصفحة التي تبحث عنها غير موجودة. يمكنك العودة للصفحة الرئيسية أو تصفح الوصفات.",
   robots: {

@@ -1,14 +1,9 @@
-// buildRecipeJsonLd
-/* =========================
-   Types
-========================= */
-
 type DataBoxObject = {
   info?: string;
-  prep_time_minutes?: number;
-  cook_time_minutes?: number;
-  total_time_minutes?: number;
-  servings?: number;
+  prep_time_minutes?: number | string;
+  cook_time_minutes?: number | string;
+  total_time_minutes?: number | string;
+  servings?: number | string;
   meal_type?: string;
   difficulty?: string;
   dish_type?: string;
@@ -16,71 +11,73 @@ type DataBoxObject = {
 
 type DataBox = DataBoxObject | string[];
 
+type RecipeImage = {
+  url?: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+};
+
 export type RecipeInput = {
   title: string;
   alt?: string;
   slug: string;
-  country?: string; // مثال: "المطبخ المصري"
-  language?: string; // "ar"
-  img?: { url: string; alt?: string } | string;
-
+  country?: string;
+  language?: string;
+  img?: RecipeImage | string;
   category?: string[];
   tags?: string[];
-
   description?: string;
   intro?: string;
-
-  steps?: string[];
-  ingredients?: string[];
-
+  steps?: string[] | string;
+  ingredients?: unknown;
   data_box?: DataBox;
-
-  created_at?: string; // "2025-12-18"
-  updated_at?: string; // "2025-12-18"
+  created_at?: string;
+  updated_at?: string;
 };
-
-/* =========================
-   Helpers
-========================= */
 
 const SITE_URL = "https://chefalarab.com";
 
-function toAbsolute(url?: string) {
+function toAbsolute(url?: string): string | undefined {
   if (!url) return undefined;
-  if (url.startsWith("http")) return url;
-  return `${SITE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${SITE_URL}${url.startsWith("/") ? url : `/${url}`}`;
 }
 
-function findNumber(text: string) {
-  const m = text.match(/(\d+)/);
-  return m ? parseInt(m[1], 10) : undefined;
+function findNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const match = String(value ?? "").match(/([0-9٠-٩]+)/);
+  if (!match) return undefined;
+
+  const normalized = match[1].replace(/[٠-٩]/g, (digit) =>
+    String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)),
+  );
+  const parsed = Number.parseInt(normalized, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function minutesToISO(min?: number) {
-  if (!min || min <= 0) return undefined;
-  return `PT${min}M`;
+function minutesToISO(value: unknown): string | undefined {
+  const minutes = findNumber(value);
+  if (!minutes || minutes <= 0) return undefined;
+  return `PT${minutes}M`;
 }
 
-function isISODate(value?: string) {
+function isISODate(value?: string): boolean {
   if (!value) return false;
-  return /^\d{4}-\d{2}-\d{2}([T ].+)?$/.test(value);
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime());
 }
-
-/* =========================
-   DataBox Parser
-========================= */
 
 function parseDataBox(data?: DataBox) {
   if (data && !Array.isArray(data)) {
-    const prep = data.prep_time_minutes;
-    const cook = data.cook_time_minutes;
-    const total =
-      data.total_time_minutes ?? (prep && cook ? prep + cook : undefined);
+    const prep = findNumber(data.prep_time_minutes);
+    const cook = findNumber(data.cook_time_minutes);
+    const explicitTotal = findNumber(data.total_time_minutes);
 
     return {
       prep,
       cook,
-      total,
+      total: explicitTotal ?? (prep || cook ? (prep || 0) + (cook || 0) : undefined),
       servings: data.servings,
       dishType: data.dish_type,
       mealType: data.meal_type,
@@ -89,20 +86,21 @@ function parseDataBox(data?: DataBox) {
   }
 
   if (Array.isArray(data)) {
-    const prepRow = data.find((x) => x.includes("وقت التحضير"));
-    const cookRow = data.find((x) => x.includes("وقت الطبخ"));
+    const prepRow = data.find((item) => item.includes("وقت التحضير"));
+    const cookRow = data.find((item) => item.includes("وقت الطبخ"));
+    const totalRow = data.find((item) => item.includes("الوقت الكلي"));
     const servingsRow = data.find(
-      (x) => x.includes("عدد الأشخاص") || x.includes("عدد الافراد")
+      (item) => item.includes("عدد الأشخاص") || item.includes("عدد الافراد"),
     );
 
-    const prep = prepRow ? findNumber(prepRow) : undefined;
-    const cook = cookRow ? findNumber(cookRow) : undefined;
+    const prep = findNumber(prepRow);
+    const cook = findNumber(cookRow);
 
     return {
       prep,
       cook,
-      total: prep || cook ? (prep || 0) + (cook || 0) : undefined,
-      servings: servingsRow ? findNumber(servingsRow) : undefined,
+      total: findNumber(totalRow) ?? (prep || cook ? (prep || 0) + (cook || 0) : undefined),
+      servings: findNumber(servingsRow),
       dishType: undefined,
       mealType: undefined,
       difficulty: undefined,
@@ -112,89 +110,124 @@ function parseDataBox(data?: DataBox) {
   return {};
 }
 
-function normalizeCuisine(country?: string) {
+function normalizeCuisine(country?: string): string | undefined {
   if (!country) return undefined;
-  const c = country.trim();
-  if (c.includes("المطبخ")) return c.replace("المطبخ", "").trim();
-  return c;
+  return country
+    .replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}\uFE0F]/gu, "")
+    .replace(/المطبخ/g, "")
+    .replace(/\s+/g, " ")
+    .trim() || undefined;
 }
 
-/* =========================
-   Recipe JSON-LD Builder
-========================= */
+function normalizeIngredients(value: unknown): string[] | undefined {
+  const items: string[] = [];
+
+  const visit = (input: unknown) => {
+    if (input === null || input === undefined) return;
+
+    if (Array.isArray(input)) {
+      for (const item of input) visit(item);
+      return;
+    }
+
+    if (typeof input === "object") {
+      for (const nested of Object.values(input as Record<string, unknown>)) {
+        visit(nested);
+      }
+      return;
+    }
+
+    const text = String(input).trim();
+    if (!text || /[:：]\s*$/.test(text)) return;
+    items.push(text);
+  };
+
+  visit(value);
+  return items.length > 0 ? Array.from(new Set(items)) : undefined;
+}
+
+function cleanStepNumber(step: string): string {
+  return step.replace(/^\s*[٠-٩0-9]+\s*[.\-:)،]?\s*/, "").trim();
+}
+
+function normalizeInstructions(value: RecipeInput["steps"]) {
+  const steps = Array.isArray(value) ? value : value ? [value] : [];
+  const cleaned = steps.map(cleanStepNumber).filter(Boolean);
+
+  return cleaned.length > 0
+    ? cleaned.map((step, index) => ({
+        "@type": "HowToStep",
+        position: index + 1,
+        text: step,
+      }))
+    : undefined;
+}
 
 export function buildRecipeJsonLd(recipe: RecipeInput) {
   const data = parseDataBox(recipe.data_box);
-
-  const imageUrl =
-    typeof recipe.img === "string" ? recipe.img : recipe.img?.url;
-
+  const imageUrl = typeof recipe.img === "string" ? recipe.img : recipe.img?.url;
   const imageAlt =
-    recipe.img && typeof recipe.img !== "string"
-      ? recipe.img.alt || recipe.alt || recipe.title
-      : recipe.alt || recipe.title;
-
+    typeof recipe.img === "string"
+      ? recipe.alt || recipe.title
+      : recipe.img?.alt || recipe.alt || recipe.title;
   const fullDescription = [recipe.intro, recipe.description]
     .filter(Boolean)
     .join(" ")
+    .replace(/\s+/g, " ")
     .trim();
+  const pageUrl = `${SITE_URL}/recipe/${encodeURIComponent(recipe.slug)}`;
+  const absoluteImage = toAbsolute(imageUrl);
 
-  const pageUrl = `${SITE_URL}/recipes/${encodeURIComponent(recipe.slug)}`;
-
-  const image = imageUrl
-    ? [
-        {
-          "@type": "ImageObject",
-          url: toAbsolute(imageUrl),
-          caption: imageAlt,
-          description: imageAlt,
-        },
-      ]
-    : undefined;
-
-  const jsonLd: any = {
+  const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Recipe",
     inLanguage: recipe.language || "ar",
-
     name: recipe.title,
     description: fullDescription || recipe.title,
-
     url: pageUrl,
     mainEntityOfPage: { "@type": "WebPage", "@id": pageUrl },
-
-    image,
-
+    image: absoluteImage
+      ? [
+          {
+            "@type": "ImageObject",
+            url: absoluteImage,
+            caption: imageAlt,
+            description: imageAlt,
+          },
+        ]
+      : undefined,
     recipeCuisine: normalizeCuisine(recipe.country),
     recipeCategory: data.dishType || recipe.category?.[0],
-
     keywords:
-      (recipe.tags?.length ?? 0) > 0
-        ? recipe.tags!.join(", ")
-        : (recipe.category?.length ?? 0) > 0
-        ? recipe.category!.join(", ")
-        : undefined,
-
+      [...(recipe.tags || []), ...(recipe.category || [])].filter(Boolean).join(", ") ||
+      undefined,
     prepTime: minutesToISO(data.prep),
     cookTime: minutesToISO(data.cook),
     totalTime: minutesToISO(data.total),
-
-    recipeYield: data.servings ? `${data.servings} حصص` : undefined,
-
-    recipeIngredient: recipe.ingredients?.length ? recipe.ingredients : undefined,
-
-    recipeInstructions: recipe.steps?.length
-      ? recipe.steps.map((step: string) => ({ "@type": "HowToStep", text: step }))
-      : undefined,
-
+    recipeYield:
+      data.servings !== undefined && data.servings !== null
+        ? String(data.servings)
+        : undefined,
+    recipeIngredient: normalizeIngredients(recipe.ingredients),
+    recipeInstructions: normalizeInstructions(recipe.steps),
     author: { "@type": "Organization", name: "شيف العرب", url: SITE_URL },
-    publisher: { "@type": "Organization", name: "شيف العرب", url: SITE_URL },
+    publisher: {
+      "@type": "Organization",
+      name: "شيف العرب",
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/favicon.webp`,
+      },
+    },
   };
 
   if (isISODate(recipe.created_at)) jsonLd.datePublished = recipe.created_at;
   if (isISODate(recipe.updated_at)) jsonLd.dateModified = recipe.updated_at;
 
   return JSON.parse(
-    JSON.stringify(jsonLd, (_k, v) => (v === undefined ? undefined : v))
+    JSON.stringify(jsonLd, (_key, value) =>
+      value === undefined || value === "" ? undefined : value,
+    ),
   );
 }

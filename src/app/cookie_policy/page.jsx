@@ -2,12 +2,11 @@
 import CookiePolicyClient from "./CookiePolicyClient";
 
 export const metadata = {
-  title: "سياسة ملفات الارتباط (الكوكيز) | شيف العرب",
+  title: "سياسة ملفات الارتباط (الكوكيز)",
   description:
     "تعرف على سياسة ملفات الارتباط (Cookies) في موقع شيف العرب (chefalarab.com) وكيفية استخدامها لتحسين التجربة وقياس الأداء وعلاقتها بإعلانات Google AdSense.",
   alternates: {
    canonical: "https://chefalarab.com/cookie_policy",  
-   url: "https://chefalarab.com/cookie_policy"
  
   },
   robots: {

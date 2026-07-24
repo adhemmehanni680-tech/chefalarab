@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -20,18 +20,13 @@ import {
   X,
 } from "lucide-react";
 
-import iconAd from "../../../../public/ads/youssef-Z.webp";
-import iconQasr from "../../../../public/ads/qasr-alsiyramik.webp";
-import iconElmaher from "../../../../public/ads/elmaher.webp";
-import iconLavender from "../../../../public/ads/lavender.webp";
-
 /* ===============================
    Types
 ================================ */
 
 interface AdItem {
   id: string | number;
-  imageSrc?: string | StaticImageData;
+  imageSrc?: string;
   link: string;
   altText: string;
   phone?: string | string[];
@@ -63,7 +58,7 @@ const DEFAULTS = {
   adsList: [
     {
       id: 1,
-      imageSrc: iconAd,
+      imageSrc: "/ads/youssef-Z.webp",
       link: "",
       altText: "Ozeed",
       phone: ["+201111157067", "+201150051351"],
@@ -73,7 +68,7 @@ const DEFAULTS = {
     },
     {
       id: 2,
-      imageSrc: iconQasr,
+      imageSrc: "/ads/qasr-alsiyramik.webp",
       link: "",
       altText: "قصر السراميك",
       phone: ["+201150500288", "+201010515400"],
@@ -84,7 +79,7 @@ const DEFAULTS = {
     },
     {
       id: 3,
-      imageSrc: iconElmaher,
+      imageSrc: "/ads/elmaher.webp",
       link: "https://www.facebook.com/share/1BZYsQV38t/",
       altText: "الماهر",
       phone: ["+201155416650", "+201037472085"],
@@ -94,7 +89,7 @@ const DEFAULTS = {
     },
     {
       id: 4,
-      imageSrc: iconLavender,
+      imageSrc: "/ads/lavender.webp",
       link: "",
       altText: "لافندر",
       phone: ["+201201928497"],
@@ -123,6 +118,9 @@ export default function AdBannerPro({
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isDismissed, setIsDismissed] = useState(false);
   const [isNearFooter, setIsNearFooter] = useState(false);
+  const [failedImageId, setFailedImageId] = useState<
+    string | number | null
+  >(null);
 
   const bannerRef = useRef<HTMLDivElement>(null);
 
@@ -449,14 +447,20 @@ export default function AdBannerPro({
   ================================ */
 
   const AdvertisementImage = () => {
+    const imageSource =
+      failedImageId === currentAd.id
+        ? "/favicon.webp"
+        : currentAd.imageSrc || "/favicon.webp";
+
     const imageElement = (
       <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-lg sm:h-24 sm:w-24">
         <Image
-          src={currentAd.imageSrc ?? iconAd}
+          src={imageSource}
           alt={currentAd.altText}
           fill
           sizes="(max-width: 640px) 80px, 96px"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
+          onError={() => setFailedImageId(currentAd.id)}
         />
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/5" />

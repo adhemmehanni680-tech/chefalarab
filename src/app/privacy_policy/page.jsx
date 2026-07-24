@@ -1,7 +1,7 @@
 import PrivacyPolicyClient from "./PrivacyPolicyClient";
 
 export const metadata = {
-  title: "سياسة الخصوصية | شيف العرب",
+  title: "سياسة الخصوصية",
   description:
     "سياسة الخصوصية لموقع شيف العرب: كيفية جمع واستخدام وحماية البيانات، ملفات تعريف الارتباط (الكوكيز)، الإعلانات (Google AdSense)، الروابط الخارجية وخصوصية الأطفال.",
   alternates: {

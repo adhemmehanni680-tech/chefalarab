@@ -1,72 +1,54 @@
-// app/recipes/page.jsx
-import React from "react";
+import type { Metadata } from "next";
 import RecipesClient from "./RecipesClient";
-import recipesData from "@/data/recipes-index.json";
+import recipesData from "@/data/recipes-catalog.json";
 
 type Recipe = {
   id: number;
   title: string;
   slug: string;
+  status?: string;
   country?: string;
   category?: string[] | string;
   tags?: string[] | string;
   img: {
-    url: string;
+    url?: string;
+    "url-card"?: string;
     alt?: string;
+    width?: number;
+    height?: number;
   };
 };
 
-const getCategories = (recipes: Recipe[]): string[] => {
-  const set = new Set<string>();
-  recipes.forEach((recipe) => {
-    if (!recipe.category) return;
-    const cats = Array.isArray(recipe.category) ? recipe.category : [recipe.category];
-    cats.forEach((c) => set.add(c));
-  });
-  return Array.from(set);
+type PageProps = {
+  searchParams: Promise<{
+    category?: string | string[];
+  }>;
 };
 
-const RecipesPageSkeleton = () => (
-  <div className="dark:bg-gray-900 min-h-screen text-white pb-24 pt-16 mt-16">
-    <h1 className="text-center font-bold text-3xl mb-6 animate-pulse bg-gray-700 h-12 w-3/4 mx-auto rounded"></h1>
-    <div className="max-w-[1500px] mx-auto flex gap-6 px-3">
-      <aside className="hidden lg:block w-[220px]">
-        <div className="sticky top-24 space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-60 bg-gray-700 rounded-xl animate-pulse"></div>
-          ))}
-        </div>
-      </aside>
-      <main className="flex-1">
-        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="bg-[#111827] rounded-2xl overflow-hidden border border-gray-700 animate-pulse">
-              <div className="h-56 bg-gray-700"></div>
-              <div className="p-4 text-center space-y-2">
-                <div className="h-6 bg-gray-600 rounded w-3/4 mx-auto"></div>
-                <div className="h-4 bg-gray-500 rounded w-1/2 mx-auto"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </main>
-      <aside className="hidden lg:block w-[295px]">
-        <div className="sticky top-24 space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-12 bg-gray-700 rounded-lg animate-pulse"></div>
-          ))}
-        </div>
-      </aside>
-    </div>
-  </div>
-);
+function getCategories(recipes: Recipe[]): string[] {
+  const categories = new Set<string>();
 
-export const metadata = {
-  title: "الوصفات | شيف العرب",
+  for (const recipe of recipes) {
+    const values = Array.isArray(recipe.category)
+      ? recipe.category
+      : recipe.category
+        ? [recipe.category]
+        : [];
+
+    for (const category of values) {
+      if (category) categories.add(category);
+    }
+  }
+
+  return Array.from(categories).sort((a, b) => a.localeCompare(b, "ar"));
+}
+
+export const metadata: Metadata = {
+  title: "الوصفات",
   description:
-    "تصفح جميع وصفات شيف العرب: أطباق عربية وغربية، سلطات، حلويات، ومشروبات. اختر التصنيف واستكشف وصفات مجربة وسهلة.",
+    "تصفح جميع وصفات شيف العرب: أطباق عربية وعالمية، سلطات، حلويات ومشروبات مع تصنيفات واضحة وخطوات سهلة.",
   alternates: {
-    canonical: "https://chefalarab.com/recipes",
+    canonical: "/recipes",
   },
   robots: {
     index: true,
@@ -80,36 +62,46 @@ export const metadata = {
     },
   },
   openGraph: {
-    title: "الوصفات | شيف العرب",
+    title: "الوصفات",
     description:
-      "تصفح جميع وصفات شيف العرب حسب التصنيف: العربي، الغربي، سلطات، حلويات، ومشروبات.",
-    url: "https://chefalarab.com/recipes",
+      "تصفح وصفات شيف العرب حسب التصنيف والدولة ونوع الوجبة.",
+    url: "/recipes",
     siteName: "شيف العرب",
     type: "website",
     locale: "ar_AR",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "وصفات شيف العرب",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "الوصفات | شيف العرب",
-    description:
-      "تصفح جميع وصفات شيف العرب حسب التصنيف: العربي، الغربي، سلطات، حلويات، ومشروبات.",
+    title: "الوصفات",
+    description: "تصفح جميع وصفات شيف العرب بسهولة.",
+    images: ["/og-image.jpg"],
   },
 };
 
-export default async function Page({ searchParams }: { searchParams?: { category?: string } }) {
-  const recipes = recipesData as Recipe[];
-  const categories = getCategories(recipes);
-  // انتظر searchParams قبل استخدام خصائصه
+export default async function RecipesPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const initialCategory = params?.category || null;
+  const categoryParam = params.category;
+  const initialCategory = Array.isArray(categoryParam)
+    ? categoryParam[0] || null
+    : categoryParam || null;
+
+  const recipes = (recipesData as Recipe[]).filter(
+    (recipe) => !recipe.status || recipe.status === "published",
+  );
 
   return (
-    <React.Suspense fallback={<RecipesPageSkeleton />}>
-      <RecipesClient
-        recipes={recipes}
-        categories={categories}
-        initialCategory={initialCategory}
-      />
-    </React.Suspense>
+    <RecipesClient
+      recipes={recipes}
+      categories={getCategories(recipes)}
+      initialCategory={initialCategory}
+    />
   );
 }

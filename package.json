@@ -3,10 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint ."
+    "dev": "node scripts/generate-recipe-indexes.mjs && next dev",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "build": "node scripts/generate-recipe-indexes.mjs && next build && node scripts/prepare-standalone.mjs",
+    "check": "npm run audit && npm run lint && npm run typecheck && npm run build",
+    "start": "node .next/standalone/server.js",
+    "start:next": "next start",
+    "data:generate": "node scripts/generate-recipe-indexes.mjs",
+    "clean": "node scripts/clean.mjs",
+    "build:clean": "npm run clean && npm run build",
+    "audit": "node scripts/audit-project.mjs",
+    "audit:strict": "node scripts/audit-project.mjs --strict-assets"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -29,5 +37,8 @@
     "postcss": "^8.5.15",
     "tailwindcss": "^3.4.19",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   }
 }

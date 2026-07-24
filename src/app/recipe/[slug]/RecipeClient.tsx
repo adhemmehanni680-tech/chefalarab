@@ -539,9 +539,19 @@ function getRelativeDateArabic(
   return `منذ ${diffInDays} يومًا`;
 }
 
+function cleanStepNumber(step: string): string {
+  return step
+    .replace(/^\s*[٠-٩0-9]+\s*[.\-:)،]?\s*/, "")
+    .trim();
+}
+
 function getInitialOpenSection(
   recipe: Recipe,
 ): SectionKey {
+  if (recipe.ingredients) {
+    return "ingredients";
+  }
+
   if (recipe.intro) {
     return "intro";
   }
@@ -552,10 +562,6 @@ function getInitialOpenSection(
 
   if (recipe.data_box) {
     return "data";
-  }
-
-  if (recipe.ingredients) {
-    return "ingredients";
   }
 
   return null;
@@ -657,26 +663,6 @@ const fadeUp = {
   },
 };
 
-const staggerContainer = {
-  hidden: {},
-  show: {
-    transition: {
-      staggerChildren: 0.025,
-    },
-  },
-};
-
-const staggerItem = {
-  hidden: {
-    opacity: 0,
-    y: 7,
-  },
-  show: {
-    opacity: 1,
-    y: 0,
-  },
-};
-
 /* =============================== */
 /* Image components                */
 /* =============================== */
@@ -702,8 +688,7 @@ function InlineImageFallback({
       </span>
 
       <span className="mt-2 text-xs font-medium text-white/60">
-        تأكد من وجود الصورة داخل
-        public/uploads أو public/card
+        الصورة غير متاحة حاليًا
       </span>
     </div>
   );
@@ -769,10 +754,8 @@ function SmartRecipeImage({
       fill
       sizes={sizes}
       quality={quality}
-      priority={priority}
-      loading={
-        priority ? "eager" : "lazy"
-      }
+      preload={priority}
+      loading={priority ? undefined : "lazy"}
       placeholder="blur"
       blurDataURL={IMAGE_BLUR_DATA}
       decoding="async"
@@ -1387,7 +1370,7 @@ const RelatedRecipeCard = memo(
         className="group overflow-hidden rounded-xl border border-white/[0.06] bg-[#1b2839] shadow-sm shadow-black/20 transition hover:-translate-y-1 hover:border-orange-500/30 hover:shadow-xl"
       >
         <Link
-          href={`/recipe/${recipe.slug}`}
+          href={`/recipe/${encodeURIComponent(recipe.slug)}`}
           prefetch={false}
           className="block"
         >
@@ -1528,9 +1511,9 @@ export default function RecipeClient({
     recipe.created_at
       ? new Date(
           recipe.created_at,
-        ).toLocaleDateString(
-          "ar-EG",
-        )
+        ).toLocaleDateString("ar-EG", {
+          timeZone: "UTC",
+        })
       : "";
 
   const updatedAtRelative =
@@ -1970,7 +1953,7 @@ export default function RecipeClient({
 
               {updatedAtRelative && (
                 <span className="rounded-full border border-white/[0.07] bg-[#1b2839] px-3 py-1.5">
-                 🔄تم التحديث: منذ 7 يومًا
+                  🔄 تم التحديث: {updatedAtRelative}
                 </span>
               )}
             </m.div>
@@ -2000,16 +1983,9 @@ export default function RecipeClient({
                     item,
                     index,
                   ) => (
-                    <m.div
+                    <div
                       key={`${item.label}-${index}`}
-                      whileHover={
-                        shouldReduceMotion
-                          ? undefined
-                          : {
-                              y: -2,
-                            }
-                      }
-                      className="rounded-lg border border-white/[0.06] bg-[#121b29] p-2.5 text-center"
+                      className="rounded-lg border border-white/[0.06] bg-[#121b29] p-2.5 text-center transition-transform duration-200 hover:-translate-y-0.5"
                     >
                       <span className="mb-1 block text-xl">
                         {
@@ -2028,7 +2004,7 @@ export default function RecipeClient({
                           item.value
                         }
                       </span>
-                    </m.div>
+                    </div>
                   ),
                 )}
               </div>
@@ -2073,35 +2049,25 @@ export default function RecipeClient({
                         </h3>
                       )}
 
-                      <m.ul
-                        variants={
-                          staggerContainer
-                        }
-                        initial="hidden"
-                        animate="show"
-                        className="space-y-1.5"
-                      >
+                      <ul className="space-y-1.5">
                         {section.items.map(
                           (
                             item,
                             itemIndex,
                           ) => (
-                            <m.li
+                            <li
                               key={`${item}-${itemIndex}`}
-                              variants={
-                                staggerItem
-                              }
-                              className="rounded-lg border border-white/[0.06] bg-[#111a28] px-3 py-2 text-[12px] font-bold leading-6 text-slate-100 sm:text-sm"
+                              className="p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black  rounded-lg border border-white/[0.06] bg-[#111a28] px-3 py-2 text-[12px] font-bold leading-6 text-slate-100 sm:text-sm"
                             >
                               <span className="ml-1.5 text-orange-500">
                                 •
                               </span>
 
                               {item}
-                            </m.li>
+                            </li>
                           ),
                         )}
-                      </m.ul>
+                      </ul>
                     </div>
                   ),
                 )}
@@ -2123,39 +2089,25 @@ export default function RecipeClient({
                 خطوات التحضير
               </SectionTitle>
 
-              <m.ol
-                variants={
-                  staggerContainer
-                }
-                initial="hidden"
-                whileInView="show"
-                viewport={{
-                  once: true,
-                  amount: 0.08,
-                }}
-                className="space-y-2"
-              >
+              <ol className="space-y-2">
                 {steps.map(
                   (
                     step,
                     index,
                   ) => (
-                    <m.li
+                    <li
                       key={`${step}-${index}`}
-                      variants={
-                        staggerItem
-                      }
-                      className="relative rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
+                      className="relative p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
                     >
                       <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full bg-orange-500 text-sm font-black text-white">
                         {index + 1}
                       </span>
 
-                      {step}
-                    </m.li>
+                      {cleanStepNumber(step)}
+                    </li>
                   ),
                 )}
-              </m.ol>
+              </ol>
             </m.section>
           )}
 
@@ -2171,39 +2123,25 @@ export default function RecipeClient({
                 نصائح
               </SectionTitle>
 
-              <m.ul
-                variants={
-                  staggerContainer
-                }
-                initial="hidden"
-                whileInView="show"
-                viewport={{
-                  once: true,
-                  amount: 0.08,
-                }}
-                className="space-y-2"
-              >
+              <ul className="space-y-2">
                 {tips.map(
                   (
                     tip,
                     index,
                   ) => (
-                    <m.li
+                    <li
                       key={`${tip}-${index}`}
-                      variants={
-                        staggerItem
-                      }
-                      className="relative rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
+                      className="   p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black relative rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
                     >
                       <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black text-orange-500">
                         ✓
                       </span>
 
                       {tip}
-                    </m.li>
+                    </li>
                   ),
                 )}
-              </m.ul>
+              </ul>
             </m.section>
           )}
 
@@ -2220,39 +2158,25 @@ export default function RecipeClient({
                 الأخطاء الشائعة
               </SectionTitle>
 
-              <m.ul
-                variants={
-                  staggerContainer
-                }
-                initial="hidden"
-                whileInView="show"
-                viewport={{
-                  once: true,
-                  amount: 0.08,
-                }}
-                className="space-y-2"
-              >
+              <ul className="space-y-2">
                 {commonMistakes.map(
                   (
                     mistake,
                     index,
                   ) => (
-                    <m.li
+                    <li
                       key={`${mistake}-${index}`}
-                      variants={
-                        staggerItem
-                      }
-                      className="relative rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
+                      className="relative p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black rounded-xl border  border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7 "
                     >
-                      <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black">
+                      <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black ">
                         ❌
                       </span>
 
                       {mistake}
-                    </m.li>
+                    </li>
                   ),
                 )}
-              </m.ul>
+              </ul>
             </m.section>
           )}
 
@@ -2275,21 +2199,18 @@ export default function RecipeClient({
                     [key, value],
                     index,
                   ) => (
-                    <m.div
+                    <div
                       key={`${key}-${index}`}
-                      variants={
-                        staggerItem
-                      }
                       className="rounded-xl border border-slate-200 bg-gray-900 px-3 py-3 text-center text-white shadow-sm dark:bg-white dark:text-gray-900"
                     >
                       <span className="block text-[11px] font-black text-orange-500 sm:text-sm">
                         {key}
                       </span>
 
-                      <span className="mt-1 block text-sm font-black text-white dark:text-gray-900">
+                      <span className="mt-1 block text-sm font-black text-white dark:text-gray-900 ">
                         {String(value)}
                       </span>
-                    </m.div>
+                    </div>
                   ),
                 )}
               </div>
@@ -2394,7 +2315,7 @@ export default function RecipeClient({
                               }}
                               className="overflow-hidden"
                             >
-                              <div className="border-t border-slate-700 px-3 pb-3 pt-2 text-[12px] font-bold leading-6 text-white dark:border-slate-200 dark:text-gray-900 sm:text-sm sm:leading-7">
+                              <div className="border-t border-slate-700 px-3 pb-3 pt-2 text-[12px] font-bold leading-6 text-white dark:border-slate-200   p-2 rounded-lg  hover:bg-orange-500 hover:text-black  dark:text-gray-900 sm:text-sm sm:leading-7">
                                 {
                                   item.answer
                                 }

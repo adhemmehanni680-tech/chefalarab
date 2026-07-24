@@ -194,3 +194,24 @@ button {
   animation: shimmer 1.5s infinite;
 }
 
+
+/* تأجيل رسم الأقسام البعيدة عن الشاشة بدون تغيير ترتيب الصفحة. */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

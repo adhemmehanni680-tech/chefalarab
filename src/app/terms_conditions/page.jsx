@@ -1,7 +1,7 @@
 import TermsConditionsClient from "./TermsConditionsClient";
 
 export const metadata = {
-  title: "الشروط والأحكام | شيف العرب",
+  title: "الشروط والأحكام",
   description:
     "تعرف على الشروط والأحكام الخاصة بموقع شيف العرب، مع توضيح حقوق الملكية، الروابط الخارجية، ملفات الكوكيز، والإعلانات.",
   alternates: {

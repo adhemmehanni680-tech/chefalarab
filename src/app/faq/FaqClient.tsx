@@ -1,7 +1,12 @@
 // app/faq/FaqClient
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 
 import { ChevronDown, Search, HelpCircle } from "lucide-react";
@@ -9,7 +14,7 @@ import { ChevronDown, Search, HelpCircle } from "lucide-react";
 
 type Item = {
   q: string;
-  a: JSX.Element;
+  a: ReactNode;
   tags?: string[];
 };
 
@@ -213,7 +218,9 @@ export default function FAQClient() {
 
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              setQuery(event.target.value)
+            }
             placeholder="ابحث داخل الأسئلة (مثال: إعلانات، كوكيز، وصفات)..."
             className={`w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-800
             px-12 py-3 text-sm sm:text-base text-gray-900 dark:text-gray-100 outline-none
