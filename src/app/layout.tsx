@@ -6,7 +6,15 @@ import "./globals.css";
 import Header from "./Components/header/Header";
 import Footer from "./Components/footer/Footer";
 import RootClient from "./RootClient";
-import { adsEnabled } from "@/lib/ads";
+
+import {
+  adsEnabled,
+  adsenseClient,
+} from "@/lib/ads";
+
+/* =========================================================
+   Fonts
+   ========================================================= */
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -23,29 +31,61 @@ const arefRuqaa = Aref_Ruqaa({
   preload: true,
 });
 
+/* =========================================================
+   Site configuration
+   ========================================================= */
+
 const SITE_URL = "https://chefalarab.com";
-const ADSENSE_CLIENT =
-  process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-9717868267549745";
+
+/*
+ * نستخدم Environment Variable أولًا.
+ * ولو غير موجود، نستخدم رقم GTM الاحتياطي.
+ */
+const GTM_ID =
+  process.env.NEXT_PUBLIC_GTM_ID?.trim() ||
+  "GTM-P8MZTC3W";
+
+const hasValidGtmId =
+  /^GTM-[A-Z0-9]+$/i.test(GTM_ID);
+
+/* =========================================================
+   Viewport
+   ========================================================= */
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#101827" },
+    {
+      media: "(prefers-color-scheme: light)",
+      color: "#ffffff",
+    },
+    {
+      media: "(prefers-color-scheme: dark)",
+      color: "#101827",
+    },
   ],
 };
 
+/* =========================================================
+   Metadata
+   ========================================================= */
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+
   title: {
     default: "شيف العرب",
     template: "%s | شيف العرب",
   },
+
   description:
     "اكتشف ألذ وأحدث الوصفات العربية الأصيلة والعالمية بخطوات واضحة ومقادير دقيقة للطبخ المنزلي والحلويات والمشروبات.",
+
   applicationName: "شيف العرب",
+
   keywords: [
     "شيف العرب",
     "وصفات عربية",
@@ -60,10 +100,21 @@ export const metadata: Metadata = {
     "مشروبات",
     "وصفات سهلة وسريعة",
   ],
-  authors: [{ name: "Adhem Mehanni", url: SITE_URL }],
+
+  authors: [
+    {
+      name: "Adhem Mehanni",
+      url: SITE_URL,
+    },
+  ],
+
   creator: "شيف العرب",
   publisher: "شيف العرب",
-  alternates: { canonical: "/" },
+
+  alternates: {
+    canonical: "/",
+  },
+
   openGraph: {
     title: "شيف العرب",
     description:
@@ -72,6 +123,7 @@ export const metadata: Metadata = {
     siteName: "شيف العرب",
     type: "website",
     locale: "ar_AR",
+
     images: [
       {
         url: "/og-image.jpg",
@@ -81,15 +133,19 @@ export const metadata: Metadata = {
       },
     ],
   },
+
   twitter: {
     card: "summary_large_image",
     title: "شيف العرب",
-    description: "وصفات عربية وعالمية مجربة بخطوات واضحة.",
+    description:
+      "وصفات عربية وعالمية مجربة بخطوات واضحة.",
     images: ["/og-image.jpg"],
   },
+
   robots: {
     index: true,
     follow: true,
+
     googleBot: {
       index: true,
       follow: true,
@@ -98,9 +154,18 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
+
   manifest: "/manifest.webmanifest",
+
   icons: {
-    icon: [{ url: "/favicon.ico", sizes: "any", type: "image/x-icon" }],
+    icon: [
+      {
+        url: "/favicon.ico",
+        sizes: "any",
+        type: "image/x-icon",
+      },
+    ],
+
     apple: [
       {
         url: "/apple-touch-icon.png",
@@ -109,21 +174,26 @@ export const metadata: Metadata = {
       },
     ],
   },
+
   other: {
-    "google-adsense-account": "ca-pub-9717868267549745",
+    "google-adsense-account": adsenseClient,
   },
+
   verification: {
-    google: "tdSwWzOnOuUsvJhYhKTI616MoDw3Vb4Xvle7no2xtas",
+    google:
+      "tdSwWzOnOuUsvJhYhKTI616MoDw3Vb4Xvle7no2xtas",
   },
 };
+
+/* =========================================================
+   Root layout
+   ========================================================= */
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
-
   return (
     <html
       lang="ar"
@@ -132,45 +202,234 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
     >
       <body
-        className={`${cairo.variable} ${arefRuqaa.variable} flex min-h-screen flex-col bg-white text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100`}
+        className={`
+          ${cairo.variable}
+          ${arefRuqaa.variable}
+          flex min-h-screen flex-col
+          bg-white text-gray-900 antialiased
+          dark:bg-gray-900 dark:text-gray-100
+        `}
       >
-        <Script id="theme-init" strategy="beforeInteractive">
-          {`(function(){try{var saved=localStorage.getItem('theme');var dark=saved?saved==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.classList.toggle('dark',dark);document.documentElement.style.colorScheme=dark?'dark':'light';}catch(e){}})();`}
-        </Script>
+        {/* ===============================================
+            GTM fallback for browsers without JavaScript
+            =============================================== */}
 
-        <Script id="consent-default" strategy="beforeInteractive">
-          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});`}
-        </Script>
-
-        {GTM_ID && (
-          <>
-            <Script id="gtm" strategy="afterInteractive">
-              {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');`}
-            </Script>
-            <noscript>
-              <iframe
-                src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-                height="0"
-                width="0"
-                title="Google Tag Manager"
-                style={{ display: "none", visibility: "hidden" }}
-              />
-            </noscript>
-          </>
+        {hasValidGtmId && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              title="Google Tag Manager"
+              style={{
+                display: "none",
+                visibility: "hidden",
+              }}
+            />
+          </noscript>
         )}
+
+        {/* ===============================================
+            Google Consent Mode v2
+
+            المستخدم الجديد أو الرافض:
+            Analytics وAds = denied
+
+            المستخدم الذي وافق سابقًا:
+            Analytics وAds = granted
+            =============================================== */}
+
+        <Script
+          id="google-consent-default"
+          strategy="beforeInteractive"
+        >
+          {`
+            (function () {
+              window.dataLayer =
+                window.dataLayer || [];
+
+              window.gtag =
+                window.gtag ||
+                function () {
+                  window.dataLayer.push(arguments);
+                };
+
+              var storedConsent = null;
+
+              try {
+                storedConsent =
+                  window.localStorage.getItem(
+                    "cookie_consent_v1"
+                  );
+              } catch (error) {
+                storedConsent = null;
+              }
+
+              var consentGranted =
+                storedConsent === "accepted";
+
+              var optionalStorageState =
+                consentGranted
+                  ? "granted"
+                  : "denied";
+
+              window.gtag(
+                "consent",
+                "default",
+                {
+                  ad_storage:
+                    optionalStorageState,
+
+                  analytics_storage:
+                    optionalStorageState,
+
+                  ad_user_data:
+                    optionalStorageState,
+
+                  ad_personalization:
+                    optionalStorageState,
+
+                  personalization_storage:
+                    optionalStorageState,
+
+                  functionality_storage:
+                    "granted",
+
+                  security_storage:
+                    "granted",
+
+                  wait_for_update: 500
+                }
+              );
+            })();
+          `}
+        </Script>
+
+        {/* ===============================================
+            Theme initialization
+            =============================================== */}
+
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+        >
+          {`
+            (function () {
+              try {
+                var savedTheme =
+                  window.localStorage.getItem(
+                    "theme"
+                  );
+
+                var isDark = savedTheme
+                  ? savedTheme === "dark"
+                  : window.matchMedia(
+                      "(prefers-color-scheme: dark)"
+                    ).matches;
+
+                document.documentElement
+                  .classList
+                  .toggle("dark", isDark);
+
+                document.documentElement
+                  .style
+                  .colorScheme =
+                    isDark ? "dark" : "light";
+              } catch (error) {}
+            })();
+          `}
+        </Script>
+
+        {/* ===============================================
+            Google Tag Manager
+
+            يعمل سواء كانت الإعلانات مفعلة أم لا.
+            Consent Mode هو المسؤول عن السماح بالقياس.
+            =============================================== */}
+
+        {hasValidGtmId && (
+          <Script
+            id="google-tag-manager"
+            strategy="afterInteractive"
+          >
+            {`
+              (function (
+                windowObject,
+                documentObject,
+                scriptTag,
+                dataLayerName,
+                containerId
+              ) {
+                windowObject[dataLayerName] =
+                  windowObject[dataLayerName] || [];
+
+                windowObject[dataLayerName].push({
+                  "gtm.start":
+                    new Date().getTime(),
+                  event: "gtm.js"
+                });
+
+                var firstScript =
+                  documentObject
+                    .getElementsByTagName(
+                      scriptTag
+                    )[0];
+
+                var gtmScript =
+                  documentObject
+                    .createElement(scriptTag);
+
+                var dataLayerQuery =
+                  dataLayerName !== "dataLayer"
+                    ? "&l=" + dataLayerName
+                    : "";
+
+                gtmScript.async = true;
+
+                gtmScript.src =
+                  "https://www.googletagmanager.com/gtm.js?id=" +
+                  containerId +
+                  dataLayerQuery;
+
+                firstScript.parentNode.insertBefore(
+                  gtmScript,
+                  firstScript
+                );
+              })(
+                window,
+                document,
+                "script",
+                "dataLayer",
+                "${GTM_ID}"
+              );
+            `}
+          </Script>
+        )}
+
+        {/* ===============================================
+            Google AdSense
+
+            لا يتم تحميله نهائيًا إلا عندما تكون:
+            NEXT_PUBLIC_ADS_ENABLED=true
+            =============================================== */}
 
         {adsEnabled && (
           <Script
             id="google-adsense"
-            strategy="lazyOnload"
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+            strategy="afterInteractive"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
             crossOrigin="anonymous"
           />
         )}
 
         <Header />
-        <div className="min-h-0 flex-1">{children}</div>
+
+        <main className="min-h-0 flex-1">
+          {children}
+        </main>
+
         <Footer />
+
         <RootClient />
       </body>
     </html>

@@ -22,7 +22,7 @@ interface ScrollToTopButtonProps {
 
 export default function ScrollToTopButton({
   threshold = 400,
-  bottom = "bottom-28",
+  bottom = "bottom-4",
   right = "right-6",
   footerSelector = "#site-footer",
   customButton,
@@ -143,8 +143,7 @@ export default function ScrollToTopButton({
       className={`
         fixed ${bottom} ${right} z-[9999]
         flex h-12 w-12 items-center justify-center
-        rounded-full
-        border border-white/20
+       rounded-2xl border border-white/20 bg-gradient-to-br
         bg-orange-500
         text-white
         shadow-xl shadow-black/20

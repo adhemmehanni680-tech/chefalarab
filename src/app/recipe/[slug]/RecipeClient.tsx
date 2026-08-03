@@ -1901,8 +1901,8 @@ export default function RecipeClient({
                 )
               }
             >
-              <div className="rounded-lg border border-orange-500/25 bg-[#131d2c] p-3 shadow-inner shadow-black/10">
-                <p className="text-[13px] font-bold leading-7 text-slate-100 sm:text-sm sm:leading-8">
+              <div className="rounded-lg border border-orange-500/25 dark:bg-[#131d2c] bg-white p-3 shadow-inner shadow-black/10">
+                <p className="text-[13px] font-bold leading-7 dark:text-slate-100 text-gray-900 sm:text-sm sm:leading-8">
                   {recipe.intro}
                 </p>
               </div>
@@ -1926,8 +1926,8 @@ export default function RecipeClient({
                 )
               }
             >
-              <div className="rounded-lg border border-amber-500/20 bg-[#171d27] p-3">
-                <p className="text-[13px] font-bold leading-7 text-slate-100 sm:text-sm sm:leading-8">
+              <div className="rounded-lg border border-orange-500/25 dark:bg-[#131d2c] bg-white p-3 shadow-inner shadow-black/10">
+                <p className="text-[13px] font-bold leading-7 dark:text-slate-100 text-gray-900 sm:text-sm sm:leading-8">
                   {
                     recipe.description
                   }
@@ -1977,6 +1977,8 @@ export default function RecipeClient({
                 toggleSection("data")
               }
             >
+
+              
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                 {dataBoxItems.map(
                   (
@@ -1985,7 +1987,7 @@ export default function RecipeClient({
                   ) => (
                     <div
                       key={`${item.label}-${index}`}
-                      className="rounded-lg border border-white/[0.06] bg-[#121b29] p-2.5 text-center transition-transform duration-200 hover:-translate-y-0.5"
+                      className="rounded-lg border border-white/[0.06] dark:bg-[#121b29] bg-white p-2.5 text-center transition-transform duration-200 hover:-translate-y-0.5"
                     >
                       <span className="mb-1 block text-xl">
                         {
@@ -1993,13 +1995,13 @@ export default function RecipeClient({
                         }
                       </span>
 
-                      <span className="block text-[10px] font-black text-slate-400 sm:text-xs">
+                      <span className="block text-[10px] font-black dark:text-slate-400 text-gray-900 sm:text-xs">
                         {
                           item.label
                         }
                       </span>
 
-                      <span className="mt-1 block text-xs font-black text-white sm:text-sm">
+                      <span className="mt-1 block text-xs font-black dark:text-white text-gray-900 sm:text-sm">
                         {
                           item.value
                         }
@@ -2057,7 +2059,7 @@ export default function RecipeClient({
                           ) => (
                             <li
                               key={`${item}-${itemIndex}`}
-                              className="p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black  rounded-lg border border-white/[0.06] bg-[#111a28] px-3 py-2 text-[12px] font-bold leading-6 text-slate-100 sm:text-sm"
+                              className="p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black  rounded-lg border border-white/[0.06]  dark:bg-[#111a28] bg-white   px-3 py-2 text-[12px] font-bold leading-6 dark:text-slate-100 text-gray-900 sm:text-sm"
                             >
                               <span className="ml-1.5 text-orange-500">
                                 •
@@ -2083,13 +2085,13 @@ export default function RecipeClient({
             <m.section
               id="recipe-section-steps"
               {...fadeUp}
-              className="mb-7 scroll-mt-24"
+              className="mb-7 scroll-mt-24 "
             >
               <SectionTitle icon="🍳">
                 خطوات التحضير
               </SectionTitle>
 
-              <ol className="space-y-2">
+              <ol className="space-y-2  ">
                 {steps.map(
                   (
                     step,
@@ -2097,7 +2099,7 @@ export default function RecipeClient({
                   ) => (
                     <li
                       key={`${step}-${index}`}
-                      className="relative p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
+                      className="relative p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black rounded-xl border dark:border-slate-200 border-gray-900 dark:bg-gray-900  bg-white py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6  shadow-sm  dark:text-white text-gray-900 sm:text-sm sm:leading-7"
                     >
                       <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full bg-orange-500 text-sm font-black text-white">
                         {index + 1}
@@ -2123,7 +2125,7 @@ export default function RecipeClient({
                 نصائح
               </SectionTitle>
 
-              <ul className="space-y-2">
+              <ul className="space-y-2 ">
                 {tips.map(
                   (
                     tip,
@@ -2131,9 +2133,9 @@ export default function RecipeClient({
                   ) => (
                     <li
                       key={`${tip}-${index}`}
-                      className="   p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black relative rounded-xl border border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7"
+                      className="relative p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black rounded-xl border dark:border-slate-200 border-gray-900  dark:bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 dark:text-white shadow-sm bg-white text-gray-900 sm:text-sm sm:leading-7"
                     >
-                      <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black text-orange-500">
+                      <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black  dark:text-white text-gray-900 ">
                         ✓
                       </span>
 
@@ -2166,7 +2168,7 @@ export default function RecipeClient({
                   ) => (
                     <li
                       key={`${mistake}-${index}`}
-                      className="relative p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black rounded-xl border  border-slate-200 bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 text-white shadow-sm dark:bg-white dark:text-gray-900 sm:text-sm sm:leading-7 "
+                      className="relative p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black rounded-xl border dark:border-slate-200 border-gray-900 dark:bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 dark:text-white shadow-sm bg-white text-gray-900 sm:text-sm sm:leading-7 "
                     >
                       <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black ">
                         ❌
@@ -2201,13 +2203,13 @@ export default function RecipeClient({
                   ) => (
                     <div
                       key={`${key}-${index}`}
-                      className="rounded-xl border border-slate-200 bg-gray-900 px-3 py-3 text-center text-white shadow-sm dark:bg-white dark:text-gray-900"
+                      className="rounded-xl border  dark:border-slate-200 border-slate-900  px-3 py-3 text-center  dark:bg-gray-900 text-gray-900  dark:text-white bg-white "
                     >
                       <span className="block text-[11px] font-black text-orange-500 sm:text-sm">
                         {key}
                       </span>
 
-                      <span className="mt-1 block text-sm font-black text-white dark:text-gray-900 ">
+                      <span className="mt-1 block text-sm font-black  dark:text-white text-gray-900 ">
                         {String(value)}
                       </span>
                     </div>
@@ -2242,7 +2244,7 @@ export default function RecipeClient({
                     return (
                       <div
                         key={`${item.question}-${index}`}
-                        className="overflow-hidden rounded-xl border border-slate-200 bg-gray-900 shadow-sm dark:bg-white"
+                        className="overflow-hidden rounded-xl border dark:border-slate-200 border-slate-900 shadow-sm dark:bg-gray-900  bg-white"
                       >
                         <button
                           type="button"
@@ -2256,15 +2258,15 @@ export default function RecipeClient({
                           aria-expanded={
                             isOpen
                           }
-                          className="flex w-full items-center justify-between gap-3 bg-gray-900 px-3 py-2.5 text-right transition dark:bg-white"
+                          className="flex w-full items-center justify-between gap-3 dark:bg-gray-900  bg-white px-3 py-2.5 text-right transition "
                         >
-                          <span className="text-[12px] font-black leading-6 text-white dark:text-gray-900 sm:text-base">
+                          <span className="text-[12px] font-black leading-6 dark:text-white text-gray-900 sm:text-base">
                             {
                               item.question
                             }
                           </span>
 
-                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/10 text-white dark:bg-gray-100 dark:text-gray-900">
+                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full dark:bg-gray-100 dark:text-gray-900  bg-gray-900 text-gray-100">
                             {isOpen ? (
                               <ChevronUp
                                 size={
@@ -2315,7 +2317,7 @@ export default function RecipeClient({
                               }}
                               className="overflow-hidden"
                             >
-                              <div className="border-t border-slate-700 px-3 pb-3 pt-2 text-[12px] font-bold leading-6 text-white dark:border-slate-200   p-2 rounded-lg  hover:bg-orange-500 hover:text-black  dark:text-gray-900 sm:text-sm sm:leading-7">
+                              <div className="border-t border-slate-700 px-3 pb-3 pt-2 text-[12px] font-bold leading-6 dark:text-white text-gray-900 dark:border-slate-200   p-2 rounded-lg  hover:bg-orange-500 hover:text-black   sm:text-sm sm:leading-7">
                                 {
                                   item.answer
                                 }

@@ -1057,7 +1057,7 @@ export default function SearchFloating({
     <div
       ref={boxRef}
       dir="rtl"
-      className="fixed bottom-44 right-3 z-[9999] sm:right-6"
+      className="fixed bottom-20 right-3 z-[9999] sm:right-6"
     >
       <AnimatePresence mode="wait">
         {!open ? (
@@ -1131,7 +1131,7 @@ export default function SearchFloating({
               stiffness: 320,
               damping: 27,
             }}
-            className="w-[calc(100vw-1.5rem)] max-w-[410px] overflow-hidden rounded-[26px] border border-white/10 bg-[#111827]/95 shadow-[0_30px_80px_-25px_rgba(0,0,0,0.75)] backdrop-blur-2xl dark:border-gray-200/70 dark:bg-white/95"
+            className="w-[calc(100vw-1.5rem)] max-w-[410px] overflow-hidden rounded-[26px] border border-gray-200/80 bg-white/95 shadow-[0_30px_80px_-25px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-colors duration-300 dark:border-white/10 dark:bg-[#111827]/95 dark:shadow-[0_30px_80px_-25px_rgba(0,0,0,0.75)]"
           >
             {/*
             |--------------------------------------------------------------------------
@@ -1139,7 +1139,7 @@ export default function SearchFloating({
             |--------------------------------------------------------------------------
             */}
 
-            <div className="relative overflow-hidden border-b border-white/10 px-4 pb-4 pt-4 dark:border-gray-200">
+            <div className="relative overflow-hidden border-b border-gray-200 px-4 pb-4 pt-4 transition-colors duration-300 dark:border-white/10">
               <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-orange-500/15 blur-3xl" />
 
               <div className="pointer-events-none absolute -bottom-20 -left-12 h-40 w-40 rounded-full bg-amber-400/10 blur-3xl" />
@@ -1154,7 +1154,7 @@ export default function SearchFloating({
                   </div>
 
                   <div>
-                    <h2 className="flex items-center gap-1.5 text-sm font-bold text-white dark:text-gray-900">
+                    <h2 className="flex items-center gap-1.5 text-sm font-bold text-gray-900 dark:text-white">
                       البحث الذكي
 
                       <Sparkles
@@ -1163,7 +1163,7 @@ export default function SearchFloating({
                       />
                     </h2>
 
-                    <p className="mt-0.5 text-[11px] text-gray-400 dark:text-gray-500">
+                    <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
                       اكتب كلمة واحدة وسنجد الأقرب
                     </p>
                   </div>
@@ -1173,7 +1173,7 @@ export default function SearchFloating({
                   type="button"
                   aria-label="إغلاق البحث"
                   onClick={closeSearch}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 transition duration-200 hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-400 dark:border-gray-200 dark:bg-gray-100 dark:text-gray-500 dark:hover:bg-red-50 dark:hover:text-red-500"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-gray-100 text-gray-500 transition duration-200 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400 dark:hover:border-red-400/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                 >
                   <X
                     size={18}
@@ -1191,7 +1191,7 @@ export default function SearchFloating({
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
                   {isSearching ? (
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-gray-600 border-t-orange-500 dark:border-gray-300 dark:border-t-orange-500" />
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-orange-500 dark:border-gray-600 dark:border-t-orange-500" />
                   ) : (
                     <Search
                       size={20}
@@ -1212,7 +1212,7 @@ export default function SearchFloating({
                   onChange={(event) => {
                     setSearchTerm(event.target.value);
                   }}
-                  className="h-[54px] w-full rounded-2xl border border-white/10 bg-black/20 py-3 pl-12 pr-12 text-sm font-medium text-white outline-none transition duration-200 placeholder:text-gray-500 focus:border-orange-500/70 focus:bg-black/30 focus:ring-4 focus:ring-orange-500/10 dark:border-gray-200 dark:bg-gray-50 dark:text-gray-900 dark:placeholder:text-gray-400 dark:focus:bg-white sm:text-[15px]"
+                  className="h-[54px] w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-12 pr-12 text-sm font-medium text-gray-900 outline-none transition duration-200 placeholder:text-gray-400 focus:border-orange-500/70 focus:bg-white focus:ring-4 focus:ring-orange-500/10 dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-black/30 sm:text-[15px]"
                 />
 
                 {hasQuery ? (
@@ -1220,13 +1220,13 @@ export default function SearchFloating({
                     type="button"
                     aria-label="مسح البحث"
                     onClick={clearSearch}
-                    className="absolute inset-y-0 left-3 my-auto flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition hover:bg-white/10 hover:text-white dark:hover:bg-gray-200 dark:hover:text-gray-800"
+                    className="absolute inset-y-0 left-3 my-auto flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-200 hover:text-gray-800 dark:hover:bg-white/10 dark:hover:text-white"
                   >
                     <X size={16} />
                   </button>
                 ) : (
                   <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                    <div className="hidden items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-semibold text-gray-500 dark:border-gray-200 dark:bg-white sm:flex">
+                    <div className="hidden items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-[10px] font-semibold text-gray-500 dark:border-white/10 dark:bg-white/5 sm:flex">
                       <Command size={11} />
                       <span>K</span>
                     </div>
@@ -1241,7 +1241,7 @@ export default function SearchFloating({
             |--------------------------------------------------------------------------
             */}
 
-            <div className="bg-gradient-to-b from-transparent to-black/10 dark:to-gray-50">
+            <div className="bg-gradient-to-b from-transparent to-gray-50 transition-colors duration-300 dark:to-black/10">
               <AnimatePresence mode="wait">
                 {!hasQuery ? (
                   /*
@@ -1264,7 +1264,7 @@ export default function SearchFloating({
                     className="p-4"
                   >
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="flex items-center gap-1.5 text-xs font-bold text-gray-300 dark:text-gray-700">
+                      <p className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300">
                         <Sparkles
                           size={14}
                           className="text-orange-500"
@@ -1289,7 +1289,7 @@ export default function SearchFloating({
                                 suggestion
                               )
                             }
-                            className="group flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-gray-300 transition duration-200 hover:-translate-y-0.5 hover:border-orange-500/40 hover:bg-orange-500/10 hover:text-orange-400 dark:border-gray-200 dark:bg-white dark:text-gray-600 dark:hover:border-orange-300 dark:hover:bg-orange-50 dark:hover:text-orange-600"
+                            className="group flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-gray-300 dark:hover:border-orange-500/40 dark:hover:bg-orange-500/10 dark:hover:text-orange-400"
                           >
                             <UtensilsCrossed
                               size={13}
@@ -1303,7 +1303,7 @@ export default function SearchFloating({
                     </div>
 
                     <div className="mt-4 rounded-2xl border border-orange-500/15 bg-orange-500/[0.06] p-3">
-                      <p className="flex items-start gap-2 text-[11px] leading-5 text-gray-400 dark:text-gray-500">
+                      <p className="flex items-start gap-2 text-[11px] leading-5 text-gray-500 dark:text-gray-400">
                         <Sparkles
                           size={14}
                           className="mt-0.5 shrink-0 text-orange-500"
@@ -1341,7 +1341,7 @@ export default function SearchFloating({
                       <Search size={23} />
                     </div>
 
-                    <p className="text-sm font-bold text-gray-200 dark:text-gray-700">
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
                       أكمل كتابة الكلمة
                     </p>
 
@@ -1404,7 +1404,7 @@ export default function SearchFloating({
                               className={`group relative mb-1 flex items-center gap-3 overflow-hidden rounded-2xl border px-3 py-3 transition-all duration-200 ${
                                 isActive
                                   ? "border-orange-500/40 bg-orange-500/10 shadow-[0_10px_30px_-18px_rgba(249,115,22,0.8)]"
-                                  : "border-transparent hover:border-white/10 hover:bg-white/[0.04] dark:hover:border-gray-200 dark:hover:bg-white"
+                                  : "border-transparent hover:border-gray-200 hover:bg-white dark:hover:border-white/10 dark:hover:bg-white/[0.04]"
                               }`}
                             >
                               {isActive && (
@@ -1423,7 +1423,7 @@ export default function SearchFloating({
                                 className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition duration-200 ${
                                   isActive
                                     ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/20"
-                                    : "bg-white/[0.05] text-gray-500 group-hover:bg-orange-500/10 group-hover:text-orange-500 dark:bg-gray-100"
+                                    : "bg-gray-100 text-gray-500 group-hover:bg-orange-500/10 group-hover:text-orange-500 dark:bg-white/[0.05]"
                                 }`}
                               >
                                 <ChefHat
@@ -1436,8 +1436,8 @@ export default function SearchFloating({
                                 <p
                                   className={`line-clamp-2 text-[13px] font-bold leading-6 transition ${
                                     isActive
-                                      ? "text-white dark:text-gray-900"
-                                      : "text-gray-200 group-hover:text-white dark:text-gray-700 dark:group-hover:text-gray-900"
+                                      ? "text-gray-900 dark:text-white"
+                                      : "text-gray-700 group-hover:text-gray-900 dark:text-gray-200 dark:group-hover:text-white"
                                   }`}
                                 >
                                   {highlightTitle(
@@ -1446,8 +1446,9 @@ export default function SearchFloating({
                                   )}
                                 </p>
 
+
                                 {recipe.meta && (
-                                  <p className="mt-0.5 truncate text-[10px] text-gray-500">
+                                  <p className="mt-0.5 truncate text-[10px] text-gray-500 dark:text-gray-400">
                                     {recipe.meta}
                                   </p>
                                 )}
@@ -1457,7 +1458,7 @@ export default function SearchFloating({
                                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition duration-200 ${
                                   isActive
                                     ? "bg-orange-500 text-white"
-                                    : "text-gray-600 group-hover:bg-orange-500/10 group-hover:text-orange-500"
+                                    : "text-gray-500 group-hover:bg-orange-500/10 group-hover:text-orange-500 dark:text-gray-400"
                                 }`}
                               >
                                 <ArrowUpLeft
@@ -1507,7 +1508,7 @@ export default function SearchFloating({
                       </div>
                     </div>
 
-                    <p className="text-sm font-bold text-gray-200 dark:text-gray-700">
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
                       لم نجد وصفة مطابقة
                     </p>
 
@@ -1534,7 +1535,7 @@ export default function SearchFloating({
             |--------------------------------------------------------------------------
             */}
 
-            <div className="flex items-center justify-between border-t border-white/10 bg-black/10 px-4 py-2.5 text-[10px] text-gray-500 dark:border-gray-200 dark:bg-gray-50">
+            <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] text-gray-500 transition-colors duration-300 dark:border-white/10 dark:bg-black/10">
               <span className="flex items-center gap-1.5">
                 <Sparkles
                   size={12}

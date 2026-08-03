@@ -1,3 +1,4 @@
+// CookieConsentBanner.tsx
 "use client";
 
 import {
