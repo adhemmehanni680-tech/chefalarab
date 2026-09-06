@@ -1,6 +1,17 @@
-import type { Metadata, Viewport } from "next";
+import type {
+  Metadata,
+  Viewport,
+} from "next";
+
+import type { ReactNode } from "react";
+
 import Script from "next/script";
-import { Aref_Ruqaa, Cairo } from "next/font/google";
+
+import {
+  Aref_Ruqaa,
+  Cairo,
+} from "next/font/google";
+
 import "./globals.css";
 
 import Header from "./Components/header/Header";
@@ -35,12 +46,9 @@ const arefRuqaa = Aref_Ruqaa({
    Site configuration
    ========================================================= */
 
-const SITE_URL = "https://chefalarab.com";
+const SITE_URL =
+  "https://chefalarab.com";
 
-/*
- * نستخدم Environment Variable أولًا.
- * ولو غير موجود، نستخدم رقم GTM الاحتياطي.
- */
 const GTM_ID =
   process.env.NEXT_PUBLIC_GTM_ID?.trim() ||
   "GTM-P8MZTC3W";
@@ -59,12 +67,14 @@ export const viewport: Viewport = {
 
   themeColor: [
     {
-      media: "(prefers-color-scheme: light)",
+      media:
+        "(prefers-color-scheme: light)",
       color: "#ffffff",
     },
     {
-      media: "(prefers-color-scheme: dark)",
-      color: "#101827",
+      media:
+        "(prefers-color-scheme: dark)",
+      color: "#0b1220",
     },
   ],
 };
@@ -117,11 +127,15 @@ export const metadata: Metadata = {
 
   openGraph: {
     title: "شيف العرب",
+
     description:
       "وصفات عربية وعالمية مجربة بخطوات واضحة ومقادير دقيقة.",
+
     url: "/",
     siteName: "شيف العرب",
+
     type: "website",
+
     locale: "ar_AR",
 
     images: [
@@ -137,8 +151,10 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "شيف العرب",
+
     description:
       "وصفات عربية وعالمية مجربة بخطوات واضحة.",
+
     images: ["/og-image.jpg"],
   },
 
@@ -149,6 +165,7 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
+
       "max-image-preview": "large",
       "max-snippet": -1,
       "max-video-preview": -1,
@@ -176,7 +193,8 @@ export const metadata: Metadata = {
   },
 
   other: {
-    "google-adsense-account": adsenseClient,
+    "google-adsense-account":
+      adsenseClient,
   },
 
   verification: {
@@ -186,33 +204,39 @@ export const metadata: Metadata = {
 };
 
 /* =========================================================
-   Root layout
+   Root Layout
    ========================================================= */
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
     <html
       lang="ar"
       dir="rtl"
       suppressHydrationWarning
-      data-scroll-behavior="smooth"
     >
       <body
         className={`
           ${cairo.variable}
           ${arefRuqaa.variable}
-          flex min-h-screen flex-col
-          bg-white text-gray-900 antialiased
-          dark:bg-gray-900 dark:text-gray-100
+          flex
+          min-h-screen
+          flex-col
+          bg-white
+          text-gray-900
+          antialiased
+          transition-colors
+          duration-300
+          dark:bg-[#0b1220]
+          dark:text-gray-100
         `}
       >
-        {/* ===============================================
-            GTM fallback for browsers without JavaScript
-            =============================================== */}
+        {/* =================================================
+            GTM no-script fallback
+            ================================================= */}
 
         {hasValidGtmId && (
           <noscript>
@@ -229,15 +253,9 @@ export default function RootLayout({
           </noscript>
         )}
 
-        {/* ===============================================
+        {/* =================================================
             Google Consent Mode v2
-
-            المستخدم الجديد أو الرافض:
-            Analytics وAds = denied
-
-            المستخدم الذي وافق سابقًا:
-            Analytics وAds = granted
-            =============================================== */}
+            ================================================= */}
 
         <Script
           id="google-consent-default"
@@ -305,9 +323,9 @@ export default function RootLayout({
           `}
         </Script>
 
-        {/* ===============================================
-            Theme initialization
-            =============================================== */}
+        {/* =================================================
+            Theme Initialization
+            ================================================= */}
 
         <Script
           id="theme-init"
@@ -321,31 +339,36 @@ export default function RootLayout({
                     "theme"
                   );
 
-                var isDark = savedTheme
-                  ? savedTheme === "dark"
-                  : window.matchMedia(
-                      "(prefers-color-scheme: dark)"
-                    ).matches;
+                var isDark =
+                  savedTheme
+                    ? savedTheme === "dark"
+                    : window.matchMedia(
+                        "(prefers-color-scheme: dark)"
+                      ).matches;
 
-                document.documentElement
+                document
+                  .documentElement
                   .classList
-                  .toggle("dark", isDark);
+                  .toggle(
+                    "dark",
+                    isDark
+                  );
 
-                document.documentElement
+                document
+                  .documentElement
                   .style
                   .colorScheme =
-                    isDark ? "dark" : "light";
+                    isDark
+                      ? "dark"
+                      : "light";
               } catch (error) {}
             })();
           `}
         </Script>
 
-        {/* ===============================================
+        {/* =================================================
             Google Tag Manager
-
-            يعمل سواء كانت الإعلانات مفعلة أم لا.
-            Consent Mode هو المسؤول عن السماح بالقياس.
-            =============================================== */}
+            ================================================= */}
 
         {hasValidGtmId && (
           <Script
@@ -366,6 +389,7 @@ export default function RootLayout({
                 windowObject[dataLayerName].push({
                   "gtm.start":
                     new Date().getTime(),
+
                   event: "gtm.js"
                 });
 
@@ -377,11 +401,15 @@ export default function RootLayout({
 
                 var gtmScript =
                   documentObject
-                    .createElement(scriptTag);
+                    .createElement(
+                      scriptTag
+                    );
 
                 var dataLayerQuery =
-                  dataLayerName !== "dataLayer"
-                    ? "&l=" + dataLayerName
+                  dataLayerName !==
+                  "dataLayer"
+                    ? "&l=" +
+                      dataLayerName
                     : "";
 
                 gtmScript.async = true;
@@ -391,10 +419,12 @@ export default function RootLayout({
                   containerId +
                   dataLayerQuery;
 
-                firstScript.parentNode.insertBefore(
-                  gtmScript,
-                  firstScript
-                );
+                firstScript
+                  .parentNode
+                  .insertBefore(
+                    gtmScript,
+                    firstScript
+                  );
               })(
                 window,
                 document,
@@ -406,12 +436,9 @@ export default function RootLayout({
           </Script>
         )}
 
-        {/* ===============================================
+        {/* =================================================
             Google AdSense
-
-            لا يتم تحميله نهائيًا إلا عندما تكون:
-            NEXT_PUBLIC_ADS_ENABLED=true
-            =============================================== */}
+            ================================================= */}
 
         {adsEnabled && (
           <Script
@@ -422,13 +449,32 @@ export default function RootLayout({
           />
         )}
 
+        {/* =================================================
+            Site Header
+            ================================================= */}
+
         <Header />
 
-        <main className="min-h-0 flex-1">
+        {/* =================================================
+            Main Content
+            ================================================= */}
+
+        <main
+          id="main-content"
+          className="min-h-0 flex-1"
+        >
           {children}
         </main>
 
+        {/* =================================================
+            Site Footer
+            ================================================= */}
+
         <Footer />
+
+        {/* =================================================
+            Global Client Components
+            ================================================= */}
 
         <RootClient />
       </body>

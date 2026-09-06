@@ -8,8 +8,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+
 import Image from "next/image";
 import Link from "next/link";
+
 import {
   ChevronDown,
   ChevronLeft,
@@ -24,8 +26,10 @@ import {
   UtensilsCrossed,
   X,
 } from "lucide-react";
+
 import clsx from "clsx";
 import dynamic from "next/dynamic";
+
 import { adsEnabled } from "@/lib/ads";
 
 const AdSenseBanner = dynamic(
@@ -36,8 +40,7 @@ const AdSenseBanner = dynamic(
 );
 
 const MOBILE_AD_INTERVAL = 4;
-const INITIAL_VISIBLE_COUNT = 12;
-const LOAD_MORE_COUNT = 6;
+const RECIPES_PER_PAGE = 12;
 
 /* =============================== */
 /* Types                           */
@@ -79,11 +82,14 @@ interface RecipesClientProps {
   recipes: Recipe[];
   categories: string[];
   initialCategory?: string | null;
+  initialPage?: number;
 }
 
 interface CategoryNavigationProps {
   categories: string[];
+
   countriesMap: Record<string, CountryItem[]>;
+
   availableTags: TagItem[];
 
   activeCategory: string | null;
@@ -93,6 +99,7 @@ interface CategoryNavigationProps {
   expandedCategories: Record<string, boolean>;
 
   onToggleCategory: (category: string) => void;
+
   onSelectAll: () => void;
 
   onSelectCountry: (
@@ -101,6 +108,7 @@ interface CategoryNavigationProps {
   ) => void;
 
   onSelectTag: (tag: string) => void;
+
   onAfterSelect?: () => void;
 }
 
@@ -108,7 +116,9 @@ interface CategoryNavigationProps {
 /* Helpers                         */
 /* =============================== */
 
-function formatCategoryName(category: string): string {
+function formatCategoryName(
+  category: string,
+): string {
   return category.replace(/-/g, " ").trim();
 }
 
@@ -264,6 +274,90 @@ function getAvailableTags(
     .slice(0, 16);
 }
 
+type PaginationItem =
+  | number
+  | "start-ellipsis"
+  | "end-ellipsis";
+
+function getPaginationItems(
+  currentPage: number,
+  totalPages: number,
+): PaginationItem[] {
+  if (totalPages <= 7) {
+    return Array.from(
+      { length: totalPages },
+      (_, index) => index + 1,
+    );
+  }
+
+  if (currentPage <= 4) {
+    return [
+      1,
+      2,
+      3,
+      4,
+      5,
+      "end-ellipsis",
+      totalPages,
+    ];
+  }
+
+  if (currentPage >= totalPages - 3) {
+    return [
+      1,
+      "start-ellipsis",
+      totalPages - 4,
+      totalPages - 3,
+      totalPages - 2,
+      totalPages - 1,
+      totalPages,
+    ];
+  }
+
+  return [
+    1,
+    "start-ellipsis",
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    "end-ellipsis",
+    totalPages,
+  ];
+}
+
+function formatNumber(value: number): string {
+  return value.toLocaleString("ar-EG");
+}
+
+function replaceRecipesUrl(
+  page: number,
+  category: string | null,
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const url = new URL(window.location.href);
+
+  if (category) {
+    url.searchParams.set("category", category);
+  } else {
+    url.searchParams.delete("category");
+  }
+
+  if (page > 1) {
+    url.searchParams.set("page", String(page));
+  } else {
+    url.searchParams.delete("page");
+  }
+
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${url.pathname}${url.search}${url.hash}`,
+  );
+}
+
 /* =============================== */
 /* Footer dock hook                */
 /* =============================== */
@@ -287,7 +381,9 @@ function useFooterDock(): FooterDockState {
     let animationFrameId = 0;
 
     const updateFooterPosition = () => {
-      window.cancelAnimationFrame(animationFrameId);
+      window.cancelAnimationFrame(
+        animationFrameId,
+      );
 
       animationFrameId =
         window.requestAnimationFrame(() => {
@@ -301,23 +397,28 @@ function useFooterDock(): FooterDockState {
           const overlap = footerIsInsideViewport
             ? Math.max(
                 0,
-                window.innerHeight -
-                  footerRect.top,
+                window.innerHeight - footerRect.top,
               )
             : 0;
 
-          const nextOffset = overlap > 0 ? Math.round(overlap + 12) : 0;
+          const nextOffset =
+            overlap > 0
+              ? Math.round(overlap + 12)
+              : 0;
 
           setFooterState((current) => {
             if (
-              current.isFooterVisible === footerIsInsideViewport &&
+              current.isFooterVisible ===
+                footerIsInsideViewport &&
               current.footerOffset === nextOffset
             ) {
               return current;
             }
 
             return {
-              isFooterVisible: footerIsInsideViewport,
+              isFooterVisible:
+                footerIsInsideViewport,
+
               footerOffset: nextOffset,
             };
           });
@@ -398,10 +499,13 @@ function CategoryNavigation({
   categories,
   countriesMap,
   availableTags,
+
   activeCategory,
   activeCountry,
   activeTag,
+
   expandedCategories,
+
   onToggleCategory,
   onSelectAll,
   onSelectCountry,
@@ -443,6 +547,7 @@ function CategoryNavigation({
         }
         className={clsx(
           "flex w-full items-center gap-2.5 rounded-2xl border px-3 py-3 text-right text-xs font-black transition-all duration-200",
+
           !activeCategory &&
             !activeCountry &&
             !activeTag
@@ -453,6 +558,7 @@ function CategoryNavigation({
         <span
           className={clsx(
             "grid h-8 w-8 shrink-0 place-items-center rounded-full",
+
             !activeCategory &&
               !activeCountry &&
               !activeTag
@@ -481,6 +587,7 @@ function CategoryNavigation({
             key={category}
             className={clsx(
               "overflow-hidden rounded-2xl border transition-all duration-200",
+
               isActive
                 ? "border-orange-500/50 bg-[#172335] shadow-lg shadow-orange-500/5"
                 : "border-white/[0.06] bg-[#172335]",
@@ -497,6 +604,7 @@ function CategoryNavigation({
               }
               className={clsx(
                 "flex w-full items-center gap-2.5 px-3 py-3 text-right text-xs font-black transition-all",
+
                 isActive
                   ? "bg-orange-500 text-white"
                   : "text-slate-100 hover:bg-[#233247]",
@@ -505,6 +613,7 @@ function CategoryNavigation({
               <span
                 className={clsx(
                   "grid h-8 w-8 shrink-0 place-items-center rounded-full",
+
                   isActive
                     ? "bg-white/20"
                     : "bg-[#101827]",
@@ -520,6 +629,7 @@ function CategoryNavigation({
               <span
                 className={clsx(
                   "grid h-6 w-6 shrink-0 place-items-center rounded-full",
+
                   isActive
                     ? "bg-white/15"
                     : "bg-[#101827]",
@@ -552,6 +662,7 @@ function CategoryNavigation({
                     }
                     className={clsx(
                       "flex w-full items-center rounded-xl px-3 py-2.5 text-right text-[11px] font-black transition",
+
                       isActive && !activeCountry
                         ? "bg-orange-500/15 text-orange-400"
                         : "bg-[#111a28] text-slate-300 hover:bg-[#223148] hover:text-white",
@@ -573,8 +684,10 @@ function CategoryNavigation({
                         }
                         className={clsx(
                           "flex w-full items-center rounded-xl px-3 py-2.5 text-right text-[11px] font-black transition",
+
                           isActive &&
-                            activeCountry === country
+                            activeCountry ===
+                              country
                             ? "bg-orange-500 text-white shadow-md shadow-orange-500/15"
                             : "bg-[#111a28] text-slate-300 hover:bg-[#223148] hover:text-white",
                         )}
@@ -603,10 +716,13 @@ function CategoryNavigation({
                               key={`${category}-${tag}`}
                               type="button"
                               onClick={() =>
-                                handleSelectTag(tag)
+                                handleSelectTag(
+                                  tag,
+                                )
                               }
                               className={clsx(
                                 "inline-flex min-w-0 items-center rounded-full border px-2.5 py-1.5 text-[9px] font-black transition",
+
                                 activeTag === tag
                                   ? "border-orange-500 bg-orange-500 text-white"
                                   : "border-white/[0.07] bg-[#111a28] text-slate-300 hover:border-orange-500/40 hover:text-orange-400",
@@ -651,10 +767,6 @@ function DesktopCategoriesAside({
   onShowAllRecipes: () => void;
   children: ReactNode;
 }) {
-  /*
-   * عند ظهور الفوتر لا نُخفي التنقل بالكامل.
-   * يتحول إلى زر صغير فوق الفوتر.
-   */
   if (isFooterVisible) {
     return (
       <div
@@ -703,6 +815,7 @@ function DesktopCategoriesAside({
       aria-label="قائمة تصنيفات الوصفات"
       className={clsx(
         "fixed bottom-5 left-0 top-28 z-40 hidden transition-all duration-300 ease-out xl:block",
+
         isOpen ? "w-[260px]" : "w-[58px]",
       )}
     >
@@ -781,6 +894,7 @@ function DesktopAdvertisementAside({
       aria-label="الإعلان"
       className={clsx(
         "fixed bottom-5 right-0 top-28 z-40 hidden w-[300px] transition-all duration-300 ease-out xl:block",
+
         isFooterVisible
           ? "pointer-events-none translate-x-full opacity-0"
           : "translate-x-0 opacity-100",
@@ -819,23 +933,32 @@ function MobileCategoriesGuide({
   isOpen,
   onToggle,
   onClose,
+
   isFooterVisible,
   footerOffset,
+
   activeCategory,
   activeCountry,
   activeTag,
+
   onShowAllRecipes,
+
   children,
 }: {
   isOpen: boolean;
+
   onToggle: () => void;
   onClose: () => void;
+
   isFooterVisible: boolean;
   footerOffset: number;
+
   activeCategory: string | null;
   activeCountry: string | null;
   activeTag: string | null;
+
   onShowAllRecipes: () => void;
+
   children: ReactNode;
 }) {
   const hasActiveFilters = Boolean(
@@ -852,19 +975,49 @@ function MobileCategoriesGuide({
       : "كل الوصفات");
 
   useEffect(() => {
-    if (isFooterVisible) {
+    if (isFooterVisible && isOpen) {
       onClose();
     }
-  }, [isFooterVisible, onClose]);
+  }, [
+    isFooterVisible,
+    isOpen,
+    onClose,
+  ]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleKeyDown = (
+      event: KeyboardEvent,
+    ) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener(
+      "keydown",
+      handleKeyDown,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        handleKeyDown,
+      );
+    };
+  }, [isOpen, onClose]);
 
   /*
-   * عند ظهور الفوتر يظهر زر الرجوع
-   * إلى كل الوصفات فوق الفوتر.
+   * عند ظهور الفوتر
+   * نثبت الزر ناحية الشمال.
    */
   if (isFooterVisible) {
     return (
       <div
-        className="fixed left-3 z-50 xl:hidden"
+        className="fixed left-2 z-50 xl:hidden sm:left-3"
         style={{
           bottom: `${Math.max(
             footerOffset,
@@ -905,92 +1058,141 @@ function MobileCategoriesGuide({
   }
 
   return (
-    <div
-      className="fixed left-3 z-50 flex w-[calc(100vw-5.75rem)] max-w-[330px] flex-col items-start gap-2 transition-all duration-300 xl:hidden"
-      style={{
-        bottom:
-          "max(0.75rem, env(safe-area-inset-bottom))",
-      }}
-    >
+    <>
+      {/*
+       * الخلفية خلف القائمة
+       */}
       {isOpen && (
-        <div className="w-full overflow-hidden rounded-3xl border border-white/10 bg-[#162235]/98 shadow-2xl shadow-black/40 backdrop-blur-xl">
-          <div className="flex items-center justify-between gap-3 bg-orange-500 px-3 py-2.5 text-white">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
-                <ListFilter size={16} />
-              </span>
-
-              <div className="min-w-0">
-                <span className="block text-xs font-black">
-                  دليل التصنيفات
-                </span>
-
-                <span className="block max-w-[200px] truncate text-[9px] font-bold text-white/80">
-                  الاختيار الحالي: {activeLabel}
-                </span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="إغلاق قائمة التصنيفات"
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15 transition hover:bg-white/25"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          <div className="category-scrollbar max-h-[65dvh] overflow-y-auto p-2.5">
-            {children}
-          </div>
-        </div>
+        <button
+          type="button"
+          aria-label="إغلاق قائمة التصنيفات"
+          onClick={onClose}
+          className="fixed inset-0 z-[60] bg-black/55 backdrop-blur-[2px] xl:hidden"
+        />
       )}
 
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        aria-label={
-          isOpen
-            ? "إغلاق قائمة التصنيفات"
-            : "فتح قائمة التصنيفات"
-        }
+      {/*
+       * مهم:
+       * القائمة مثبتة ناحية الشمال فعليًا
+       * باستخدام left وليس RTL start/end.
+       */}
+      <div
         className={clsx(
-          "flex h-12 max-w-[205px] items-center gap-2 rounded-full border border-white/10 px-3 text-white shadow-xl shadow-black/30 transition hover:-translate-y-0.5 active:scale-95",
+          "fixed left-2 right-auto z-[70] flex w-[calc(100vw-1rem)] max-w-[430px] flex-col gap-2 xl:hidden sm:left-3 sm:w-[calc(100vw-1.5rem)]",
+
           isOpen
-            ? "bg-[#162235] hover:bg-[#1f2d40]"
-            : "bg-orange-500 hover:bg-orange-600",
+            ? "pointer-events-auto"
+            : "pointer-events-none",
         )}
+        style={{
+          bottom:
+            "max(0.75rem, env(safe-area-inset-bottom))",
+        }}
       >
-        <span
-          className={clsx(
-            "grid h-8 w-8 shrink-0 place-items-center rounded-full",
+        {isOpen && (
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label="دليل تصنيفات الوصفات"
+            className="mobile-category-panel flex w-full min-h-0 flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#162235]/98 shadow-2xl shadow-black/50 backdrop-blur-xl"
+          >
+            <div className="flex shrink-0 items-center justify-between gap-3 bg-orange-500 px-3 py-3 text-white">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
+                  <ListFilter size={16} />
+                </span>
+
+                <div className="min-w-0">
+                  <span className="block text-xs font-black">
+                    دليل التصنيفات
+                  </span>
+
+                  <span className="block max-w-[240px] truncate text-[9px] font-bold text-white/80">
+                    الاختيار الحالي:{" "}
+                    {activeLabel}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="إغلاق قائمة التصنيفات"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15 transition hover:bg-white/25 active:scale-95"
+              >
+                <X size={17} />
+              </button>
+            </div>
+
+            <div
+              className="category-scrollbar mobile-category-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-2.5"
+              tabIndex={0}
+            >
+              {children}
+
+              <div
+                aria-hidden="true"
+                className="h-3"
+              />
+            </div>
+          </section>
+        )}
+
+        {/*
+         * mr-auto هنا مهم جدًا.
+         * لأن الصفحة RTL، واستخدام items-start
+         * قد يجعل الزر ناحية اليمين.
+         *
+         * margin-right:auto يدفعه فعليًا
+         * ناحية الشمال.
+         */}
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          aria-label={
             isOpen
-              ? "bg-orange-500"
-              : "bg-white/15",
+              ? "إغلاق قائمة التصنيفات"
+              : "فتح قائمة التصنيفات"
+          }
+          className={clsx(
+            "pointer-events-auto ml-0 mr-auto flex h-12 max-w-[220px] items-center gap-2 rounded-full border border-white/10 px-3 text-white shadow-xl shadow-black/30 transition active:scale-95",
+
+            isOpen
+              ? "bg-[#162235] hover:bg-[#1f2d40]"
+              : "bg-orange-500 hover:bg-orange-600",
           )}
         >
-          {isOpen ? (
-            <X size={16} />
-          ) : (
-            <ListFilter size={17} />
-          )}
-        </span>
+          <span
+            className={clsx(
+              "grid h-8 w-8 shrink-0 place-items-center rounded-full",
 
-        <span className="min-w-0 text-right">
-          <span className="block truncate text-[11px] font-black">
-            تصنيفات الوصفات
+              isOpen
+                ? "bg-orange-500"
+                : "bg-white/15",
+            )}
+          >
+            {isOpen ? (
+              <X size={16} />
+            ) : (
+              <ListFilter size={17} />
+            )}
           </span>
 
-          {!isOpen && (
-            <span className="block max-w-[135px] truncate text-[9px] font-bold text-white/80">
-              {activeLabel}
+          <span className="min-w-0 text-right">
+            <span className="block truncate text-[11px] font-black">
+              تصنيفات الوصفات
             </span>
-          )}
-        </span>
-      </button>
-    </div>
+
+            {!isOpen && (
+              <span className="block max-w-[145px] truncate text-[9px] font-bold text-white/80">
+                {activeLabel}
+              </span>
+            )}
+          </span>
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -1009,7 +1211,8 @@ function RecipeCard({
   hasImageError: boolean;
   onImageError: (id: number) => void;
 }) {
-  const cardImageUrl = getCardImageUrl(recipe);
+  const cardImageUrl =
+    getCardImageUrl(recipe);
 
   const categoryLabel = Array.isArray(
     recipe.category,
@@ -1020,7 +1223,9 @@ function RecipeCard({
   return (
     <article className="group h-full">
       <Link
-        href={`/recipe/${encodeURIComponent(recipe.slug)}`}
+        href={`/recipe/${encodeURIComponent(
+          recipe.slug,
+        )}`}
         prefetch={false}
         className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/[0.07] bg-[#121c2b] shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1.5 hover:border-orange-500/40 hover:shadow-2xl hover:shadow-black/25"
       >
@@ -1038,7 +1243,11 @@ function RecipeCard({
               sizes="(max-width: 640px) 94vw, (max-width: 1024px) 46vw, (max-width: 1536px) 31vw, 360px"
               quality={70}
               preload={index < 4}
-              loading={index < 4 ? undefined : "lazy"}
+              loading={
+                index < 4
+                  ? undefined
+                  : "lazy"
+              }
               decoding="async"
               draggable={false}
               unoptimized={cardImageUrl!.startsWith(
@@ -1073,7 +1282,9 @@ function RecipeCard({
         <div className="flex flex-1 flex-col p-4">
           {categoryLabel && (
             <span className="mb-2 block truncate text-[10px] font-black text-orange-400">
-              {formatCategoryName(categoryLabel)}
+              {formatCategoryName(
+                categoryLabel,
+              )}
             </span>
           )}
 
@@ -1095,6 +1306,216 @@ function RecipeCard({
 }
 
 /* =============================== */
+/* Pagination                      */
+/* =============================== */
+
+function RecipesPagination({
+  currentPage,
+  totalPages,
+  totalItems,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  const paginationItems = getPaginationItems(
+    currentPage,
+    totalPages,
+  );
+
+  const firstItem =
+    (currentPage - 1) *
+      RECIPES_PER_PAGE +
+    1;
+
+  const lastItem = Math.min(
+    currentPage * RECIPES_PER_PAGE,
+    totalItems,
+  );
+
+  const progress = Math.min(
+    100,
+    Math.max(
+      0,
+      (currentPage / totalPages) * 100,
+    ),
+  );
+
+  return (
+    <nav
+      aria-label="التنقل بين صفحات الوصفات"
+      className="mt-8 overflow-hidden rounded-3xl border border-white/[0.07] bg-gradient-to-br from-[#172438] via-[#121d2d] to-[#0f1826] shadow-2xl shadow-black/20"
+    >
+      <div className="flex flex-col gap-3 border-b border-white/[0.06] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="min-w-0 text-center sm:text-right">
+          <div className="flex items-center justify-center gap-2 sm:justify-start">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-orange-500/10 text-orange-400">
+              <UtensilsCrossed size={16} />
+            </span>
+
+            <div>
+              <p className="text-xs font-black text-white sm:text-sm">
+                تصفّح الوصفات بسهولة
+              </p>
+
+              <p className="mt-0.5 text-[10px] font-bold text-slate-400 sm:text-[11px]">
+                عرض {formatNumber(firstItem)}–
+                {formatNumber(lastItem)} من {" "}
+                {formatNumber(totalItems)} وصفة
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <span className="mx-auto inline-flex w-fit items-center rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-1.5 text-[10px] font-black text-orange-300 sm:mx-0 sm:text-[11px]">
+          الصفحة {formatNumber(currentPage)} من {" "}
+          {formatNumber(totalPages)}
+        </span>
+      </div>
+
+      <div className="p-3 sm:p-4">
+        {/* Mobile pagination */}
+        <div className="flex items-center justify-between gap-2 sm:hidden">
+          <button
+            type="button"
+            onClick={() =>
+              onPageChange(currentPage - 1)
+            }
+            disabled={currentPage === 1}
+            aria-label="الصفحة السابقة"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/[0.07] bg-[#182638] text-slate-100 shadow-lg shadow-black/10 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            <ChevronRight size={18} />
+          </button>
+
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl border border-white/[0.06] bg-[#101a28] px-3 py-2.5">
+            <span className="text-[11px] font-bold text-slate-400">
+              صفحة
+            </span>
+
+            <span className="grid h-8 min-w-8 place-items-center rounded-xl bg-orange-500 px-2 text-xs font-black text-white shadow-lg shadow-orange-500/20">
+              {formatNumber(currentPage)}
+            </span>
+
+            <span className="text-[11px] font-bold text-slate-500">
+              / {formatNumber(totalPages)}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              onPageChange(currentPage + 1)
+            }
+            disabled={
+              currentPage === totalPages
+            }
+            aria-label="الصفحة التالية"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/[0.07] bg-[#182638] text-slate-100 shadow-lg shadow-black/10 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            <ChevronLeft size={18} />
+          </button>
+        </div>
+
+        {/* Desktop / tablet pagination */}
+        <div className="hidden items-center justify-center gap-2 sm:flex">
+          <button
+            type="button"
+            onClick={() =>
+              onPageChange(currentPage - 1)
+            }
+            disabled={currentPage === 1}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-[#182638] px-4 text-xs font-black text-slate-100 shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:border-orange-500/30 hover:bg-[#213147] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:translate-y-0"
+          >
+            <ChevronRight size={16} />
+            السابق
+          </button>
+
+          <div className="flex items-center gap-1.5 rounded-2xl border border-white/[0.06] bg-[#0f1927] p-1.5">
+            {paginationItems.map(
+              (item, index) => {
+                if (
+                  item === "start-ellipsis" ||
+                  item === "end-ellipsis"
+                ) {
+                  return (
+                    <span
+                      key={`${item}-${index}`}
+                      aria-hidden="true"
+                      className="grid h-10 w-8 place-items-center text-sm font-black text-slate-500"
+                    >
+                      …
+                    </span>
+                  );
+                }
+
+                const isActive =
+                  item === currentPage;
+
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() =>
+                      onPageChange(item)
+                    }
+                    aria-label={`الانتقال إلى الصفحة ${item}`}
+                    aria-current={
+                      isActive
+                        ? "page"
+                        : undefined
+                    }
+                    className={clsx(
+                      "grid h-10 min-w-10 place-items-center rounded-xl px-2 text-xs font-black transition",
+
+                      isActive
+                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/25"
+                        : "text-slate-300 hover:bg-[#223148] hover:text-white",
+                    )}
+                  >
+                    {formatNumber(item)}
+                  </button>
+                );
+              },
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              onPageChange(currentPage + 1)
+            }
+            disabled={
+              currentPage === totalPages
+            }
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-orange-500/25 bg-orange-500 px-4 text-xs font-black text-white shadow-lg shadow-orange-500/20 transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:translate-y-0"
+          >
+            التالي
+            <ChevronLeft size={16} />
+          </button>
+        </div>
+      </div>
+
+      <div
+        className="h-1 bg-white/[0.04]"
+        aria-hidden="true"
+      >
+        <div
+          className="h-full rounded-full bg-gradient-to-l from-orange-400 to-orange-600 transition-[width] duration-500"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </nav>
+  );
+}
+
+/* =============================== */
 /* Main component                  */
 /* =============================== */
 
@@ -1102,6 +1523,7 @@ export default function RecipesClient({
   recipes,
   categories,
   initialCategory = null,
+  initialPage = 1,
 }: RecipesClientProps) {
   const normalizedInitialCategory =
     initialCategory &&
@@ -1109,61 +1531,77 @@ export default function RecipesClient({
       ? initialCategory
       : null;
 
-  const [activeCategory, setActiveCategory] =
-    useState<string | null>(
-      normalizedInitialCategory,
-    );
+  const [
+    activeCategory,
+    setActiveCategory,
+  ] = useState<string | null>(
+    normalizedInitialCategory,
+  );
 
-  const [activeCountry, setActiveCountry] =
-    useState<string | null>(null);
+  const [
+    activeCountry,
+    setActiveCountry,
+  ] = useState<string | null>(null);
 
-  const [activeTag, setActiveTag] = useState<
-    string | null
-  >(null);
+  const [
+    activeTag,
+    setActiveTag,
+  ] = useState<string | null>(null);
 
-  const [visibleCount, setVisibleCount] =
-    useState(INITIAL_VISIBLE_COUNT);
-
-  const [loadingMore, setLoadingMore] =
-    useState(false);
+  const [
+    currentPage,
+    setCurrentPage,
+  ] = useState(() =>
+    Math.max(1, initialPage),
+  );
 
   const isLoading = false;
 
-  const [imageErrors, setImageErrors] =
-    useState<Record<string, boolean>>({});
+  const [
+    imageErrors,
+    setImageErrors,
+  ] = useState<
+    Record<string, boolean>
+  >({});
 
-  const [sidebarMobileOpen, setSidebarMobileOpen] =
-    useState(false);
+  const [
+    sidebarMobileOpen,
+    setSidebarMobileOpen,
+  ] = useState(false);
 
   const [
     desktopCategoriesOpen,
     setDesktopCategoriesOpen,
   ] = useState(true);
 
-  const [expandedCategories, setExpandedCategories] =
-    useState<Record<string, boolean>>(() =>
+  const [
+    expandedCategories,
+    setExpandedCategories,
+  ] = useState<Record<string, boolean>>(
+    () =>
       normalizedInitialCategory
         ? {
-            [normalizedInitialCategory]: true,
+            [normalizedInitialCategory]:
+              true,
           }
         : {},
-    );
+  );
 
   const [
     expandedCategoriesMobile,
     setExpandedCategoriesMobile,
-  ] = useState<Record<string, boolean>>(() =>
-    normalizedInitialCategory
-      ? {
-          [normalizedInitialCategory]: true,
-        }
-      : {},
+  ] = useState<Record<string, boolean>>(
+    () =>
+      normalizedInitialCategory
+        ? {
+            [normalizedInitialCategory]:
+              true,
+          }
+        : {},
   );
 
-  const loadingMoreRef = useRef(false);
-
-  const loadMoreSentinelRef =
-    useRef<HTMLDivElement>(null);
+  const recipesSectionRef =
+    useRef<HTMLElement>(null);
 
   const {
     isFooterVisible,
@@ -1191,11 +1629,26 @@ export default function RecipesClient({
         [initialCategory]: true,
       });
     }
-  }, [initialCategory, categories]);
+
+    setCurrentPage(
+      Math.max(1, initialPage),
+    );
+  }, [
+    initialCategory,
+    initialPage,
+    categories,
+  ]);
 
   const countriesMap = useMemo(
-    () => getCountriesMap(recipes, categories),
-    [recipes, categories],
+    () =>
+      getCountriesMap(
+        recipes,
+        categories,
+      ),
+    [
+      recipes,
+      categories,
+    ],
   );
 
   const availableTags = useMemo(
@@ -1205,32 +1658,47 @@ export default function RecipesClient({
         activeCategory,
         activeCountry,
       ),
-    [recipes, activeCategory, activeCountry],
+    [
+      recipes,
+      activeCategory,
+      activeCountry,
+    ],
   );
 
   const filteredRecipes = useMemo(() => {
     let result = [...recipes];
 
     if (activeCategory) {
-      result = result.filter((recipe) =>
-        hasCategory(recipe, activeCategory),
+      result = result.filter(
+        (recipe) =>
+          hasCategory(
+            recipe,
+            activeCategory,
+          ),
       );
     }
 
     if (activeCountry) {
       result = result.filter(
         (recipe) =>
-          recipe.country === activeCountry,
+          recipe.country ===
+          activeCountry,
       );
     }
 
     if (activeTag) {
-      result = result.filter((recipe) =>
-        hasTag(recipe, activeTag),
+      result = result.filter(
+        (recipe) =>
+          hasTag(
+            recipe,
+            activeTag,
+          ),
       );
     }
 
-    return result.sort((a, b) => b.id - a.id);
+    return result.sort(
+      (a, b) => b.id - a.id,
+    );
   }, [
     recipes,
     activeCategory,
@@ -1238,183 +1706,281 @@ export default function RecipesClient({
     activeTag,
   ]);
 
-  const visibleRecipes = useMemo(
-    () => filteredRecipes.slice(0, visibleCount),
-    [filteredRecipes, visibleCount],
+  const totalPages = Math.max(
+    1,
+    Math.ceil(
+      filteredRecipes.length /
+        RECIPES_PER_PAGE,
+    ),
   );
 
-  const hasMoreRecipes =
-    visibleCount < filteredRecipes.length;
+  const safeCurrentPage = Math.min(
+    Math.max(currentPage, 1),
+    totalPages,
+  );
 
-  const desktopGridColumns = useMemo(() => {
-    if (!adsEnabled) {
-      return "xl:grid-cols-4";
-    }
+  const paginatedRecipes = useMemo(() => {
+    const startIndex =
+      (safeCurrentPage - 1) *
+      RECIPES_PER_PAGE;
 
-    if (desktopCategoriesOpen) {
-      return "xl:grid-cols-2";
-    }
-
-    return "xl:grid-cols-3";
-  }, [desktopCategoriesOpen]);
-
-  useEffect(() => {
-    setVisibleCount(INITIAL_VISIBLE_COUNT);
-  }, [activeCategory, activeCountry, activeTag]);
-
-  const loadMore = useCallback(() => {
-    if (
-      loadingMoreRef.current ||
-      loadingMore ||
-      !hasMoreRecipes
-    ) {
-      return;
-    }
-
-    loadingMoreRef.current = true;
-    setLoadingMore(true);
-
-    window.requestAnimationFrame(() => {
-      setVisibleCount((currentCount) =>
-        Math.min(
-          currentCount + LOAD_MORE_COUNT,
-          filteredRecipes.length,
-        ),
-      );
-
-      setLoadingMore(false);
-      loadingMoreRef.current = false;
-    });
+    return filteredRecipes.slice(
+      startIndex,
+      startIndex + RECIPES_PER_PAGE,
+    );
   }, [
-    loadingMore,
-    hasMoreRecipes,
-    filteredRecipes.length,
+    filteredRecipes,
+    safeCurrentPage,
   ]);
 
-  useEffect(() => {
-    const sentinel = loadMoreSentinelRef.current;
+  const desktopGridColumns =
+    useMemo(() => {
+      if (!adsEnabled) {
+        return "xl:grid-cols-4";
+      }
 
-    if (
-      !sentinel ||
-      !hasMoreRecipes ||
-      isLoading
-    ) {
+      if (
+        desktopCategoriesOpen
+      ) {
+        return "xl:grid-cols-2";
+      }
+
+      return "xl:grid-cols-3";
+    }, [
+      desktopCategoriesOpen,
+    ]);
+
+  useEffect(() => {
+    if (currentPage === safeCurrentPage) {
       return;
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          loadMore();
-        }
-      },
-      {
-        root: null,
-        rootMargin: "500px 0px",
-        threshold: 0.01,
-      },
+    setCurrentPage(safeCurrentPage);
+
+    replaceRecipesUrl(
+      safeCurrentPage,
+      activeCategory,
     );
+  }, [
+    currentPage,
+    safeCurrentPage,
+    activeCategory,
+  ]);
 
-    observer.observe(sentinel);
+  const goToPage = useCallback(
+    (page: number) => {
+      const nextPage = Math.min(
+        Math.max(page, 1),
+        totalPages,
+      );
 
-    return () => {
-      observer.disconnect();
-    };
-  }, [hasMoreRecipes, isLoading, loadMore]);
+      if (nextPage === safeCurrentPage) {
+        return;
+      }
 
-  const toggleCategory = useCallback(
-    (
-      category: string,
-      mobile = false,
-    ) => {
-      const setExpanded = mobile
-        ? setExpandedCategoriesMobile
-        : setExpandedCategories;
+      setCurrentPage(nextPage);
 
-      setExpanded((currentState) => {
-        const isCurrentlyOpen = Boolean(
-          currentState[category],
+      replaceRecipesUrl(
+        nextPage,
+        activeCategory,
+      );
+
+      window.setTimeout(() => {
+        const section =
+          recipesSectionRef.current;
+
+        if (!section) {
+          return;
+        }
+
+        const top =
+          section.getBoundingClientRect().top +
+          window.scrollY -
+          112;
+
+        window.scrollTo({
+          top: Math.max(0, top),
+          behavior: "smooth",
+        });
+      }, 30);
+    },
+    [
+      totalPages,
+      safeCurrentPage,
+      activeCategory,
+    ],
+  );
+
+  const toggleCategory =
+    useCallback(
+      (
+        category: string,
+        mobile = false,
+      ) => {
+        const setExpanded =
+          mobile
+            ? setExpandedCategoriesMobile
+            : setExpandedCategories;
+
+        setExpanded(
+          (currentState) => {
+            const isCurrentlyOpen =
+              Boolean(
+                currentState[
+                  category
+                ],
+              );
+
+            return {
+              [category]:
+                !isCurrentlyOpen,
+            };
+          },
         );
 
-        return {
-          [category]: !isCurrentlyOpen,
-        };
-      });
+        setActiveCategory(
+          category,
+        );
 
-      setActiveCategory(category);
+        setActiveCountry(null);
+        setActiveTag(null);
+        setCurrentPage(1);
+
+        replaceRecipesUrl(
+          1,
+          category,
+        );
+      },
+      [],
+    );
+
+  const selectCountry =
+    useCallback(
+      (
+        category: string,
+        country:
+          | string
+          | null,
+      ) => {
+        setActiveCategory(
+          category,
+        );
+
+        setActiveCountry(
+          country,
+        );
+
+        setActiveTag(null);
+        setCurrentPage(1);
+
+        replaceRecipesUrl(
+          1,
+          category,
+        );
+      },
+      [],
+    );
+
+  const selectTag =
+    useCallback(
+      (tag: string) => {
+        setActiveTag(
+          (currentTag) =>
+            currentTag === tag
+              ? null
+              : tag,
+        );
+
+        setCurrentPage(1);
+
+        replaceRecipesUrl(
+          1,
+          activeCategory,
+        );
+      },
+      [activeCategory],
+    );
+
+  const clearAllFilters =
+    useCallback(() => {
+      setActiveCategory(null);
+
       setActiveCountry(null);
-      setActiveTag(null);
-    },
-    [],
-  );
 
-  const selectCountry = useCallback(
-    (
-      category: string,
-      country: string | null,
-    ) => {
-      setActiveCategory(category);
-      setActiveCountry(country);
       setActiveTag(null);
-    },
-    [],
-  );
 
-  const selectTag = useCallback(
-    (tag: string) => {
-      setActiveTag((currentTag) =>
-        currentTag === tag ? null : tag,
+      setCurrentPage(1);
+
+      replaceRecipesUrl(1, null);
+
+      setExpandedCategories({});
+
+      setExpandedCategoriesMobile(
+        {},
       );
-    },
-    [],
-  );
 
-  const clearAllFilters = useCallback(() => {
-    setActiveCategory(null);
-    setActiveCountry(null);
-    setActiveTag(null);
-    setVisibleCount(INITIAL_VISIBLE_COUNT);
+      window.setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }, 40);
+    }, []);
 
-    setExpandedCategories({});
-    setExpandedCategoriesMobile({});
+  const handleImageError =
+    useCallback(
+      (id: number) => {
+        setImageErrors(
+          (currentErrors) => ({
+            ...currentErrors,
 
-    window.setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }, 40);
-  }, []);
-
-  const handleImageError = useCallback(
-    (id: number) => {
-      setImageErrors((currentErrors) => ({
-        ...currentErrors,
-        [String(id)]: true,
-      }));
-    },
-    [],
-  );
+            [String(id)]: true,
+          }),
+        );
+      },
+      [],
+    );
 
   const handleMobileGuideClose =
     useCallback(() => {
-      setSidebarMobileOpen(false);
+      setSidebarMobileOpen(
+        false,
+      );
     }, []);
 
   const desktopNavigation = (
     <CategoryNavigation
       categories={categories}
-      countriesMap={countriesMap}
-      availableTags={availableTags}
-      activeCategory={activeCategory}
-      activeCountry={activeCountry}
-      activeTag={activeTag}
-      expandedCategories={expandedCategories}
-      onToggleCategory={(category) =>
-        toggleCategory(category, false)
+      countriesMap={
+        countriesMap
       }
-      onSelectAll={clearAllFilters}
-      onSelectCountry={selectCountry}
+      availableTags={
+        availableTags
+      }
+      activeCategory={
+        activeCategory
+      }
+      activeCountry={
+        activeCountry
+      }
+      activeTag={activeTag}
+      expandedCategories={
+        expandedCategories
+      }
+      onToggleCategory={(
+        category,
+      ) =>
+        toggleCategory(
+          category,
+          false,
+        )
+      }
+      onSelectAll={
+        clearAllFilters
+      }
+      onSelectCountry={
+        selectCountry
+      }
       onSelectTag={selectTag}
     />
   );
@@ -1422,21 +1988,40 @@ export default function RecipesClient({
   const mobileNavigation = (
     <CategoryNavigation
       categories={categories}
-      countriesMap={countriesMap}
-      availableTags={availableTags}
-      activeCategory={activeCategory}
-      activeCountry={activeCountry}
+      countriesMap={
+        countriesMap
+      }
+      availableTags={
+        availableTags
+      }
+      activeCategory={
+        activeCategory
+      }
+      activeCountry={
+        activeCountry
+      }
       activeTag={activeTag}
       expandedCategories={
         expandedCategoriesMobile
       }
-      onToggleCategory={(category) =>
-        toggleCategory(category, true)
+      onToggleCategory={(
+        category,
+      ) =>
+        toggleCategory(
+          category,
+          true,
+        )
       }
-      onSelectAll={clearAllFilters}
-      onSelectCountry={selectCountry}
+      onSelectAll={
+        clearAllFilters
+      }
+      onSelectCountry={
+        selectCountry
+      }
       onSelectTag={selectTag}
-      onAfterSelect={handleMobileGuideClose}
+      onAfterSelect={
+        handleMobileGuideClose
+      }
     />
   );
 
@@ -1446,38 +2031,66 @@ export default function RecipesClient({
       className="min-h-screen pb-32 pt-24 text-white dark:bg-[#0b1220] sm:pb-28 sm:pt-28 xl:pb-20"
     >
       <DesktopCategoriesAside
-        isOpen={desktopCategoriesOpen}
+        isOpen={
+          desktopCategoriesOpen
+        }
         onToggle={() =>
           setDesktopCategoriesOpen(
-            (current) => !current,
+            (current) =>
+              !current,
           )
         }
-        isFooterVisible={isFooterVisible}
-        footerOffset={footerOffset}
-        hasActiveFilters={hasActiveFilters}
-        onShowAllRecipes={clearAllFilters}
+        isFooterVisible={
+          isFooterVisible
+        }
+        footerOffset={
+          footerOffset
+        }
+        hasActiveFilters={
+          hasActiveFilters
+        }
+        onShowAllRecipes={
+          clearAllFilters
+        }
       >
         {desktopNavigation}
       </DesktopCategoriesAside>
 
       <DesktopAdvertisementAside
-        isFooterVisible={isFooterVisible}
+        isFooterVisible={
+          isFooterVisible
+        }
       />
 
       <MobileCategoriesGuide
-        isOpen={sidebarMobileOpen}
+        isOpen={
+          sidebarMobileOpen
+        }
         onToggle={() =>
           setSidebarMobileOpen(
-            (currentState) => !currentState,
+            (currentState) =>
+              !currentState,
           )
         }
-        onClose={handleMobileGuideClose}
-        isFooterVisible={isFooterVisible}
-        footerOffset={footerOffset}
-        activeCategory={activeCategory}
-        activeCountry={activeCountry}
+        onClose={
+          handleMobileGuideClose
+        }
+        isFooterVisible={
+          isFooterVisible
+        }
+        footerOffset={
+          footerOffset
+        }
+        activeCategory={
+          activeCategory
+        }
+        activeCountry={
+          activeCountry
+        }
         activeTag={activeTag}
-        onShowAllRecipes={clearAllFilters}
+        onShowAllRecipes={
+          clearAllFilters
+        }
       >
         {mobileNavigation}
       </MobileCategoriesGuide>
@@ -1485,9 +2098,11 @@ export default function RecipesClient({
       <div
         className={clsx(
           "mx-auto w-full max-w-[1920px] px-3 transition-[padding] duration-300 sm:px-5",
+
           desktopCategoriesOpen
             ? "xl:pl-[280px]"
             : "xl:pl-[78px]",
+
           adsEnabled
             ? "xl:pr-[320px]"
             : "xl:pr-5",
@@ -1502,41 +2117,61 @@ export default function RecipesClient({
 
           <div className="relative">
             <span className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-orange-500 text-white shadow-xl shadow-orange-500/20 sm:h-16 sm:w-16">
-              <UtensilsCrossed size={28} />
+              <UtensilsCrossed
+                size={28}
+              />
             </span>
 
             <h1 className="mx-auto max-w-[1000px] text-balance text-xl font-black leading-9 text-white sm:text-2xl sm:leading-10 lg:text-3xl lg:leading-[1.6]">
-              استمتع بألذ الوصفات العربية والعالمية
-              الأصيلة
+              استمتع بألذ
+              الوصفات العربية
+              والعالمية الأصيلة
             </h1>
 
             <p className="mx-auto mt-3 max-w-[900px] text-sm font-bold leading-7 text-slate-300 sm:text-base sm:leading-8">
-              وصفات شهية وسهلة التحضير لكل المناسبات
-              اليومية والعائلية، مع خطوات واضحة ونصائح
-              احترافية وأفكار مبتكرة من مطابخ العالم.
+              وصفات شهية وسهلة
+              التحضير لكل
+              المناسبات اليومية
+              والعائلية، مع خطوات
+              واضحة ونصائح
+              احترافية وأفكار
+              مبتكرة من مطابخ
+              العالم.
             </p>
           </div>
         </section>
 
-        <main className="min-w-0">
+        <main
+          ref={recipesSectionRef}
+          className="min-w-0"
+        >
           {/* Recipes grid */}
 
           <div
             className={clsx(
               "grid grid-cols-1 gap-4 transition-all duration-300 sm:grid-cols-2 sm:gap-5",
+
               desktopGridColumns,
             )}
           >
             {isLoading
               ? Array.from({
                   length: 8,
-                }).map((_, index) => (
-                  <RecipeSkeleton
-                    key={`recipe-skeleton-${index}`}
-                  />
-                ))
-              : visibleRecipes.map(
-                  (recipe, index) => (
+                }).map(
+                  (
+                    _,
+                    index,
+                  ) => (
+                    <RecipeSkeleton
+                      key={`recipe-skeleton-${index}`}
+                    />
+                  ),
+                )
+              : paginatedRecipes.map(
+                  (
+                    recipe,
+                    index,
+                  ) => (
                     <div
                       key={
                         recipe.slug
@@ -1545,11 +2180,15 @@ export default function RecipesClient({
                       }
                     >
                       <RecipeCard
-                        recipe={recipe}
+                        recipe={
+                          recipe
+                        }
                         index={index}
                         hasImageError={Boolean(
                           imageErrors[
-                            String(recipe.id)
+                            String(
+                              recipe.id,
+                            )
                           ],
                         )}
                         onImageError={
@@ -1558,7 +2197,8 @@ export default function RecipesClient({
                       />
 
                       {adsEnabled &&
-                        (index + 1) %
+                        (index +
+                          1) %
                           MOBILE_AD_INTERVAL ===
                           0 && (
                           <div className="mt-4 overflow-hidden rounded-2xl border border-white/[0.05] bg-[#111a28] xl:hidden">
@@ -1574,32 +2214,44 @@ export default function RecipesClient({
 
           {!isLoading &&
             hasActiveFilters &&
-            filteredRecipes.length > 0 && (
+            filteredRecipes.length >
+              0 && (
               <section className="mt-6 overflow-hidden rounded-3xl border border-orange-500/20 bg-gradient-to-br from-[#172438] to-[#111a28] p-4 shadow-xl shadow-black/10 sm:p-5">
                 <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-right">
                   <div className="flex items-center gap-3">
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-orange-500 text-white shadow-lg shadow-orange-500/20">
-                      <ListFilter size={19} />
+                      <ListFilter
+                        size={19}
+                      />
                     </span>
 
                     <div>
                       <h2 className="text-sm font-black text-white sm:text-base">
-                        أنت تشاهد نتائج تصنيف محدد
+                        أنت تشاهد
+                        نتائج تصنيف
+                        محدد
                       </h2>
 
                       <p className="mt-1 text-[11px] font-bold text-slate-400">
-                        يمكنك الرجوع إلى جميع الوصفات
-                        وعرض باقي التصنيفات.
+                        يمكنك الرجوع
+                        إلى جميع
+                        الوصفات وعرض
+                        باقي
+                        التصنيفات.
                       </p>
                     </div>
                   </div>
 
                   <button
                     type="button"
-                    onClick={clearAllFilters}
+                    onClick={
+                      clearAllFilters
+                    }
                     className="inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 text-xs font-black text-white shadow-lg shadow-orange-500/20 transition hover:-translate-y-0.5 hover:bg-orange-600 sm:w-auto"
                   >
-                    <RotateCcw size={15} />
+                    <RotateCcw
+                      size={15}
+                    />
 
                     عرض كل الوصفات
                   </button>
@@ -1607,89 +2259,56 @@ export default function RecipesClient({
               </section>
             )}
 
-          {/* Loading more */}
-
-          {!isLoading && loadingMore && (
-            <div
-              className={clsx(
-                "mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5",
-                desktopGridColumns,
-              )}
-            >
-              {Array.from({
-                length: 4,
-              }).map((_, index) => (
-                <RecipeSkeleton
-                  key={`loading-more-skeleton-${index}`}
-                />
-              ))}
-            </div>
-          )}
-
           {/* Empty state */}
 
           {!isLoading &&
-            filteredRecipes.length === 0 && (
+            filteredRecipes.length ===
+              0 && (
               <section className="rounded-3xl border border-white/[0.07] bg-[#121c2b] px-5 py-12 text-center shadow-xl shadow-black/10">
                 <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-orange-500/10 text-orange-400">
-                  <UtensilsCrossed size={30} />
+                  <UtensilsCrossed
+                    size={30}
+                  />
                 </span>
 
                 <h2 className="mt-4 text-xl font-black text-white">
-                  لا توجد وصفات مطابقة
+                  لا توجد وصفات
+                  مطابقة
                 </h2>
 
                 <p className="mx-auto mt-2 max-w-md text-sm font-bold leading-7 text-slate-400">
-                  جرّب تغيير التصنيف أو الدولة أو الوسم
-                  لعرض وصفات أخرى.
+                  جرّب تغيير
+                  التصنيف أو الدولة
+                  أو الوسم لعرض
+                  وصفات أخرى.
                 </p>
 
                 <button
                   type="button"
-                  onClick={clearAllFilters}
+                  onClick={
+                    clearAllFilters
+                  }
                   className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 text-sm font-black text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600"
                 >
-                  <RotateCcw size={16} />
+                  <RotateCcw
+                    size={16}
+                  />
 
                   عرض كل الوصفات
                 </button>
               </section>
             )}
 
-          {/* Load more button */}
-
           {!isLoading &&
-            filteredRecipes.length > 0 &&
-            hasMoreRecipes && (
-              <div className="mt-7 flex justify-center">
-                <button
-                  type="button"
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                  className="inline-flex h-12 min-w-[190px] items-center justify-center gap-2 rounded-2xl border border-orange-500/30 bg-orange-500 px-6 text-sm font-black text-white shadow-lg shadow-orange-500/20 transition hover:-translate-y-0.5 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {loadingMore ? (
-                    <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-
-                      جاري التحميل
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown size={17} />
-
-                      عرض وصفات أخرى
-                    </>
-                  )}
-                </button>
-              </div>
+            filteredRecipes.length > 0 && (
+              <RecipesPagination
+                currentPage={safeCurrentPage}
+                totalPages={totalPages}
+                totalItems={filteredRecipes.length}
+                onPageChange={goToPage}
+              />
             )}
 
-          <div
-            ref={loadMoreSentinelRef}
-            aria-hidden="true"
-            className="h-5"
-          />
         </main>
       </div>
 
@@ -1698,7 +2317,7 @@ export default function RecipesClient({
         .advertisement-scrollbar {
           scrollbar-width: thin;
           scrollbar-color: #f97316 transparent;
-          overscroll-behavior: contain;
+          overscroll-behavior-y: contain;
         }
 
         .category-scrollbar::-webkit-scrollbar,
@@ -1722,9 +2341,125 @@ export default function RecipesClient({
           background: #ea580c;
         }
 
+        /*
+         * القائمة على الموبايل
+         */
+
+        .mobile-category-panel {
+          max-height: calc(
+            100vh - 7rem
+          );
+
+          max-height: calc(
+            100svh - 7rem
+          );
+
+          max-height: calc(
+            100dvh - 7rem
+          );
+        }
+
+        /*
+         * إصلاح Scroll اللمس
+         * على Android و iPhone
+         */
+
+        .mobile-category-scroll {
+          min-height: 0;
+
+          overflow-x: hidden !important;
+          overflow-y: auto !important;
+
+          -webkit-overflow-scrolling: touch;
+
+          overscroll-behavior-y: contain;
+
+          touch-action: pan-y;
+
+          scrollbar-gutter: stable;
+        }
+
+        @supports (
+          -webkit-touch-callout:
+            none
+        ) {
+          .mobile-category-scroll {
+            -webkit-overflow-scrolling: touch;
+
+            touch-action: pan-y;
+          }
+        }
+
+        /*
+         * الشاشات القصيرة
+         */
+
+        @media (max-height: 650px) and (max-width: 1279px) {
+          .mobile-category-panel {
+            max-height: calc(
+              100vh - 5.75rem
+            );
+
+            max-height: calc(
+              100svh - 5.75rem
+            );
+
+            max-height: calc(
+              100dvh - 5.75rem
+            );
+          }
+        }
+
+        /*
+         * الموبايل
+         */
+
         @media (max-width: 640px) {
           html {
             scroll-behavior: auto;
+          }
+
+          .mobile-category-panel {
+            max-height: calc(
+              100vh - 6.25rem
+            );
+
+            max-height: calc(
+              100svh - 6.25rem
+            );
+
+            max-height: calc(
+              100dvh - 6.25rem
+            );
+          }
+
+          .mobile-category-scroll {
+            padding-bottom: max(
+              0.75rem,
+              env(
+                safe-area-inset-bottom
+              )
+            );
+          }
+        }
+
+        /*
+         * الشاشات الصغيرة جدًا
+         */
+
+        @media (max-width: 380px) {
+          .mobile-category-panel {
+            max-height: calc(
+              100vh - 5.5rem
+            );
+
+            max-height: calc(
+              100svh - 5.5rem
+            );
+
+            max-height: calc(
+              100dvh - 5.5rem
+            );
           }
         }
       `}</style>

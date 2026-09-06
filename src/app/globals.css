@@ -2,92 +2,547 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================================================
+   Root / Global Variables
+   ========================================================= */
 
-
-
-
-
-
-/* تنسيق شريط التمرير داخل الأكورديون */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #1f2937; /* gray-800 */
-  border-radius: 8px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #f97316; /* orange-500 */
-  border-radius: 8px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #ea580c; /* orange-600 */
-}
-/* سلوك التمرير السلس + تثبيت خلفية html  */
-html {
-  
-  transition: background-color 0.4s ease, color 0.4s ease;
-
-  /*   overflow أفقي  */
-  overflow-x: hidden;
-}
-
-html[dir="rtl"] body { text-align: right; }
-
-/* إعدادات الألوان  */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
-  /* ألوان افتراضية للضوء */
+  /* ألوان الصفحة الافتراضية */
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
 
-  /* تأثيرات عالمية سلسة */
+  /* سرعة الانتقالات */
   --transition-speed: 0.4s;
 
-  /* خطوط الموقع: خفيفة ومحسّنة عبر next/font */
-  --font-body: var(--font-cairo), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
-  --font-heading: var(--font-cairo), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
-  --font-brand: var(--font-aref-ruqaa), var(--font-cairo), system-ui, sans-serif;
+  /* =======================================================
+     خطوط الموقع
+     ======================================================= */
+
+  --font-body:
+    var(--font-cairo),
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Tahoma,
+    Arial,
+    sans-serif;
+
+  --font-heading:
+    var(--font-cairo),
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Tahoma,
+    Arial,
+    sans-serif;
+
+  --font-brand:
+    var(--font-aref-ruqaa),
+    var(--font-cairo),
+    system-ui,
+    sans-serif;
+
+  /* =======================================================
+     Scrollbar - Light Mode
+     ======================================================= */
+
+  /* gray-900 */
+  --scrollbar-thumb: #111827;
+
+  /* gray-800 */
+  --scrollbar-thumb-hover: #1f2937;
+
+  /* gray-950 */
+  --scrollbar-thumb-active: #030712;
+
+  /* gray-200 */
+  --scrollbar-track: #e5e7eb;
+
+  /*
+   * Desktop
+   */
+  --scrollbar-size: 20px;
+
+  /*
+   * Mobile
+   * أكبر قليلًا لتسهيل اللمس والرؤية.
+   */
+  --scrollbar-size-mobile: 20px;
+
+  /*
+   * المسافة حول المقبض.
+   */
+  --scrollbar-thumb-gap: 2px;
+
+  /*
+   * على الموبايل نخليه تقريبًا
+   * يملأ المسار كله.
+   */
+  --scrollbar-thumb-gap-mobile: 1px;
 }
 
-/* إعدادات الدارك مود */
+/* =========================================================
+   Dark Mode
+   ========================================================= */
+
 html.dark {
+  color-scheme: dark;
+
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 15, 15, 33;
   --background-end-rgb: 34, 37, 41;
+
+  /* orange-500 */
+  --scrollbar-thumb: #f97316;
+
+  /* orange-400 */
+  --scrollbar-thumb-hover: #fb923c;
+
+  /* orange-600 */
+  --scrollbar-thumb-active: #ea580c;
+
+  /* gray-800 */
+  --scrollbar-track: #1f2937;
 }
 
-/* gradient على body فقط */
+/* =========================================================
+   HTML
+   ========================================================= */
+
+html {
+  transition:
+    background-color var(--transition-speed) ease,
+    color var(--transition-speed) ease;
+
+  overflow-x: hidden;
+
+  /*
+   * مفيد على الكمبيوتر لتقليل
+   * تحرك المحتوى عند ظهور Scrollbar.
+   */
+  scrollbar-gutter: stable;
+}
+
+html[dir="rtl"] body {
+  text-align: right;
+}
+
+/* =========================================================
+   Body
+   ========================================================= */
+
 body {
-  font-family: var(--font-body);
   min-height: 100vh;
-  transition: background-color var(--transition-speed) ease,
-              color var(--transition-speed) ease;
-       
 
+  font-family: var(--font-body);
 
-  /* منع أي scroll أفقي زائد */
+  transition:
+    background-color var(--transition-speed) ease,
+    color var(--transition-speed) ease;
+
   overflow-x: hidden;
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* =========================================================
+   Chrome / Edge / Safari Desktop
+   Global Scrollbar
+   ========================================================= */
 
+@supports selector(::-webkit-scrollbar) {
+  /*
+   * Explicit html / body targeting
+   * بالإضافة إلى العناصر الداخلية.
+   */
 
-/* تحسين الخطوط العربية مع الحفاظ على الأداء */
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    width: var(--scrollbar-size) !important;
+    height: var(--scrollbar-size) !important;
+  }
+
+  /* =======================================================
+     Track
+     ======================================================= */
+
+  html::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-track {
+    background: var(--scrollbar-track) !important;
+
+    border-radius: 999px !important;
+  }
+
+  /* =======================================================
+     Thumb
+     ======================================================= */
+
+  html::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb,
+  *::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb) !important;
+
+    border-radius: 999px !important;
+
+    border:
+      var(--scrollbar-thumb-gap) solid var(--scrollbar-track) !important;
+
+    background-clip: padding-box !important;
+
+    min-height: 80px;
+
+    transition:
+      background-color 0.18s ease,
+      border-width 0.18s ease !important;
+  }
+
+  /* =======================================================
+     Hover
+     ======================================================= */
+
+  html::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover,
+  *::-webkit-scrollbar-thumb:hover {
+    background:
+      var(--scrollbar-thumb-hover) !important;
+
+    border-width: 0 !important;
+  }
+
+  /* =======================================================
+     Active
+     ======================================================= */
+
+  html::-webkit-scrollbar-thumb:active,
+  body::-webkit-scrollbar-thumb:active,
+  *::-webkit-scrollbar-thumb:active {
+    background:
+      var(--scrollbar-thumb-active) !important;
+
+    border-width: 0 !important;
+  }
+
+  /* =======================================================
+     Corner
+     ======================================================= */
+
+  html::-webkit-scrollbar-corner,
+  body::-webkit-scrollbar-corner,
+  *::-webkit-scrollbar-corner {
+    background:
+      var(--scrollbar-track) !important;
+  }
+
+  /* =======================================================
+     Force Dark Scrollbar
+     ======================================================= */
+
+  /*
+   * إضافة استهداف مباشر للدارك
+   * حتى لا يحتفظ أي Component
+   * باللون القديم.
+   */
+
+  html.dark::-webkit-scrollbar-track,
+  html.dark body::-webkit-scrollbar-track,
+  html.dark *::-webkit-scrollbar-track {
+    background: #1f2937 !important;
+  }
+
+  html.dark::-webkit-scrollbar-thumb,
+  html.dark body::-webkit-scrollbar-thumb,
+  html.dark *::-webkit-scrollbar-thumb {
+    background: #f97316 !important;
+
+    border-color: #1f2937 !important;
+  }
+
+  html.dark::-webkit-scrollbar-thumb:hover,
+  html.dark body::-webkit-scrollbar-thumb:hover,
+  html.dark *::-webkit-scrollbar-thumb:hover {
+    background: #fb923c !important;
+
+    border-width: 0 !important;
+  }
+
+  html.dark::-webkit-scrollbar-thumb:active,
+  html.dark body::-webkit-scrollbar-thumb:active,
+  html.dark *::-webkit-scrollbar-thumb:active {
+    background: #ea580c !important;
+
+    border-width: 0 !important;
+  }
+}
+
+/* =========================================================
+   Mobile Scrollbar
+   Android / Chromium / supported WebKit browsers
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  /*
+   * على الموبايل scrollbar-gutter
+   * مش محتاجينه لأن أغلب المتصفحات
+   * تستخدم overlay scrollbar.
+   */
+  html {
+    scrollbar-gutter: auto;
+  }
+
+  @supports selector(::-webkit-scrollbar) {
+    /*
+     * تكبير Scrollbar على الموبايل.
+     */
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {
+      width:
+        var(--scrollbar-size-mobile) !important;
+
+      height:
+        var(--scrollbar-size-mobile) !important;
+    }
+
+    /*
+     * Track
+     */
+
+    html::-webkit-scrollbar-track,
+    body::-webkit-scrollbar-track,
+    *::-webkit-scrollbar-track {
+      background:
+        var(--scrollbar-track) !important;
+
+      border-radius:
+        999px !important;
+    }
+
+    /*
+     * Thumb
+     *
+     * مفيش Border تقريبًا،
+     * وبالتالي المقبض نفسه
+     * يكون كبير وواضح.
+     */
+
+    html::-webkit-scrollbar-thumb,
+    body::-webkit-scrollbar-thumb,
+    *::-webkit-scrollbar-thumb {
+      background:
+        var(--scrollbar-thumb) !important;
+
+      border-radius:
+        999px !important;
+
+      border:
+        var(--scrollbar-thumb-gap-mobile) solid var(--scrollbar-track) !important;
+
+      background-clip:
+        padding-box !important;
+
+      min-height:
+        90px !important;
+    }
+
+    /*
+     * عند لمس / الضغط على المقبض
+     */
+
+    html::-webkit-scrollbar-thumb:active,
+    body::-webkit-scrollbar-thumb:active,
+    *::-webkit-scrollbar-thumb:active {
+      background:
+        var(--scrollbar-thumb-active) !important;
+
+      border-width:
+        0 !important;
+    }
+
+    /* =====================================================
+       Mobile Dark Mode
+       ===================================================== */
+
+    html.dark::-webkit-scrollbar-track,
+    html.dark body::-webkit-scrollbar-track,
+    html.dark *::-webkit-scrollbar-track {
+      background:
+        #1f2937 !important;
+    }
+
+    html.dark::-webkit-scrollbar-thumb,
+    html.dark body::-webkit-scrollbar-thumb,
+    html.dark *::-webkit-scrollbar-thumb {
+      background:
+        #f97316 !important;
+
+      border-color:
+        #1f2937 !important;
+    }
+
+    html.dark::-webkit-scrollbar-thumb:active,
+    html.dark body::-webkit-scrollbar-thumb:active,
+    html.dark *::-webkit-scrollbar-thumb:active {
+      background:
+        #ea580c !important;
+    }
+
+    /* =====================================================
+       Mobile Light Mode
+       ===================================================== */
+
+    html:not(.dark)::-webkit-scrollbar-track,
+    html:not(.dark) body::-webkit-scrollbar-track,
+    html:not(.dark) *::-webkit-scrollbar-track {
+      background:
+        #e5e7eb !important;
+    }
+
+    html:not(.dark)::-webkit-scrollbar-thumb,
+    html:not(.dark) body::-webkit-scrollbar-thumb,
+    html:not(.dark) *::-webkit-scrollbar-thumb {
+      background:
+        #111827 !important;
+
+      border-color:
+        #e5e7eb !important;
+    }
+  }
+}
+
+/* =========================================================
+   Touch Devices
+   ========================================================= */
+
+/*
+ * بعض التابلت والموبايلات عرضهم
+ * أكبر من 768px.
+ *
+ * لذلك نستهدف touch devices أيضًا.
+ */
+
+@media (hover: none) and (pointer: coarse) {
+  @supports selector(::-webkit-scrollbar) {
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {
+      width:
+        var(--scrollbar-size-mobile) !important;
+
+      height:
+        var(--scrollbar-size-mobile) !important;
+    }
+
+    html::-webkit-scrollbar-thumb,
+    body::-webkit-scrollbar-thumb,
+    *::-webkit-scrollbar-thumb {
+      min-height:
+        90px !important;
+
+      border-width:
+        0 !important;
+
+      background:
+        var(--scrollbar-thumb) !important;
+    }
+
+    html.dark::-webkit-scrollbar-thumb,
+    html.dark body::-webkit-scrollbar-thumb,
+    html.dark *::-webkit-scrollbar-thumb {
+      background:
+        #f97316 !important;
+    }
+
+    html:not(.dark)::-webkit-scrollbar-thumb,
+    html:not(.dark) body::-webkit-scrollbar-thumb,
+    html:not(.dark) *::-webkit-scrollbar-thumb {
+      background:
+        #111827 !important;
+    }
+  }
+}
+
+/* =========================================================
+   Firefox
+   ========================================================= */
+
+/*
+ * Firefox لا يسمح بتحديد 20px أو 22px
+ * للـ native scrollbar بنفس تحكم WebKit.
+ */
+
+@supports not selector(::-webkit-scrollbar) {
+
+  html,
+  body,
+  * {
+    scrollbar-width: auto;
+
+    scrollbar-color:
+      var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+}
+
+/* =========================================================
+   Custom Scrollbar
+   ========================================================= */
+
+.custom-scrollbar {
+  overscroll-behavior: contain;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+/* =========================================================
+   Category Scrollbar
+   ========================================================= */
+
+.category-scrollbar {
+  overscroll-behavior-y: contain;
+
+  -webkit-overflow-scrolling: touch;
+
+  touch-action: pan-y;
+}
+
+/* =========================================================
+   Advertisement Scrollbar
+   ========================================================= */
+
+.advertisement-scrollbar {
+  overscroll-behavior-y: contain;
+
+  -webkit-overflow-scrolling: touch;
+
+  touch-action: pan-y;
+}
+
+/* =========================================================
+   Arabic Typography
+   ========================================================= */
+
 h1,
 h2,
 h3,
 .font-heading {
   font-family: var(--font-heading);
+
   letter-spacing: -0.025em;
 }
 
 .font-brand {
   font-family: var(--font-brand);
+
   letter-spacing: -0.015em;
 }
 
@@ -96,122 +551,210 @@ h3,
 article p,
 li {
   font-feature-settings: "kern" 1;
+
   text-rendering: optimizeLegibility;
 }
+
+/* =========================================================
+   Text Selection
+   ========================================================= */
 
 ::selection {
   background: rgba(132, 204, 22, 0.25);
 }
 
+/* =========================================================
+   Animations
+   ========================================================= */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
-
 
 @keyframes fadeInUp {
   from {
     opacity: 0;
+
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
+
     transform: translateY(0);
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   Animation Classes
+   ========================================================= */
+
 .animate-fadeIn {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation:
+    fadeIn 0.5s ease-out forwards;
 }
 
 .animate-fadeInUp {
-  animation: fadeInUp 0.5s ease-out forwards;
-  opacity: 0; /* تبدأ مخفية */
+  animation:
+    fadeInUp 0.5s ease-out forwards;
+
+  opacity: 0;
 }
-/* تحسين النصوص */
+
+.animate-fade-in {
+  animation:
+    fadeInUp 0.6s ease-out;
+}
+
+.animate-slide-up {
+  animation:
+    slideUp 0.3s ease-out;
+}
+
+.shimmer {
+  background:
+    linear-gradient(90deg,
+      #374151 25%,
+      #4b5563 50%,
+      #374151 75%);
+
+  background-size: 200% 100%;
+
+  animation:
+    shimmer 1.5s infinite;
+}
+
+/* =========================================================
+   Tailwind Utilities
+   ========================================================= */
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
 
-  /* تأثيرات عند التمرير أو hover */
+  /* =======================================================
+     Hover Fade
+     ======================================================= */
+
   .hover-fade {
-    transition: transform var(--transition-speed) ease,
-                opacity var(--transition-speed) ease;
+    transition:
+      transform var(--transition-speed) ease,
+      opacity var(--transition-speed) ease;
   }
+
   .hover-fade:hover {
-    transform: translateY(-3px);
+    transform:
+      translateY(-3px);
+
     opacity: 0.9;
   }
 
-  /* منع أي تجاوز عرض لأي عنصر عالميًا */
+  /* =======================================================
+     Global Width Protection
+     ======================================================= */
+
   .max-w-global {
-    max-width: 100vw !important;
+    max-width:
+      100vw !important;
   }
 }
 
-/* تحسين الروابط والأزرار */
+/* =========================================================
+   Links & Buttons
+   ========================================================= */
+
 a,
 button {
-  transition: color var(--transition-speed) ease,
-              background-color var(--transition-speed) ease,
-              box-shadow var(--transition-speed) ease;
+  transition:
+    color var(--transition-speed) ease,
+    background-color var(--transition-speed) ease,
+    border-color var(--transition-speed) ease,
+    box-shadow var(--transition-speed) ease,
+    opacity var(--transition-speed) ease;
 }
 
-/* تأثير ظل خفيف عالمي */
+/* =========================================================
+   Global Shadows
+   ========================================================= */
+
 .shadow-smooth {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  transition: box-shadow var(--transition-speed) ease;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.05);
+
+  transition:
+    box-shadow var(--transition-speed) ease;
 }
+
 .shadow-smooth:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
+/* =========================================================
+   Performance
+   ========================================================= */
 
-.animate-fade-in {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out;
-}
-
-.shimmer {
-  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-
-/* تأجيل رسم الأقسام البعيدة عن الشاشة بدون تغيير ترتيب الصفحة. */
 .content-visibility-auto {
   content-visibility: auto;
-  contain-intrinsic-size: auto 720px;
+
+  contain-intrinsic-size:
+    auto 720px;
 }
+
+/* =========================================================
+   Reduced Motion
+   ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
   html {
-    scroll-behavior: auto !important;
+    scroll-behavior:
+      auto !important;
   }
 
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+    animation-duration:
+      0.01ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      0.01ms !important;
+
+    scroll-behavior:
+      auto !important;
   }
 }
