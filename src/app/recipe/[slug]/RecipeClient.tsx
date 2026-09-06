@@ -2371,45 +2371,179 @@ export default function RecipeClient({
         </div>
 
         <style jsx global>{`
+          /*
+           * Scrollbar الخاص بمحتوى الأقسام المفتوحة.
+           *
+           * كان 3px فقط، لذلك كان رفيعًا جدًا.
+           * أصبح 12px مع Thumb واضح وكبير.
+           */
           .custom-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: #f97316
-              transparent;
-            overscroll-behavior: contain;
-          }
-
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-          }
-
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-          }
-
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            border-radius: 999px;
-            background: #f97316;
-          }
-
-          .recipe-guide-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: #f97316
-              transparent;
+            scrollbar-width: auto;
+            scrollbar-color:
+              var(--scrollbar-thumb, #111827)
+              var(--scrollbar-track, #e5e7eb);
             overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
           }
 
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 15px !important;
+            height: 15px !important;
+          }
+
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background:
+              var(--scrollbar-track, #e5e7eb) !important;
+            border-radius: 999px !important;
+          }
+
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            min-height: 64px;
+            border:
+              1px solid
+              var(--scrollbar-track, #e5e7eb) !important;
+            border-radius: 999px !important;
+            background:
+              var(--scrollbar-thumb, #111827) !important;
+            background-clip: padding-box !important;
+          }
+
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            border-width: 0 !important;
+            background:
+              var(--scrollbar-thumb-hover, #1f2937) !important;
+          }
+
+          .custom-scrollbar::-webkit-scrollbar-thumb:active {
+            border-width: 0 !important;
+            background:
+              var(--scrollbar-thumb-active, #030712) !important;
+          }
+
+          /*
+           * Scrollbar الخاص بدليل الوصفة العائم.
+           *
+           * كان 5px، وأصبح 14px لأنه عنصر
+           * يُستخدم كثيرًا على الموبايل.
+           */
+          .recipe-guide-scrollbar {
+            scrollbar-width: auto;
+            scrollbar-color:
+              var(--scrollbar-thumb, #111827)
+              var(--scrollbar-track, #e5e7eb);
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+          }
+
           .recipe-guide-scrollbar::-webkit-scrollbar {
-            width: 5px;
+            width: 17px !important;
+            height: 17px !important;
           }
 
           .recipe-guide-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
+            background:
+              var(--scrollbar-track, #e5e7eb) !important;
+            border-radius: 999px !important;
           }
 
           .recipe-guide-scrollbar::-webkit-scrollbar-thumb {
-            border-radius: 999px;
-            background: #f97316;
+            min-height: 64px;
+            border:
+              1px solid
+              var(--scrollbar-track, #e5e7eb) !important;
+            border-radius: 999px !important;
+            background:
+              var(--scrollbar-thumb, #111827) !important;
+            background-clip: padding-box !important;
+          }
+
+          .recipe-guide-scrollbar::-webkit-scrollbar-thumb:hover {
+            border-width: 0 !important;
+            background:
+              var(--scrollbar-thumb-hover, #1f2937) !important;
+          }
+
+          .recipe-guide-scrollbar::-webkit-scrollbar-thumb:active {
+            border-width: 0 !important;
+            background:
+              var(--scrollbar-thumb-active, #030712) !important;
+          }
+
+          /*
+           * فرض ألوان الوضع الداكن.
+           */
+          html.dark .custom-scrollbar {
+            scrollbar-color:
+              #f97316
+              #1f2937;
+          }
+
+          html.dark .recipe-guide-scrollbar {
+            scrollbar-color:
+              #f97316
+              #1f2937;
+          }
+
+          html.dark
+            .custom-scrollbar::-webkit-scrollbar-track,
+          html.dark
+            .recipe-guide-scrollbar::-webkit-scrollbar-track {
+            background: #1f2937 !important;
+          }
+
+          html.dark
+            .custom-scrollbar::-webkit-scrollbar-thumb,
+          html.dark
+            .recipe-guide-scrollbar::-webkit-scrollbar-thumb {
+            background: #f97316 !important;
+            border-color: #1f2937 !important;
+          }
+
+          html.dark
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+          html.dark
+            .recipe-guide-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #fb923c !important;
+            border-width: 0 !important;
+          }
+
+          html.dark
+            .custom-scrollbar::-webkit-scrollbar-thumb:active,
+          html.dark
+            .recipe-guide-scrollbar::-webkit-scrollbar-thumb:active {
+            background: #ea580c !important;
+            border-width: 0 !important;
+          }
+
+          /*
+           * ألوان الوضع الفاتح.
+           */
+          html:not(.dark) .custom-scrollbar {
+            scrollbar-color:
+              #111827
+              #e5e7eb;
+          }
+
+          html:not(.dark) .recipe-guide-scrollbar {
+            scrollbar-color:
+              #111827
+              #e5e7eb;
+          }
+
+          html:not(.dark)
+            .custom-scrollbar::-webkit-scrollbar-track,
+          html:not(.dark)
+            .recipe-guide-scrollbar::-webkit-scrollbar-track {
+            background: #e5e7eb !important;
+          }
+
+          html:not(.dark)
+            .custom-scrollbar::-webkit-scrollbar-thumb,
+          html:not(.dark)
+            .recipe-guide-scrollbar::-webkit-scrollbar-thumb {
+            background: #111827 !important;
+            border-color: #e5e7eb !important;
           }
 
           @supports (
@@ -2420,6 +2554,35 @@ export default function RecipeClient({
             }
           }
 
+          /*
+           * على الموبايل يكون أكبر قليلًا
+           * لتسهيل الرؤية واللمس.
+           */
+          @media (max-width: 640px) {
+            .recipe-guide-scrollbar::-webkit-scrollbar {
+              width: 16px !important;
+              height: 16px !important;
+            }
+
+            .recipe-guide-scrollbar::-webkit-scrollbar-thumb {
+              min-height: 72px;
+              border-width: 1px !important;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 14px !important;
+              height: 14px !important;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              min-height: 72px;
+            }
+
+            html {
+              scroll-behavior: auto;
+            }
+          }
+
           @media (max-width: 360px) {
             .recipe-guide-scrollbar {
               grid-template-columns: minmax(
@@ -2427,12 +2590,6 @@ export default function RecipeClient({
                 1fr
               );
               max-height: 50vh;
-            }
-          }
-
-          @media (max-width: 640px) {
-            html {
-              scroll-behavior: auto;
             }
           }
         `}</style>
