@@ -320,45 +320,45 @@ function normalizeDataBox(
     label: string;
     suffix?: string;
   }> = [
-    {
-      key: "prep_time_minutes",
-      icon: "⏱️",
-      label: "وقت التحضير",
-      suffix: "دقيقة",
-    },
-    {
-      key: "cook_time_minutes",
-      icon: "🔥",
-      label: "وقت الطبخ",
-      suffix: "دقيقة",
-    },
-    {
-      key: "total_time_minutes",
-      icon: "⌛",
-      label: "الوقت الكلي",
-      suffix: "دقيقة",
-    },
-    {
-      key: "servings",
-      icon: "👨‍👩‍👧‍👦",
-      label: "عدد الأشخاص",
-    },
-    {
-      key: "meal_type",
-      icon: "🍽️",
-      label: "الوجبة",
-    },
-    {
-      key: "difficulty",
-      icon: "⭐",
-      label: "المستوى",
-    },
-    {
-      key: "dish_type",
-      icon: "🍲",
-      label: "نوع الطبق",
-    },
-  ];
+      {
+        key: "prep_time_minutes",
+        icon: "⏱️",
+        label: "وقت التحضير",
+        suffix: "دقيقة",
+      },
+      {
+        key: "cook_time_minutes",
+        icon: "🔥",
+        label: "وقت الطبخ",
+        suffix: "دقيقة",
+      },
+      {
+        key: "total_time_minutes",
+        icon: "⌛",
+        label: "الوقت الكلي",
+        suffix: "دقيقة",
+      },
+      {
+        key: "servings",
+        icon: "👨‍👩‍👧‍👦",
+        label: "عدد الأشخاص",
+      },
+      {
+        key: "meal_type",
+        icon: "🍽️",
+        label: "الوجبة",
+      },
+      {
+        key: "difficulty",
+        icon: "⭐",
+        label: "المستوى",
+      },
+      {
+        key: "dish_type",
+        icon: "🍲",
+        label: "نوع الطبق",
+      },
+    ];
 
   return items
     .map(
@@ -451,14 +451,14 @@ function normalizeIngredients(
     return sections.length > 0
       ? sections
       : [
-          {
-            items: data
-              .map((item) =>
-                String(item).trim(),
-              )
-              .filter(Boolean),
-          },
-        ];
+        {
+          items: data
+            .map((item) =>
+              String(item).trim(),
+            )
+            .filter(Boolean),
+        },
+      ];
   }
 
   if (typeof data === "object") {
@@ -468,13 +468,13 @@ function normalizeIngredients(
       .map(([key, value]) => {
         const items = Array.isArray(value)
           ? value
-              .map((item) =>
-                String(item).trim(),
-              )
-              .filter(Boolean)
+            .map((item) =>
+              String(item).trim(),
+            )
+            .filter(Boolean)
           : [String(value).trim()].filter(
-              Boolean,
-            );
+            Boolean,
+          );
 
         return {
           title: key,
@@ -516,7 +516,7 @@ function getRelativeDateArabic(
     0,
     Math.floor(
       diffInMs /
-        (1000 * 60 * 60 * 24),
+      (1000 * 60 * 60 * 24),
     ),
   );
 
@@ -826,8 +826,8 @@ function RecipeSectionGuide({
 }: {
   sections: GuideSection[];
   activeSection:
-    | GuideSectionId
-    | null;
+  | GuideSectionId
+  | null;
   onNavigate: (
     id: GuideSectionId,
   ) => void;
@@ -839,11 +839,10 @@ function RecipeSectionGuide({
 
   return (
     <aside
-      className={`fixed bottom-5 left-0 top-28 z-30 hidden w-[225px] transition-all duration-300 ease-out xl:block ${
-        isFooterVisible
+      className={`fixed bottom-5 left-0 top-28 z-30 hidden w-[225px] transition-all duration-300 ease-out xl:block ${isFooterVisible
           ? "pointer-events-none -translate-x-full opacity-0"
           : "translate-x-0 opacity-100"
-      }`}
+        }`}
       aria-label="دليل أقسام الوصفة"
       aria-hidden={isFooterVisible}
     >
@@ -877,18 +876,16 @@ function RecipeSectionGuide({
                       ? "true"
                       : undefined
                   }
-                  className={`flex w-full items-center gap-2.5 rounded-2xl px-2.5 py-2.5 text-right text-xs font-black transition-all duration-200 ${
-                    isActive
+                  className={`flex w-full items-center gap-2.5 rounded-2xl px-2.5 py-2.5 text-right text-xs font-black transition-all duration-200 ${isActive
                       ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
                       : "bg-[#1d2a3c] text-slate-200 hover:-translate-y-0.5 hover:bg-[#26364b] hover:text-white"
-                  }`}
+                    }`}
                 >
                   <span
-                    className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-lg ${
-                      isActive
+                    className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-lg ${isActive
                         ? "bg-white/20"
                         : "bg-[#101827]"
-                    }`}
+                      }`}
                   >
                     {section.icon}
                   </span>
@@ -898,11 +895,10 @@ function RecipeSectionGuide({
                   </span>
 
                   <span
-                    className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] ${
-                      isActive
+                    className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] ${isActive
                         ? "bg-white font-black text-orange-500"
                         : "bg-[#2c3c51] text-slate-300"
-                    }`}
+                      }`}
                   >
                     {index + 1}
                   </span>
@@ -928,8 +924,8 @@ function RecipeFloatingGuide({
 }: {
   sections: GuideSection[];
   activeSection:
-    | GuideSectionId
-    | null;
+  | GuideSectionId
+  | null;
   onNavigate: (
     id: GuideSectionId,
   ) => void;
@@ -959,11 +955,10 @@ function RecipeFloatingGuide({
 
   return (
     <div
-      className={`fixed left-3 z-[70] flex w-[calc(100vw-5.25rem)] max-w-[340px] min-w-0 flex-col items-start gap-2 transition-all duration-300 xl:hidden ${
-        isFooterVisible
+      className={`fixed left-3 z-[70] flex w-[calc(100vw-5.25rem)] max-w-[340px] min-w-0 flex-col items-start gap-2 transition-all duration-300 xl:hidden ${isFooterVisible
           ? "pointer-events-none translate-y-24 opacity-0"
           : "translate-y-0 opacity-100"
-      }`}
+        }`}
       style={{
         bottom:
           "calc(env(safe-area-inset-bottom, 0px) + 12px)",
@@ -978,10 +973,10 @@ function RecipeFloatingGuide({
                 shouldReduceMotion
                   ? false
                   : {
-                      opacity: 0,
-                      y: 14,
-                      scale: 0.97,
-                    }
+                    opacity: 0,
+                    y: 14,
+                    scale: 0.97,
+                  }
               }
               animate={{
                 opacity: 1,
@@ -992,10 +987,10 @@ function RecipeFloatingGuide({
                 shouldReduceMotion
                   ? undefined
                   : {
-                      opacity: 0,
-                      y: 12,
-                      scale: 0.97,
-                    }
+                    opacity: 0,
+                    y: 12,
+                    scale: 0.97,
+                  }
               }
               transition={{
                 duration: 0.2,
@@ -1068,18 +1063,16 @@ function RecipeFloatingGuide({
                             ? "true"
                             : undefined
                         }
-                        className={`flex min-w-0 items-center gap-1.5 rounded-xl border px-2 py-2 text-right text-[10px] font-black transition ${
-                          isActive
+                        className={`flex min-w-0 items-center gap-1.5 rounded-xl border px-2 py-2 text-right text-[10px] font-black transition ${isActive
                             ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20"
                             : "border-white/[0.07] bg-[#1e2b3d] text-slate-100 hover:border-orange-500/40 hover:bg-[#29394e]"
-                        }`}
+                          }`}
                       >
                         <span
-                          className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] ${
-                            isActive
+                          className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] ${isActive
                               ? "bg-white/20"
                               : "bg-[#101827]"
-                          }`}
+                            }`}
                         >
                           {
                             section.icon
@@ -1093,11 +1086,10 @@ function RecipeFloatingGuide({
                         </span>
 
                         <span
-                          className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] ${
-                            isActive
+                          className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] ${isActive
                               ? "bg-white text-orange-500"
                               : "bg-[#304158] text-slate-300"
-                          }`}
+                            }`}
                         >
                           {index + 1}
                         </span>
@@ -1123,18 +1115,16 @@ function RecipeFloatingGuide({
             : "فتح دليل الوصفة"
         }
         aria-expanded={isOpen}
-        className={`flex h-11 max-w-[190px] items-center gap-2 rounded-full border border-white/10 px-2.5 text-white shadow-xl shadow-black/30 transition hover:-translate-y-0.5 active:scale-95 ${
-          isOpen
+        className={`flex h-11 max-w-[190px] items-center gap-2 rounded-full border border-white/10 px-2.5 text-white shadow-xl shadow-black/30 transition hover:-translate-y-0.5 active:scale-95 ${isOpen
             ? "bg-[#162235] hover:bg-[#1e2b3d]"
             : "bg-orange-500 hover:bg-orange-600"
-        }`}
+          }`}
       >
         <span
-          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${
-            isOpen
+          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${isOpen
               ? "bg-orange-500"
               : "bg-white/15"
-          }`}
+            }`}
         >
           {isOpen ? (
             <X size={15} />
@@ -1252,10 +1242,10 @@ function CollapsibleSection({
             shouldReduceMotion
               ? undefined
               : {
-                  rotate: isOpen
-                    ? 180
-                    : 0,
-                }
+                rotate: isOpen
+                  ? 180
+                  : 0,
+              }
           }
           transition={{
             duration: 0.18,
@@ -1273,9 +1263,9 @@ function CollapsibleSection({
               shouldReduceMotion
                 ? false
                 : {
-                    height: 0,
-                    opacity: 0,
-                  }
+                  height: 0,
+                  opacity: 0,
+                }
             }
             animate={{
               height: "auto",
@@ -1285,9 +1275,9 @@ function CollapsibleSection({
               shouldReduceMotion
                 ? undefined
                 : {
-                    height: 0,
-                    opacity: 0,
-                  }
+                  height: 0,
+                  opacity: 0,
+                }
             }
             transition={{
               duration: 0.22,
@@ -1344,17 +1334,17 @@ const RelatedRecipeCard = memo(
           shouldReduceMotion
             ? false
             : {
-                opacity: 0,
-                y: 12,
-              }
+              opacity: 0,
+              y: 12,
+            }
         }
         whileInView={
           shouldReduceMotion
             ? undefined
             : {
-                opacity: 1,
-                y: 0,
-              }
+              opacity: 1,
+              y: 0,
+            }
         }
         viewport={{
           once: true,
@@ -1381,7 +1371,7 @@ const RelatedRecipeCard = memo(
               }
               alt={imageAlt}
               sizes="(max-width: 640px) 46vw, (max-width: 1024px) 23vw, 180px"
-            quality={70}
+              quality={70}
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
@@ -1477,7 +1467,7 @@ export default function RecipeClient({
 
   const tips =
     recipe.tips &&
-    recipe.tips.length > 0
+      recipe.tips.length > 0
       ? recipe.tips
       : recipe.cooking_tips ?? [];
 
@@ -1510,10 +1500,10 @@ export default function RecipeClient({
   const createdAt =
     recipe.created_at
       ? new Date(
-          recipe.created_at,
-        ).toLocaleDateString("ar-EG", {
-          timeZone: "UTC",
-        })
+        recipe.created_at,
+      ).toLocaleDateString("ar-EG", {
+        timeZone: "UTC",
+      })
       : "";
 
   const updatedAtRelative =
@@ -1648,7 +1638,7 @@ export default function RecipeClient({
   useEffect(() => {
     setActiveSection(
       guideSections[0]?.id ??
-        null,
+      null,
     );
   }, [
     recipe.slug,
@@ -1805,9 +1795,9 @@ export default function RecipeClient({
                 shouldReduceMotion
                   ? false
                   : {
-                      opacity: 0,
-                      y: 14,
-                    }
+                    opacity: 0,
+                    y: 14,
+                  }
               }
               animate={{
                 opacity: 1,
@@ -1827,9 +1817,9 @@ export default function RecipeClient({
                   shouldReduceMotion
                     ? false
                     : {
-                        opacity: 0,
-                        y: 8,
-                      }
+                      opacity: 0,
+                      y: 8,
+                    }
                 }
                 animate={{
                   opacity: 1,
@@ -1853,9 +1843,9 @@ export default function RecipeClient({
               shouldReduceMotion
                 ? false
                 : {
-                    opacity: 0,
-                    scale: 0.985,
-                  }
+                  opacity: 0,
+                  scale: 0.985,
+                }
             }
             animate={{
               opacity: 1,
@@ -1940,24 +1930,24 @@ export default function RecipeClient({
 
           {(createdAt ||
             updatedAtRelative) && (
-            <m.div
-              {...fadeUp}
-              className="mb-3 flex flex-wrap items-center justify-center gap-2 py-1 text-[11px] font-bold text-slate-200"
-            >
-              {createdAt && (
-                <span className="rounded-full border border-white/[0.07] bg-[#1b2839] px-3 py-1.5">
-                  📅 تاريخ النشر:{" "}
-                  {createdAt}
-                </span>
-              )}
+              <m.div
+                {...fadeUp}
+                className="mb-3 flex flex-wrap items-center justify-center gap-2 py-1 text-[11px] font-bold text-slate-200"
+              >
+                {createdAt && (
+                  <span className="rounded-full border border-white/[0.07] bg-[#1b2839] px-3 py-1.5">
+                    📅 تاريخ النشر:{" "}
+                    {createdAt}
+                  </span>
+                )}
 
-              {updatedAtRelative && (
-                <span className="rounded-full border border-white/[0.07] bg-[#1b2839] px-3 py-1.5">
-                  🔄 تم التحديث: {updatedAtRelative}
-                </span>
-              )}
-            </m.div>
-          )}
+                {updatedAtRelative && (
+                  <span className="rounded-full border border-white/[0.07] bg-[#1b2839] px-3 py-1.5">
+                    🔄 تم التحديث: {updatedAtRelative}
+                  </span>
+                )}
+              </m.div>
+            )}
 
           <AdBlock />
 
@@ -1965,117 +1955,116 @@ export default function RecipeClient({
 
           {dataBoxItems.length >
             0 && (
-            <CollapsibleSection
-              sectionId="data"
-              title="معلومات الوصفة"
-              icon="📊"
-              isOpen={
-                openSection ===
-                "data"
-              }
-              onToggle={() =>
-                toggleSection("data")
-              }
-            >
+              <CollapsibleSection
+                sectionId="data"
+                title="معلومات الوصفة"
+                icon="📊"
+                isOpen={
+                  openSection ===
+                  "data"
+                }
+                onToggle={() =>
+                  toggleSection("data")
+                }
+              >
 
-              
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-                {dataBoxItems.map(
-                  (
-                    item,
-                    index,
-                  ) => (
-                    <div
-                      key={`${item.label}-${index}`}
-                      className="rounded-lg border border-white/[0.06] dark:bg-[#121b29] bg-white p-2.5 text-center transition-transform duration-200 hover:-translate-y-0.5"
-                    >
-                      <span className="mb-1 block text-xl">
-                        {
-                          item.icon
-                        }
-                      </span>
 
-                      <span className="block text-[10px] font-black dark:text-slate-400 text-gray-900 sm:text-xs">
-                        {
-                          item.label
-                        }
-                      </span>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                  {dataBoxItems.map(
+                    (
+                      item,
+                      index,
+                    ) => (
+                      <div
+                        key={`${item.label}-${index}`}
+                        className="rounded-lg border border-white/[0.06] dark:bg-[#121b29] bg-white p-2.5 text-center transition-transform duration-200 hover:-translate-y-0.5"
+                      >
+                        <span className="mb-1 block text-xl">
+                          {
+                            item.icon
+                          }
+                        </span>
 
-                      <span className="mt-1 block text-xs font-black dark:text-white text-gray-900 sm:text-sm">
-                        {
-                          item.value
-                        }
-                      </span>
-                    </div>
-                  ),
-                )}
-              </div>
-            </CollapsibleSection>
-          )}
+                        <span className="block text-[10px] font-black dark:text-slate-400 text-gray-900 sm:text-xs">
+                          {
+                            item.label
+                          }
+                        </span>
+
+                        <span className="mt-1 block text-xs font-black dark:text-white text-gray-900 sm:text-sm">
+                          {
+                            item.value
+                          }
+                        </span>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </CollapsibleSection>
+            )}
 
           {/* Ingredients */}
 
           {ingredientSections.length >
             0 && (
-            <CollapsibleSection
-              sectionId="ingredients"
-              title="المكونات"
-              icon="🧂"
-              isOpen={
-                openSection ===
-                "ingredients"
-              }
-              onToggle={() =>
-                toggleSection(
-                  "ingredients",
-                )
-              }
-            >
-              <div className="space-y-4">
-                {ingredientSections.map(
-                  (
-                    section,
-                    sectionIndex,
-                  ) => (
-                    <div
-                      key={`${
-                        section.title ||
-                        "section"
-                      }-${sectionIndex}`}
-                    >
-                      {section.title && (
-                        <h3 className="mb-2 text-sm font-black text-orange-400 sm:text-base">
-                          {
-                            section.title
-                          }
-                        </h3>
-                      )}
-
-                      <ul className="space-y-1.5">
-                        {section.items.map(
-                          (
-                            item,
-                            itemIndex,
-                          ) => (
-                            <li
-                              key={`${item}-${itemIndex}`}
-                              className="p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black  rounded-lg border border-white/[0.06]  dark:bg-[#111a28] bg-white   px-3 py-2 text-[12px] font-bold leading-6 dark:text-slate-100 text-gray-900 sm:text-sm"
-                            >
-                              <span className="ml-1.5 text-orange-500">
-                                •
-                              </span>
-
-                              {item}
-                            </li>
-                          ),
+              <CollapsibleSection
+                sectionId="ingredients"
+                title="المكونات"
+                icon="🧂"
+                isOpen={
+                  openSection ===
+                  "ingredients"
+                }
+                onToggle={() =>
+                  toggleSection(
+                    "ingredients",
+                  )
+                }
+              >
+                <div className="space-y-4">
+                  {ingredientSections.map(
+                    (
+                      section,
+                      sectionIndex,
+                    ) => (
+                      <div
+                        key={`${section.title ||
+                          "section"
+                          }-${sectionIndex}`}
+                      >
+                        {section.title && (
+                          <h3 className="mb-2 text-sm font-black text-orange-400 sm:text-base">
+                            {
+                              section.title
+                            }
+                          </h3>
                         )}
-                      </ul>
-                    </div>
-                  ),
-                )}
-              </div>
-            </CollapsibleSection>
-          )}
+
+                        <ul className="space-y-1.5">
+                          {section.items.map(
+                            (
+                              item,
+                              itemIndex,
+                            ) => (
+                              <li
+                                key={`${item}-${itemIndex}`}
+                                className="p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black  rounded-lg border border-white/[0.06]  dark:bg-[#111a28] bg-white   px-3 py-2 text-[12px] font-bold leading-6 dark:text-slate-100 text-gray-900 sm:text-sm"
+                              >
+                                <span className="ml-1.5 text-orange-500">
+                                  •
+                                </span>
+
+                                {item}
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </CollapsibleSection>
+            )}
 
           <AdBlock />
 
@@ -2151,73 +2140,73 @@ export default function RecipeClient({
 
           {commonMistakes.length >
             0 && (
-            <m.section
-              id="recipe-section-mistakes"
-              {...fadeUp}
-              className="mb-7 scroll-mt-24"
-            >
-              <SectionTitle icon="⚠️">
-                الأخطاء الشائعة
-              </SectionTitle>
+              <m.section
+                id="recipe-section-mistakes"
+                {...fadeUp}
+                className="mb-7 scroll-mt-24"
+              >
+                <SectionTitle icon="⚠️">
+                  الأخطاء الشائعة
+                </SectionTitle>
 
-              <ul className="space-y-2">
-                {commonMistakes.map(
-                  (
-                    mistake,
-                    index,
-                  ) => (
-                    <li
-                      key={`${mistake}-${index}`}
-                      className="relative p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black rounded-xl border dark:border-slate-200 border-gray-900 dark:bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 dark:text-white shadow-sm bg-white text-gray-900 sm:text-sm sm:leading-7 "
-                    >
-                      <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black ">
-                        ❌
-                      </span>
+                <ul className="space-y-2">
+                  {commonMistakes.map(
+                    (
+                      mistake,
+                      index,
+                    ) => (
+                      <li
+                        key={`${mistake}-${index}`}
+                        className="relative p-2 hover:dark:bg-orange-500 hover:dark:text-black  hover:bg-orange-500 hover:text-black rounded-xl border dark:border-slate-200 border-gray-900 dark:bg-gray-900 py-2.5 pl-3 pr-11 text-[12px] font-bold leading-6 dark:text-white shadow-sm bg-white text-gray-900 sm:text-sm sm:leading-7 "
+                      >
+                        <span className="absolute right-2 top-2.5 grid h-7 w-7 place-items-center rounded-full text-lg font-black ">
+                          ❌
+                        </span>
 
-                      {mistake}
-                    </li>
-                  ),
-                )}
-              </ul>
-            </m.section>
-          )}
+                        {mistake}
+                      </li>
+                    ),
+                  )}
+                </ul>
+              </m.section>
+            )}
 
           {/* Nutrition */}
 
           {nutritionEntries.length >
             0 && (
-            <m.section
-              id="recipe-section-nutrition"
-              {...fadeUp}
-              className="mb-7 scroll-mt-24"
-            >
-              <SectionTitle icon="🍏">
-                القيمة الغذائية
-              </SectionTitle>
+              <m.section
+                id="recipe-section-nutrition"
+                {...fadeUp}
+                className="mb-7 scroll-mt-24"
+              >
+                <SectionTitle icon="🍏">
+                  القيمة الغذائية
+                </SectionTitle>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {nutritionEntries.map(
-                  (
-                    [key, value],
-                    index,
-                  ) => (
-                    <div
-                      key={`${key}-${index}`}
-                      className="rounded-xl border  dark:border-slate-200 border-slate-900  px-3 py-3 text-center  dark:bg-gray-900 text-gray-900  dark:text-white bg-white "
-                    >
-                      <span className="block text-[11px] font-black text-orange-500 sm:text-sm">
-                        {key}
-                      </span>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {nutritionEntries.map(
+                    (
+                      [key, value],
+                      index,
+                    ) => (
+                      <div
+                        key={`${key}-${index}`}
+                        className="rounded-xl border  dark:border-slate-200 border-slate-900  px-3 py-3 text-center  dark:bg-gray-900 text-gray-900  dark:text-white bg-white "
+                      >
+                        <span className="block text-[11px] font-black text-orange-500 sm:text-sm">
+                          {key}
+                        </span>
 
-                      <span className="mt-1 block text-sm font-black  dark:text-white text-gray-900 ">
-                        {String(value)}
-                      </span>
-                    </div>
-                  ),
-                )}
-              </div>
-            </m.section>
-          )}
+                        <span className="mt-1 block text-sm font-black  dark:text-white text-gray-900 ">
+                          {String(value)}
+                        </span>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </m.section>
+            )}
 
           {/* FAQ */}
 
@@ -2294,9 +2283,9 @@ export default function RecipeClient({
                                 shouldReduceMotion
                                   ? false
                                   : {
-                                      height: 0,
-                                      opacity: 0,
-                                    }
+                                    height: 0,
+                                    opacity: 0,
+                                  }
                               }
                               animate={{
                                 height:
@@ -2307,9 +2296,9 @@ export default function RecipeClient({
                                 shouldReduceMotion
                                   ? undefined
                                   : {
-                                      height: 0,
-                                      opacity: 0,
-                                    }
+                                    height: 0,
+                                    opacity: 0,
+                                  }
                               }
                               transition={{
                                 duration:
@@ -2337,37 +2326,37 @@ export default function RecipeClient({
 
           {visibleRelatedRecipes.length >
             0 && (
-            <m.section
-              id="recipe-section-related"
-              {...fadeUp}
-              className="mb-8 scroll-mt-24"
-            >
-              <SectionTitle icon="🍽️">
-                وصفات مشابهة
-              </SectionTitle>
+              <m.section
+                id="recipe-section-related"
+                {...fadeUp}
+                className="mb-8 scroll-mt-24"
+              >
+                <SectionTitle icon="🍽️">
+                  وصفات مشابهة
+                </SectionTitle>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {visibleRelatedRecipes.map(
-                  (
-                    relatedRecipe,
-                    index,
-                  ) => (
-                    <RelatedRecipeCard
-                      key={
-                        relatedRecipe.slug
-                          ? `${relatedRecipe.slug}-${index}`
-                          : `related-recipe-${index}`
-                      }
-                      recipe={
-                        relatedRecipe
-                      }
-                      index={index}
-                    />
-                  ),
-                )}
-              </div>
-            </m.section>
-          )}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {visibleRelatedRecipes.map(
+                    (
+                      relatedRecipe,
+                      index,
+                    ) => (
+                      <RelatedRecipeCard
+                        key={
+                          relatedRecipe.slug
+                            ? `${relatedRecipe.slug}-${index}`
+                            : `related-recipe-${index}`
+                        }
+                        recipe={
+                          relatedRecipe
+                        }
+                        index={index}
+                      />
+                    ),
+                  )}
+                </div>
+              </m.section>
+            )}
         </div>
 
         <style jsx global>{`

@@ -49,12 +49,107 @@ const arefRuqaa = Aref_Ruqaa({
 const SITE_URL =
   "https://chefalarab.com";
 
+/* =========================================================
+   Google Tag Manager
+   ========================================================= */
+
 const GTM_ID =
   process.env.NEXT_PUBLIC_GTM_ID?.trim() ||
   "GTM-P8MZTC3W";
 
 const hasValidGtmId =
   /^GTM-[A-Z0-9]+$/i.test(GTM_ID);
+
+/* =========================================================
+   Google AdSense
+   ========================================================= */
+
+const ADSENSE_CLIENT =
+  adsenseClient?.trim() ?? "";
+
+const hasValidAdsenseClient =
+  /^ca-pub-\d+$/i.test(
+    ADSENSE_CLIENT,
+  );
+
+const shouldLoadAdsense =
+  Boolean(
+    adsEnabled &&
+      hasValidAdsenseClient,
+  );
+
+/* =========================================================
+   Theme initialization
+   ========================================================= */
+
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    var root = document.documentElement;
+    var storageKey = "theme";
+    var savedTheme = null;
+
+    try {
+      savedTheme =
+        window.localStorage.getItem(
+          storageKey
+        );
+    } catch (storageError) {
+      savedTheme = null;
+    }
+
+    var theme;
+
+    if (
+      savedTheme === "dark" ||
+      savedTheme === "light"
+    ) {
+      theme = savedTheme;
+    } else {
+      theme =
+        window.matchMedia &&
+        window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches
+          ? "dark"
+          : "light";
+    }
+
+    var isDark =
+      theme === "dark";
+
+    root.classList.toggle(
+      "dark",
+      isDark
+    );
+
+    root.style.colorScheme =
+      isDark
+        ? "dark"
+        : "light";
+
+    root.setAttribute(
+      "data-theme",
+      theme
+    );
+  } catch (error) {
+    var root =
+      document.documentElement;
+
+    root.classList.remove(
+      "dark"
+    );
+
+    root.style.colorScheme =
+      "light";
+
+    root.setAttribute(
+      "data-theme",
+      "light"
+    );
+  }
+})();
+`;
 
 /* =========================================================
    Viewport
@@ -84,17 +179,20 @@ export const viewport: Viewport = {
    ========================================================= */
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase:
+    new URL(SITE_URL),
 
   title: {
     default: "شيف العرب",
-    template: "%s | شيف العرب",
+    template:
+      "%s | شيف العرب",
   },
 
   description:
     "اكتشف ألذ وأحدث الوصفات العربية الأصيلة والعالمية بخطوات واضحة ومقادير دقيقة للطبخ المنزلي والحلويات والمشروبات.",
 
-  applicationName: "شيف العرب",
+  applicationName:
+    "شيف العرب",
 
   keywords: [
     "شيف العرب",
@@ -113,89 +211,136 @@ export const metadata: Metadata = {
 
   authors: [
     {
-      name: "Adhem Mehanni",
-      url: SITE_URL,
+      name:
+        "Adhem Mehanni",
+      url:
+        SITE_URL,
     },
   ],
 
-  creator: "شيف العرب",
-  publisher: "شيف العرب",
+  creator:
+    "شيف العرب",
+
+  publisher:
+    "شيف العرب",
 
   alternates: {
     canonical: "/",
   },
 
   openGraph: {
-    title: "شيف العرب",
+    title:
+      "شيف العرب",
 
     description:
       "وصفات عربية وعالمية مجربة بخطوات واضحة ومقادير دقيقة.",
 
     url: "/",
-    siteName: "شيف العرب",
 
-    type: "website",
+    siteName:
+      "شيف العرب",
 
-    locale: "ar_AR",
+    type:
+      "website",
+
+    locale:
+      "ar_AR",
 
     images: [
       {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "شيف العرب",
+        url:
+          "/og-image.jpg",
+
+        width:
+          1200,
+
+        height:
+          630,
+
+        alt:
+          "شيف العرب",
       },
     ],
   },
 
   twitter: {
-    card: "summary_large_image",
-    title: "شيف العرب",
+    card:
+      "summary_large_image",
+
+    title:
+      "شيف العرب",
 
     description:
       "وصفات عربية وعالمية مجربة بخطوات واضحة.",
 
-    images: ["/og-image.jpg"],
+    images: [
+      "/og-image.jpg",
+    ],
   },
 
   robots: {
-    index: true,
-    follow: true,
+    index:
+      true,
+
+    follow:
+      true,
 
     googleBot: {
-      index: true,
-      follow: true,
+      index:
+        true,
 
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
+      follow:
+        true,
+
+      "max-image-preview":
+        "large",
+
+      "max-snippet":
+        -1,
+
+      "max-video-preview":
+        -1,
     },
   },
 
-  manifest: "/manifest.webmanifest",
+  manifest:
+    "/manifest.webmanifest",
 
   icons: {
     icon: [
       {
-        url: "/favicon.ico",
-        sizes: "any",
-        type: "image/x-icon",
+        url:
+          "/favicon.ico",
+
+        sizes:
+          "any",
+
+        type:
+          "image/x-icon",
       },
     ],
 
     apple: [
       {
-        url: "/apple-touch-icon.png",
-        sizes: "180x180",
-        type: "image/png",
+        url:
+          "/apple-touch-icon.png",
+
+        sizes:
+          "180x180",
+
+        type:
+          "image/png",
       },
     ],
   },
 
-  other: {
-    "google-adsense-account":
-      adsenseClient,
-  },
+  other:
+    hasValidAdsenseClient
+      ? {
+          "google-adsense-account":
+            ADSENSE_CLIENT,
+        }
+      : {},
 
   verification: {
     google:
@@ -218,6 +363,39 @@ export default function RootLayout({
       dir="rtl"
       suppressHydrationWarning
     >
+      <head>
+        {/* =================================================
+            Theme initialization
+            ================================================= */}
+
+        <script
+          id="theme-init"
+          dangerouslySetInnerHTML={{
+            __html:
+              THEME_INIT_SCRIPT,
+          }}
+        />
+
+        {/* =================================================
+            Google AdSense
+
+            نستخدم afterInteractive لأن Consent Mode
+            يتم تهيئته أولاً داخل instrumentation-client.ts
+            ================================================= */}
+
+        {shouldLoadAdsense && (
+          <Script
+            id="google-adsense"
+            strategy="afterInteractive"
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(
+              ADSENSE_CLIENT,
+            )}`}
+            crossOrigin="anonymous"
+          />
+        )}
+      </head>
+
       <body
         className={`
           ${cairo.variable}
@@ -235,139 +413,36 @@ export default function RootLayout({
         `}
       >
         {/* =================================================
-            GTM no-script fallback
+            GTM noscript fallback
             ================================================= */}
 
         {hasValidGtmId && (
           <noscript>
             <iframe
-              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              src={`https://www.googletagmanager.com/ns.html?id=${encodeURIComponent(
+                GTM_ID,
+              )}`}
               height="0"
               width="0"
               title="Google Tag Manager"
+              aria-hidden="true"
+              tabIndex={-1}
               style={{
-                display: "none",
-                visibility: "hidden",
+                display:
+                  "none",
+
+                visibility:
+                  "hidden",
               }}
             />
           </noscript>
         )}
 
         {/* =================================================
-            Google Consent Mode v2
-            ================================================= */}
-
-        <Script
-          id="google-consent-default"
-          strategy="beforeInteractive"
-        >
-          {`
-            (function () {
-              window.dataLayer =
-                window.dataLayer || [];
-
-              window.gtag =
-                window.gtag ||
-                function () {
-                  window.dataLayer.push(arguments);
-                };
-
-              var storedConsent = null;
-
-              try {
-                storedConsent =
-                  window.localStorage.getItem(
-                    "cookie_consent_v1"
-                  );
-              } catch (error) {
-                storedConsent = null;
-              }
-
-              var consentGranted =
-                storedConsent === "accepted";
-
-              var optionalStorageState =
-                consentGranted
-                  ? "granted"
-                  : "denied";
-
-              window.gtag(
-                "consent",
-                "default",
-                {
-                  ad_storage:
-                    optionalStorageState,
-
-                  analytics_storage:
-                    optionalStorageState,
-
-                  ad_user_data:
-                    optionalStorageState,
-
-                  ad_personalization:
-                    optionalStorageState,
-
-                  personalization_storage:
-                    optionalStorageState,
-
-                  functionality_storage:
-                    "granted",
-
-                  security_storage:
-                    "granted",
-
-                  wait_for_update: 500
-                }
-              );
-            })();
-          `}
-        </Script>
-
-        {/* =================================================
-            Theme Initialization
-            ================================================= */}
-
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
-        >
-          {`
-            (function () {
-              try {
-                var savedTheme =
-                  window.localStorage.getItem(
-                    "theme"
-                  );
-
-                var isDark =
-                  savedTheme
-                    ? savedTheme === "dark"
-                    : window.matchMedia(
-                        "(prefers-color-scheme: dark)"
-                      ).matches;
-
-                document
-                  .documentElement
-                  .classList
-                  .toggle(
-                    "dark",
-                    isDark
-                  );
-
-                document
-                  .documentElement
-                  .style
-                  .colorScheme =
-                    isDark
-                      ? "dark"
-                      : "light";
-              } catch (error) {}
-            })();
-          `}
-        </Script>
-
-        {/* =================================================
             Google Tag Manager
+
+            Consent Mode يتم تهيئته أولاً داخل:
+            src/instrumentation-client.ts
             ================================================= */}
 
         {hasValidGtmId && (
@@ -376,77 +451,76 @@ export default function RootLayout({
             strategy="afterInteractive"
           >
             {`
-              (function (
-                windowObject,
-                documentObject,
-                scriptTag,
-                dataLayerName,
-                containerId
-              ) {
-                windowObject[dataLayerName] =
-                  windowObject[dataLayerName] || [];
+(function (
+  windowObject,
+  documentObject,
+  scriptTag,
+  dataLayerName,
+  containerId
+) {
+  windowObject[dataLayerName] =
+    windowObject[dataLayerName] || [];
 
-                windowObject[dataLayerName].push({
-                  "gtm.start":
-                    new Date().getTime(),
+  windowObject[dataLayerName].push({
+    "gtm.start":
+      new Date().getTime(),
 
-                  event: "gtm.js"
-                });
+    event:
+      "gtm.js"
+  });
 
-                var firstScript =
-                  documentObject
-                    .getElementsByTagName(
-                      scriptTag
-                    )[0];
+  var firstScript =
+    documentObject
+      .getElementsByTagName(
+        scriptTag
+      )[0];
 
-                var gtmScript =
-                  documentObject
-                    .createElement(
-                      scriptTag
-                    );
+  var gtmScript =
+    documentObject
+      .createElement(
+        scriptTag
+      );
 
-                var dataLayerQuery =
-                  dataLayerName !==
-                  "dataLayer"
-                    ? "&l=" +
-                      dataLayerName
-                    : "";
+  var dataLayerQuery =
+    dataLayerName !== "dataLayer"
+      ? "&l=" +
+        dataLayerName
+      : "";
 
-                gtmScript.async = true;
+  gtmScript.async =
+    true;
 
-                gtmScript.src =
-                  "https://www.googletagmanager.com/gtm.js?id=" +
-                  containerId +
-                  dataLayerQuery;
+  gtmScript.src =
+    "https://www.googletagmanager.com/gtm.js?id=" +
+    containerId +
+    dataLayerQuery;
 
-                firstScript
-                  .parentNode
-                  .insertBefore(
-                    gtmScript,
-                    firstScript
-                  );
-              })(
-                window,
-                document,
-                "script",
-                "dataLayer",
-                "${GTM_ID}"
-              );
+  if (
+    firstScript &&
+    firstScript.parentNode
+  ) {
+    firstScript
+      .parentNode
+      .insertBefore(
+        gtmScript,
+        firstScript
+      );
+  } else {
+    documentObject
+      .head
+      .appendChild(
+        gtmScript
+      );
+  }
+})(
+  window,
+  document,
+  "script",
+  "dataLayer",
+  "${GTM_ID}"
+);
             `}
           </Script>
-        )}
-
-        {/* =================================================
-            Google AdSense
-            ================================================= */}
-
-        {adsEnabled && (
-          <Script
-            id="google-adsense"
-            strategy="afterInteractive"
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
-            crossOrigin="anonymous"
-          />
         )}
 
         {/* =================================================
@@ -461,7 +535,10 @@ export default function RootLayout({
 
         <main
           id="main-content"
-          className="min-h-0 flex-1"
+          className="
+            min-h-0
+            flex-1
+          "
         >
           {children}
         </main>
