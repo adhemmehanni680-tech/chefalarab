@@ -40,7 +40,8 @@ const AdSenseBanner = dynamic(
 );
 
 const MOBILE_AD_INTERVAL = 4;
-const RECIPES_PER_PAGE = 12;
+const MOBILE_RECIPES_PER_PAGE = 8;
+const DESKTOP_RECIPES_PER_PAGE = 12;
 
 /* =============================== */
 /* Types                           */
@@ -1313,11 +1314,13 @@ function RecipesPagination({
   currentPage,
   totalPages,
   totalItems,
+  recipesPerPage,
   onPageChange,
 }: {
   currentPage: number;
   totalPages: number;
   totalItems: number;
+  recipesPerPage: number;
   onPageChange: (page: number) => void;
 }) {
   if (totalPages <= 1) {
@@ -1331,11 +1334,11 @@ function RecipesPagination({
 
   const firstItem =
     (currentPage - 1) *
-      RECIPES_PER_PAGE +
+      recipesPerPage +
     1;
 
   const lastItem = Math.min(
-    currentPage * RECIPES_PER_PAGE,
+    currentPage * recipesPerPage,
     totalItems,
   );
 
@@ -1555,6 +1558,13 @@ export default function RecipesClient({
     Math.max(1, initialPage),
   );
 
+  const [
+    recipesPerPage,
+    setRecipesPerPage,
+  ] = useState(
+    DESKTOP_RECIPES_PER_PAGE,
+  );
+
   const isLoading = false;
 
   const [
@@ -1613,6 +1623,35 @@ export default function RecipesClient({
       activeCountry ||
       activeTag,
   );
+
+  useEffect(() => {
+    const mediaQuery =
+      window.matchMedia(
+        "(max-width: 639px)",
+      );
+
+    const updateRecipesPerPage = () => {
+      setRecipesPerPage(
+        mediaQuery.matches
+          ? MOBILE_RECIPES_PER_PAGE
+          : DESKTOP_RECIPES_PER_PAGE,
+      );
+    };
+
+    updateRecipesPerPage();
+
+    mediaQuery.addEventListener(
+      "change",
+      updateRecipesPerPage,
+    );
+
+    return () => {
+      mediaQuery.removeEventListener(
+        "change",
+        updateRecipesPerPage,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     if (
@@ -1710,7 +1749,7 @@ export default function RecipesClient({
     1,
     Math.ceil(
       filteredRecipes.length /
-        RECIPES_PER_PAGE,
+        recipesPerPage,
     ),
   );
 
@@ -1722,15 +1761,16 @@ export default function RecipesClient({
   const paginatedRecipes = useMemo(() => {
     const startIndex =
       (safeCurrentPage - 1) *
-      RECIPES_PER_PAGE;
+      recipesPerPage;
 
     return filteredRecipes.slice(
       startIndex,
-      startIndex + RECIPES_PER_PAGE,
+      startIndex + recipesPerPage,
     );
   }, [
     filteredRecipes,
     safeCurrentPage,
+    recipesPerPage,
   ]);
 
   const desktopGridColumns =
@@ -2305,6 +2345,7 @@ export default function RecipesClient({
                 currentPage={safeCurrentPage}
                 totalPages={totalPages}
                 totalItems={filteredRecipes.length}
+                recipesPerPage={recipesPerPage}
                 onPageChange={goToPage}
               />
             )}
