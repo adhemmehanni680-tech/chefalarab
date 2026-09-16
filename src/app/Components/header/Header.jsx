@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { title: "من نحن", href: "/about_us" },
   { title: "تواصل معنا", href: "/contact_us" },
   { title: "الأسئلة الشائعة", href: "/faq" },
+  { title: "سياسة الخصوصية", href: "/privacy_policy" }
 ];
 
 export default function Header() {
