@@ -1418,9 +1418,7 @@ function HomeHero() {
             </h1>
 
             <p className="mx-auto mt-5 max-w-2xl text-base font-bold leading-8 text-white/90 sm:text-xl">
-              وصفات مجربة بخطوات واضحة
-              ومقادير دقيقة، مناسبة لكل يوم
-              ولكل مناسبة عائلية.
+             اكتشف وصفات طبخ متنوعة بمقادير دقيقة وخطوات واضحة لتحضير أشهى الأكلات العربية والعالمية، من الوجبات اليومية إلى المناسبات العائلية.
             </p>
 
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
