@@ -1,9 +1,13 @@
+// /src/app/layout.tsx
+
 import type {
   Metadata,
   Viewport,
 } from "next";
 
-import type { ReactNode } from "react";
+import type {
+  ReactNode,
+} from "react";
 
 import Script from "next/script";
 
@@ -17,9 +21,9 @@ import "./globals.css";
 import Header from "./Components/header/Header";
 import Footer from "./Components/footer/Footer";
 import RootClient from "./RootClient";
+import AdSenseScript from "./Components/AdSenseScript";
 
 import {
-  adsEnabled,
   adsenseClient,
 } from "@/lib/ads";
 
@@ -28,22 +32,49 @@ import {
    ========================================================= */
 
 const cairo = Cairo({
-  subsets: ["arabic", "latin"],
-  variable: "--font-cairo",
-  display: "swap",
-  preload: true,
+  subsets: [
+    "arabic",
+    "latin",
+  ],
+
+  variable:
+    "--font-cairo",
+
+  display:
+    "swap",
+
+  preload:
+    true,
 });
 
-const arefRuqaa = Aref_Ruqaa({
-  subsets: ["arabic"],
-  weight: ["400", "700"],
-  variable: "--font-aref-ruqaa",
-  display: "swap",
-  preload: true,
-});
+const arefRuqaa =
+  Aref_Ruqaa({
+    subsets: [
+      "arabic",
+    ],
+
+    weight: [
+      "400",
+      "700",
+    ],
+
+    variable:
+      "--font-aref-ruqaa",
+
+    display:
+      "swap",
+
+    /*
+     * Cairo هو الخط الأساسي،
+     * لذلك لا نحتاج تحميل Aref Ruqaa
+     * مسبقًا على كل صفحة.
+     */
+    preload:
+      false,
+  });
 
 /* =========================================================
-   Site configuration
+   Site
    ========================================================= */
 
 const SITE_URL =
@@ -54,40 +85,49 @@ const SITE_URL =
    ========================================================= */
 
 const GTM_ID =
-  process.env.NEXT_PUBLIC_GTM_ID?.trim() ||
+  process.env
+    .NEXT_PUBLIC_GTM_ID
+    ?.trim() ||
   "GTM-P8MZTC3W";
 
 const hasValidGtmId =
-  /^GTM-[A-Z0-9]+$/i.test(GTM_ID);
+  /^GTM-[A-Z0-9]+$/i.test(
+    GTM_ID,
+  );
 
 /* =========================================================
    Google AdSense
    ========================================================= */
 
 const ADSENSE_CLIENT =
-  adsenseClient?.trim() ?? "";
+  adsenseClient?.trim() ??
+  "";
 
 const hasValidAdsenseClient =
   /^ca-pub-\d+$/i.test(
     ADSENSE_CLIENT,
   );
 
-const shouldLoadAdsense =
-  Boolean(
-    adsEnabled &&
-      hasValidAdsenseClient,
-  );
-
 /* =========================================================
    Theme initialization
+
+   Runs before React hydration to prevent:
+   - theme flash
+   - dark/light mismatch
+   - hydration mismatch
    ========================================================= */
 
 const THEME_INIT_SCRIPT = `
 (function () {
   try {
-    var root = document.documentElement;
-    var storageKey = "theme";
-    var savedTheme = null;
+    var root =
+      document.documentElement;
+
+    var storageKey =
+      "theme";
+
+    var savedTheme =
+      null;
 
     try {
       savedTheme =
@@ -95,7 +135,8 @@ const THEME_INIT_SCRIPT = `
           storageKey
         );
     } catch (storageError) {
-      savedTheme = null;
+      savedTheme =
+        null;
     }
 
     var theme;
@@ -104,7 +145,8 @@ const THEME_INIT_SCRIPT = `
       savedTheme === "dark" ||
       savedTheme === "light"
     ) {
-      theme = savedTheme;
+      theme =
+        savedTheme;
     } else {
       theme =
         window.matchMedia &&
@@ -155,21 +197,31 @@ const THEME_INIT_SCRIPT = `
    Viewport
    ========================================================= */
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
+export const viewport:
+  Viewport = {
+  width:
+    "device-width",
+
+  initialScale:
+    1,
+
+  viewportFit:
+    "cover",
 
   themeColor: [
     {
       media:
         "(prefers-color-scheme: light)",
-      color: "#ffffff",
+
+      color:
+        "#ffffff",
     },
     {
       media:
         "(prefers-color-scheme: dark)",
-      color: "#0b1220",
+
+      color:
+        "#0b1220",
     },
   ],
 };
@@ -178,12 +230,17 @@ export const viewport: Viewport = {
    Metadata
    ========================================================= */
 
-export const metadata: Metadata = {
+export const metadata:
+  Metadata = {
   metadataBase:
-    new URL(SITE_URL),
+    new URL(
+      SITE_URL,
+    ),
 
   title: {
-    default: "شيف العرب",
+    default:
+      "شيف العرب",
+
     template:
       "%s | شيف العرب",
   },
@@ -213,6 +270,7 @@ export const metadata: Metadata = {
     {
       name:
         "Adhem Mehanni",
+
       url:
         SITE_URL,
     },
@@ -225,7 +283,8 @@ export const metadata: Metadata = {
     "شيف العرب",
 
   alternates: {
-    canonical: "/",
+    canonical:
+      "/",
   },
 
   openGraph: {
@@ -235,7 +294,8 @@ export const metadata: Metadata = {
     description:
       "وصفات عربية وعالمية مجربة بخطوات واضحة ومقادير دقيقة.",
 
-    url: "/",
+    url:
+      "/",
 
     siteName:
       "شيف العرب",
@@ -355,7 +415,8 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: ReactNode;
+  children:
+    ReactNode;
 }>) {
   return (
     <html
@@ -379,41 +440,88 @@ export default function RootLayout({
         {/* =================================================
             Google AdSense
 
-            نستخدم afterInteractive لأن Consent Mode
-            يتم تهيئته أولاً داخل instrumentation-client.ts
+            Consent Mode default يتم تهيئته داخل:
+            src/instrumentation-client.ts
+
+            AdSenseScript مسؤول عن تحميل AdSense
+            فقط في الصفحات المسموح بها.
             ================================================= */}
 
-        {shouldLoadAdsense && (
-          <Script
-            id="google-adsense"
-            strategy="afterInteractive"
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(
-              ADSENSE_CLIENT,
-            )}`}
-            crossOrigin="anonymous"
-          />
-        )}
+        <AdSenseScript />
       </head>
 
       <body
         className={`
           ${cairo.variable}
           ${arefRuqaa.variable}
+
           flex
           min-h-screen
           flex-col
+
           bg-white
           text-gray-900
+
           antialiased
+
           transition-colors
           duration-300
+
           dark:bg-[#0b1220]
           dark:text-gray-100
         `}
       >
         {/* =================================================
-            GTM noscript fallback
+            Accessibility: Skip to content
+
+            مخفي تمامًا بشكل طبيعي.
+            يظهر فقط عند الوصول إليه بالـ Tab.
+            ================================================= */}
+
+        <a
+          href="#main-content"
+          className="
+            fixed
+            left-1/2
+            top-0
+            z-[9999]
+
+            -translate-x-1/2
+            -translate-y-[125%]
+
+            rounded-b-xl
+
+            bg-orange-600
+
+            px-5
+            py-2.5
+
+            text-sm
+            font-black
+            text-white
+
+            shadow-xl
+            shadow-black/20
+
+            transition-transform
+            duration-150
+
+            focus:translate-y-0
+            focus:outline-none
+
+            focus-visible:translate-y-0
+            focus-visible:outline-none
+            focus-visible:ring-2
+            focus-visible:ring-white
+            focus-visible:ring-offset-2
+            focus-visible:ring-offset-orange-600
+          "
+        >
+          تخطي إلى المحتوى الرئيسي
+        </a>
+
+        {/* =================================================
+            GTM noscript
             ================================================= */}
 
         {hasValidGtmId && (
@@ -441,14 +549,14 @@ export default function RootLayout({
         {/* =================================================
             Google Tag Manager
 
-            Consent Mode يتم تهيئته أولاً داخل:
-            src/instrumentation-client.ts
+            Consent Mode default موجود بالفعل
+            داخل instrumentation-client.ts
             ================================================= */}
 
         {hasValidGtmId && (
           <Script
             id="google-tag-manager"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
           >
             {`
 (function (
@@ -482,7 +590,8 @@ export default function RootLayout({
       );
 
   var dataLayerQuery =
-    dataLayerName !== "dataLayer"
+    dataLayerName !==
+      "dataLayer"
       ? "&l=" +
         dataLayerName
       : "";
@@ -524,33 +633,39 @@ export default function RootLayout({
         )}
 
         {/* =================================================
-            Site Header
+            Header
             ================================================= */}
 
         <Header />
 
         {/* =================================================
-            Main Content
+            Main content target
+
+            tabIndex=-1 يسمح للـ Skip Link
+            بنقل الـ focus للمحتوى بدون إدخاله
+            في ترتيب Tab الطبيعي.
             ================================================= */}
 
-        <main
+        <div
           id="main-content"
+          tabIndex={-1}
           className="
             min-h-0
             flex-1
+            outline-none
           "
         >
           {children}
-        </main>
+        </div>
 
         {/* =================================================
-            Site Footer
+            Footer
             ================================================= */}
 
         <Footer />
 
         {/* =================================================
-            Global Client Components
+            Global client components
             ================================================= */}
 
         <RootClient />

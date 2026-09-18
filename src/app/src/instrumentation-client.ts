@@ -1,141 +1,124 @@
+// /src/instrumentation-client.ts
+
 type DataLayerEntry =
   | unknown[]
   | Record<string, unknown>;
 
-type ClientWindow = Window &
+type ClientWindow =
+  Window &
   typeof globalThis & {
     dataLayer?: DataLayerEntry[];
-    gtag?: (...args: unknown[]) => void;
+
+    gtag?: (
+      ...args: unknown[]
+    ) => void;
   };
 
-const clientWindow =
-  window as ClientWindow;
+const DEFAULT_CONSENT_WAIT_MS =
+  500;
 
 /* =========================================================
    Google Consent Mode v2
    ========================================================= */
 
 function initializeConsentMode() {
+  if (
+    typeof window === "undefined"
+  ) {
+    return;
+  }
+
   try {
+    const clientWindow =
+      window as ClientWindow;
+
     clientWindow.dataLayer =
       clientWindow.dataLayer || [];
 
-    if (!clientWindow.gtag) {
+    /*
+     * إنشاء gtag stub قبل تحميل
+     * GTM / GA4 / Google tags.
+     */
+    if (
+      typeof clientWindow.gtag !==
+      "function"
+    ) {
       clientWindow.gtag = (
         ...args: unknown[]
       ) => {
-        clientWindow.dataLayer?.push(args);
+        clientWindow.dataLayer?.push(
+          args,
+        );
       };
     }
 
-    let storedConsent: string | null =
-      null;
-
-    try {
-      storedConsent =
-        window.localStorage.getItem(
-          "cookie_consent_v1"
-        );
-    } catch {
-      storedConsent = null;
-    }
-
-    const consentGranted =
-      storedConsent === "accepted";
-
-    const optionalStorageState:
-      | "granted"
-      | "denied" =
-      consentGranted
-        ? "granted"
-        : "denied";
-
+    /*
+     * مهم جدًا:
+     *
+     * لا نقرأ cookie_consent_v1 هنا.
+     *
+     * البداية دائمًا denied.
+     *
+     * بعد ذلك:
+     *
+     * 1- Google CMP يحدث الموافقة
+     *    للمستخدم الأوروبي.
+     *
+     * 2- CookieConsentBanner يحدث
+     *    الموافقة لباقي المستخدمين.
+     */
     clientWindow.gtag(
       "consent",
       "default",
       {
         ad_storage:
-          optionalStorageState,
+          "denied",
 
         analytics_storage:
-          optionalStorageState,
+          "denied",
 
         ad_user_data:
-          optionalStorageState,
+          "denied",
 
         ad_personalization:
-          optionalStorageState,
+          "denied",
 
         personalization_storage:
-          optionalStorageState,
+          "denied",
 
+        /*
+         * ضروري لتشغيل الموقع.
+         */
         functionality_storage:
           "granted",
 
+        /*
+         * ضروري للأمان.
+         */
         security_storage:
           "granted",
 
-        wait_for_update: 500,
-      }
+        /*
+         * نعطي CMP وقتًا قصيرًا
+         * لتحديث الإشارات.
+         *
+         * بعد ذلك تظل الحالة denied
+         * إلى أن يصل consent update.
+         */
+        wait_for_update:
+          DEFAULT_CONSENT_WAIT_MS,
+      },
     );
   } catch (error) {
     if (
-      process.env.NODE_ENV ===
-      "development"
+      process.env.NODE_ENV !==
+      "production"
     ) {
       console.error(
         "Consent Mode initialization failed:",
-        error
+        error,
       );
     }
-  }
-}
-
-/* =========================================================
-   Theme Initialization
-   ========================================================= */
-
-function initializeTheme() {
-  try {
-    const savedTheme =
-      window.localStorage.getItem(
-        "theme"
-      );
-
-    const prefersDark =
-      window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-
-    const isDark =
-      savedTheme === "dark" ||
-      (savedTheme !== "light" &&
-        prefersDark);
-
-    document.documentElement.classList.toggle(
-      "dark",
-      isDark
-    );
-
-    document.documentElement.style.colorScheme =
-      isDark
-        ? "dark"
-        : "light";
-  } catch {
-    const prefersDark =
-      window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-
-    document.documentElement.classList.toggle(
-      "dark",
-      prefersDark
-    );
-
-    document.documentElement.style.colorScheme =
-      prefersDark
-        ? "dark"
-        : "light";
   }
 }
 
@@ -144,6 +127,5 @@ function initializeTheme() {
    ========================================================= */
 
 initializeConsentMode();
-initializeTheme();
 
 export {};

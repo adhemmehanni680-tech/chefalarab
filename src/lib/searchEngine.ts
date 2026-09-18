@@ -1,12 +1,11 @@
 import "server-only";
 
-import recipesData from "@/data/recipes-index.json";
+import recipesData from "@/data/recipes-catalog.json";
 
 type RawRecipe = {
   id?: number | string;
   title?: string;
   slug?: string;
-  status?: string;
   country?: string;
   category?: string[] | string;
   tags?: string[] | string;
@@ -174,7 +173,7 @@ function isCloseWord(queryWord: string, recipeWord: string): boolean {
 }
 
 const SEARCH_INDEX: IndexedRecipe[] = (recipesData as RawRecipe[])
-  .filter((recipe) => recipe.status === "published" && recipe.title && recipe.slug)
+  .filter((recipe) => recipe.title && recipe.slug)
   .map((recipe) => {
     const title = String(recipe.title);
     const slug = String(recipe.slug);

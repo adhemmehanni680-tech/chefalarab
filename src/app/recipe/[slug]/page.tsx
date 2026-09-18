@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAllRecipes, type RecipeData } from "@/lib/recipesData";
-import RecipeClient from "./RecipeClient";
+import RecipeView from "./RecipeView";
 import { buildRecipeJsonLd } from "@/lib/buildRecipeJsonLd";
 
 type PageProps = {
@@ -39,8 +39,26 @@ function absoluteUrl(value?: string | null): string | undefined {
 }
 
 function getCardImageUrl(recipe: RecipeData): string | null {
-  if (!recipe?.img || typeof recipe.img === "string") return null;
-  return recipe.img["url-card"] || recipe.img.url || null;
+  const image = recipe?.img;
+  const explicit =
+    image && typeof image === "object" ? image["url-card"] : undefined;
+
+  if (typeof explicit === "string" && explicit.trim()) {
+    return explicit;
+  }
+
+  const main =
+    typeof image === "string"
+      ? image
+      : image && typeof image === "object"
+        ? image.url
+        : undefined;
+
+  if (typeof main !== "string" || !main.trim()) return null;
+  if (/^https?:\/\//i.test(main)) return main;
+
+  const fileName = main.split("?")[0].split("#")[0].split("/").filter(Boolean).pop();
+  return fileName ? `/card/${fileName}` : main;
 }
 
 function getRelatedRecipes(currentRecipe: RecipeData) {
@@ -214,7 +232,7 @@ export default async function RecipePage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
-      <RecipeClient recipe={recipe} relatedRecipes={relatedRecipes} />
+      <RecipeView recipe={recipe} relatedRecipes={relatedRecipes} />
     </>
   );
 }

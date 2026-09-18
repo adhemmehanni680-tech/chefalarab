@@ -184,15 +184,7 @@ export default function FAQClient() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 text-black dark:text-white">
 
-      <style jsx global>{`
-        html,
-        body {
-          overflow-x: hidden !important;
-        }
-        * {
-          max-width: 100vw !important;
-        }
-      `}</style>
+     
 
       <div className="max-w-5xl mx-auto mt-10">
 

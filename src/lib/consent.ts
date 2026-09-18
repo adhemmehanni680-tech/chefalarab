@@ -1,3 +1,5 @@
+// /src/lib/consent.ts
+
 export type ConsentChoice =
   | "accepted"
   | "rejected";
@@ -6,31 +8,74 @@ export type GoogleConsentState =
   | "granted"
   | "denied";
 
-const STORAGE_KEY = "cookie_consent_v1";
+const STORAGE_KEY =
+  "cookie_consent_v1";
 
 export const CONSENT_CHANGE_EVENT =
   "chefalarab-consent-change";
 
-/*
- * نوع محلي خاص بهذا الملف فقط.
- * لا يعيد تعريف Window عالميًا،
- * وبالتالي لا يتعارض مع adsense.d.ts.
- */
-type GoogleWindow = Window & {
-  dataLayer?: unknown[];
+/* =========================================================
+   Google types
+   ========================================================= */
 
-  gtag?: (
-    ...args: any[]
-  ) => void;
-};
+type DataLayerEntry =
+  | unknown[]
+  | Record<string, unknown>;
 
-/**
- * قراءة اختيار المستخدم المحفوظ.
- */
+type GoogleWindow =
+  Window &
+  typeof globalThis & {
+    dataLayer?: DataLayerEntry[];
+
+    gtag?: (
+      ...args: unknown[]
+    ) => void;
+  };
+
+/* =========================================================
+   Helpers
+   ========================================================= */
+
+function getGoogleWindow():
+  GoogleWindow | null {
+  if (
+    typeof window === "undefined"
+  ) {
+    return null;
+  }
+
+  const googleWindow =
+    window as GoogleWindow;
+
+  googleWindow.dataLayer =
+    googleWindow.dataLayer || [];
+
+  if (
+    typeof googleWindow.gtag !==
+    "function"
+  ) {
+    googleWindow.gtag = (
+      ...args: unknown[]
+    ) => {
+      googleWindow.dataLayer?.push(
+        args,
+      );
+    };
+  }
+
+  return googleWindow;
+}
+
+/* =========================================================
+   قراءة اختيار المستخدم
+   ========================================================= */
+
 export function getStoredConsent():
   | ConsentChoice
   | null {
-  if (typeof window === "undefined") {
+  if (
+    typeof window === "undefined"
+  ) {
     return null;
   }
 
@@ -53,13 +98,16 @@ export function getStoredConsent():
   }
 }
 
-/**
- * حفظ اختيار المستخدم.
- */
+/* =========================================================
+   حفظ الاختيار
+   ========================================================= */
+
 export function storeConsent(
   choice: ConsentChoice,
 ): void {
-  if (typeof window === "undefined") {
+  if (
+    typeof window === "undefined"
+  ) {
     return;
   }
 
@@ -69,92 +117,122 @@ export function storeConsent(
       choice,
     );
   } catch {
-    // تجاهل أخطاء التخزين.
+    /*
+     * قد يكون localStorage
+     * محظورًا في بعض المتصفحات.
+     */
   }
 }
 
-/**
- * إرجاع القرار المحفوظ،
- * أو rejected كقيمة افتراضية آمنة.
- */
+/* =========================================================
+   القيمة الافتراضية
+   ========================================================= */
+
 export function getConsentOrDefaultDenied():
   ConsentChoice {
   return (
-    getStoredConsent() ?? "rejected"
+    getStoredConsent() ??
+    "rejected"
   );
 }
 
-/**
- * تحديث Google Consent Mode v2.
- */
+/* =========================================================
+   تطبيق Google Consent Mode v2
+   ========================================================= */
+
 export function applyConsent(
   choice: ConsentChoice,
 ): void {
-  if (typeof window === "undefined") {
+  const googleWindow =
+    getGoogleWindow();
+
+  if (!googleWindow) {
     return;
   }
 
-  const googleWindow =
-    window as GoogleWindow;
-
-  const state: GoogleConsentState =
+  const state:
+    GoogleConsentState =
     choice === "accepted"
       ? "granted"
       : "denied";
 
-  googleWindow.dataLayer =
-    googleWindow.dataLayer || [];
-
   /*
-   * gtag يتم إنشاؤها في layout.tsx.
-   * هذا الجزء احتياطي في حالة عدم وجودها.
+   * تحديث Consent Mode.
+   *
+   * ملاحظة:
+   * هذه الدالة تُستخدم مع
+   * بانر شيف العرب فقط.
+   *
+   * المستخدم الأوروبي الذي يديره
+   * Google CMP لا يجب أن يصل
+   * إلى هذه الدالة أثناء التهيئة.
    */
-  if (
-    typeof googleWindow.gtag !==
-    "function"
-  ) {
-    googleWindow.gtag = (
-      ...args: any[]
-    ) => {
-      googleWindow.dataLayer?.push(
-        args,
-      );
-    };
-  }
-
-  googleWindow.gtag(
+  googleWindow.gtag?.(
     "consent",
     "update",
     {
-      ad_storage: state,
-      analytics_storage: state,
-      ad_user_data: state,
-      ad_personalization: state,
-      personalization_storage: state,
+      /*
+       * Consent Mode v2
+       */
+      ad_storage:
+        state,
+
+      analytics_storage:
+        state,
+
+      ad_user_data:
+        state,
+
+      ad_personalization:
+        state,
 
       /*
-       * التخزين الضروري لتشغيل الموقع
-       * والأمان لا يعتمد على الإعلانات.
+       * تخزين اختياري إضافي.
+       */
+      personalization_storage:
+        state,
+
+      /*
+       * وظائف الموقع الأساسية.
        */
       functionality_storage:
         "granted",
 
+      /*
+       * الحماية والأمان.
+       */
       security_storage:
         "granted",
     },
   );
 
-  /*
-   * حدث إضافي يمكن رؤيته داخل GTM Preview.
-   */
-  googleWindow.dataLayer.push({
-    event: "consent_update",
-    consent_choice: choice,
-    ad_storage: state,
-    analytics_storage: state,
-    ad_user_data: state,
-    ad_personalization: state,
+  /* =======================================================
+     حدث GTM إضافي
+     ======================================================= */
+
+  googleWindow.dataLayer?.push({
+    event:
+      "consent_update",
+
+    consent_choice:
+      choice,
+
+    ad_storage:
+      state,
+
+    analytics_storage:
+      state,
+
+    ad_user_data:
+      state,
+
+    ad_personalization:
+      state,
   });
+
+  /* =======================================================
+     حدث داخلي للموقع
+     ======================================================= */
 
   window.dispatchEvent(
     new CustomEvent(

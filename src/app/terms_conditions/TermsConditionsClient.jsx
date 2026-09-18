@@ -1,7 +1,3 @@
-"use client";
-
-
-import { motion } from "framer-motion";
 import {
 
   FileText,
@@ -15,14 +11,6 @@ import {
   Cookie,
 } from "lucide-react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-import { adsEnabled } from "@/lib/ads";
-
-
-
-const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
-  ssr: false,
-});
 
 export default function TermsConditionsClient() {
 
@@ -96,35 +84,21 @@ export default function TermsConditionsClient() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden transition-colors duration-500">
-      <style jsx global>{`
-        html,
-        body {
-          overflow-x: hidden !important;
-        }
-        * {
-          max-width: 100vw !important;
-        }
-      `}</style>
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden transition-colors duration-500">
 
-      {/* الإعلان */}
-      {adsEnabled && <InterstitialAd interstitialUnitID="2901613977" />}
+
       <div className="max-w-5xl mx-auto mt-10">
-        <motion.h1
+        <h1
           className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
         >
           الشروط والأحكام
-        </motion.h1>
+        </h1>
+        <p className="mb-8 text-center text-xs font-bold text-gray-500 dark:text-gray-400">آخر تحديث: 17 سبتمبر 2026</p>
 
         {sections.map((section, idx) => (
-          <motion.section
+          <section
             key={idx}
             className="bg-gray-800 rounded-2xl shadow-md p-8 mb-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 + idx * 0.1 }}
           >
             <div className="flex items-center gap-3 mb-3">
               <section.icon className="text-blue-400 dark:text-blue-400" />
@@ -160,11 +134,11 @@ export default function TermsConditionsClient() {
                 )}
               </div>
             )}
-          </motion.section>
+          </section>
         ))}
       </div>
 
-   
-    </div>
+
+    </main>
   );
 }

@@ -1,6 +1,5 @@
 // CookiePolicyClient
 
-"use client";
 import {
   Cookie,
   Info,
@@ -87,21 +86,11 @@ export default function CookiePolicyClient() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden">
-           <style jsx global>{`
-        html,
-        body {
-          overflow-x: hidden !important;
-        }
-        * {
-          max-width: 100vw !important;
-        }
-      `}</style>
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden">
+
       <div className="max-w-5xl mx-auto mt-10">
         <h1
           className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
         >
           سياسة ملفات تعريف الارتباط (Cookies)
         </h1>
@@ -117,6 +106,7 @@ export default function CookiePolicyClient() {
             لملفات تعريف الارتباط، مع التأكيد على عدم تفعيل أي ملفات غير ضرورية
             إلا بعد موافقتك.
           </p>
+          <p className="mt-3 text-xs font-bold text-gray-400">آخر تحديث: 17 سبتمبر 2026</p>
         </div>
 
         {sections.map((section, idx) => (
@@ -164,6 +154,6 @@ export default function CookiePolicyClient() {
         ))}
       </div>
 
-    </div>
+    </main>
   );
 }
