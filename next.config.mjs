@@ -1,13 +1,14 @@
 /** @type {import('next').NextConfig} */
+const imageOptimizationDisabled =
+  process.env.NEXT_IMAGE_UNOPTIMIZED?.trim().toLowerCase() === "true";
+
 const nextConfig = {
   output: "standalone",
 
   outputFileTracingIncludes: {
     "/*": [
       "./src/data/recipes.json",
-      "./src/data/recipes-index.json",
       "./src/data/recipes-catalog.json",
-      "./src/data/recipes-search.json",
     ],
   },
 
@@ -16,22 +17,21 @@ const nextConfig = {
   compress: true,
 
   experimental: {
-    optimizePackageImports: ["lucide-react", "framer-motion"],
+    optimizePackageImports: ["lucide-react"],
   },
 
   images: {
-    // الصور في المشروع WebP جاهزة، وعرضها مباشرة يمنع استهلاك
-    // Image Optimization على الاستضافة ويزيل أخطاء 402 الخاصة بها.
-    unoptimized: true,
-    minimumCacheTTL: 14400,
-    // لا نحتاج كاش محسن الصور لأن الصور تُخدم مباشرة من public.
-    // هذا يمنع تضخم .next/cache/images على الاستضافة والجهاز المحلي.
-    maximumDiskCacheSize: 0,
-    maximumResponseBody: 8_000_000,
-    deviceSizes: [360, 414, 640, 768, 1024, 1280],
-    imageSizes: [64, 128, 256, 384],
-    qualities: [68, 70, 72, 75],
-    formats: ["image/webp"],
+    /*
+     * Optimized images are the default because they materially improve LCP
+     * and image-delivery Lighthouse audits. Set NEXT_IMAGE_UNOPTIMIZED=true
+     * only on a host that cannot run the Next.js image optimizer.
+     */
+    unoptimized: imageOptimizationDisabled,
+    minimumCacheTTL: 2_592_000,
+    deviceSizes: [360, 414, 640, 768, 828, 1024, 1200, 1440],
+    imageSizes: [32, 48, 64, 96, 128, 256, 384],
+    qualities: [70, 72, 75],
+    formats: ["image/avif", "image/webp"],
     localPatterns: [
       { pathname: "/uploads/**", search: "" },
       { pathname: "/card/**", search: "" },
@@ -68,6 +68,13 @@ const nextConfig = {
   },
 
   async headers() {
+    const staticImageCache = [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=2592000, stale-while-revalidate=31536000",
+      },
+    ];
+
     return [
       {
         source: "/sw.js",
@@ -78,24 +85,10 @@ const nextConfig = {
           },
         ],
       },
-      {
-        source: "/uploads/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=2592000, stale-while-revalidate=31536000",
-          },
-        ],
-      },
-      {
-        source: "/card/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=2592000, stale-while-revalidate=31536000",
-          },
-        ],
-      },
+      { source: "/uploads/:path*", headers: staticImageCache },
+      { source: "/card/:path*", headers: staticImageCache },
+      { source: "/ads/:path*", headers: staticImageCache },
+      { source: "/icons/:path*", headers: staticImageCache },
       {
         source: "/(.*)",
         headers: [
@@ -103,9 +96,10 @@ const nextConfig = {
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-DNS-Prefetch-Control", value: "on" },
+          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), payment=()",
+            value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
           },
           {
             key: "Strict-Transport-Security",

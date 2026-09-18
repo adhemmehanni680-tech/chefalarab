@@ -1,1555 +1,1298 @@
-// SearchFloating.jsx
 "use client";
 
 import {
-  useState,
-  useEffect,
-  useMemo,
-  useRef,
   useCallback,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
+
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search,
-  X,
-  Sparkles,
-  ChefHat,
+  useRouter,
+} from "next/navigation";
+
+import {
   ArrowUpLeft,
-  Command,
-  UtensilsCrossed,
+  ChefHat,
+  Search,
+  Sparkles,
+  X,
 } from "lucide-react";
-import recipes from "@/data/recipes-search.json";
 
-/*
-|--------------------------------------------------------------------------
-| توحيد النص العربي
-|--------------------------------------------------------------------------
-*/
+const MIN_QUERY_LENGTH = 2;
+const DEBOUNCE_MS = 220;
+const MAX_RESULTS = 10;
 
-function normalizeArabic(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/ـ/g, "")
-    .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
-    .replace(/[أإآٱ]/g, "ا")
-    .replace(/ؤ/g, "و")
-    .replace(/ئ/g, "ي")
-    .replace(/ى/g, "ي")
-    .replace(/ة/g, "ه")
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+/* =========================================================
+   Helpers
+   ========================================================= */
+
+function normalizeQuery(
+  value,
+) {
+  return String(
+    value || "",
+  )
+    .trim()
+    .replace(
+      /\s+/g,
+      " ",
+    )
+    .slice(0, 80);
 }
 
-/*
-|--------------------------------------------------------------------------
-| الكلمات التي لا تؤثر في البحث
-|--------------------------------------------------------------------------
-*/
-
-const STOP_WORDS = new Set(
-  [
-    "طريقة",
-    "طريقه",
-    "عمل",
-    "وصفة",
-    "وصفه",
-    "تحضير",
-    "كيفية",
-    "كيفيه",
-    "ازاي",
-    "كيف",
-    "عايز",
-    "عاوزه",
-    "اريد",
-    "ابغى",
-    "ممكن",
-  ].map(normalizeArabic)
-);
-
-/*
-|--------------------------------------------------------------------------
-| مرادفات عربية شائعة
-|--------------------------------------------------------------------------
-*/
-
-const SYNONYM_GROUPS = [
-  ["دجاج", "فراخ", "فراخى", "فراخي"],
-  ["لحم", "لحمة", "لحمه"],
-  ["ارز", "أرز", "رز"],
-  ["بطاطس", "بطاطا"],
-  ["طماطم", "بندورة", "بندوره"],
-  ["جبنة", "جبنه", "جبن"],
-  ["مكرونة", "مكرونه", "باستا"],
-  ["شوربة", "شوربه", "حساء"],
-  ["فطور", "فطار", "افطار", "إفطار"],
-  ["حلويات", "حلوى", "حلو", "حلى", "تحلية", "تحليه"],
-  ["سمك", "اسماك", "أسماك"],
-  ["جمبري", "روبيان", "قريدس"],
-  ["باذنجان", "بتنجان"],
-  ["فلفل", "فليفلة", "فليفله"],
-  ["زبادي", "لبن رائب", "لبن رايب"],
-  ["سريع", "سريعة", "سريعه"],
-  ["سهل", "سهلة", "سهله"],
-  ["مشوي", "مشوية", "مشويه"],
-  ["مقلي", "مقلية", "مقليه"],
-  ["مخبوز", "مخبوزة", "مخبوزه"],
-  ["حار", "حارة", "حاره", "سبايسي"],
-  ["بارد", "باردة", "بارده"],
-  ["بيض", "بيضة", "بيضه"],
-  ["خبز", "عيش", "رغيف"],
-  ["صلصة", "صوص", "صوصات"],
-];
-
-const SYNONYM_MAP = new Map();
-
-SYNONYM_GROUPS.forEach((group) => {
-  const normalizedGroup = [
-    ...new Set(group.map(normalizeArabic).filter(Boolean)),
-  ];
-
-  normalizedGroup.forEach((word) => {
-    SYNONYM_MAP.set(word, normalizedGroup);
-  });
-});
-
-/*
-|--------------------------------------------------------------------------
-| اقتراحات البحث السريع
-|--------------------------------------------------------------------------
-*/
-
-const QUICK_SEARCHES = [
-  "دجاج",
-  "حلويات",
-  "فطور",
-  "أرز",
-  "معجنات",
-  "وصفة سريعة",
-];
-
-/*
-|--------------------------------------------------------------------------
-| تحويل أي بيانات إلى نص قابل للبحث
-|--------------------------------------------------------------------------
-*/
-
-function collectStrings(value) {
-  if (value === null || value === undefined) {
-    return [];
-  }
-
-  if (typeof value === "string" || typeof value === "number") {
-    return [String(value)];
-  }
-
-  if (Array.isArray(value)) {
-    return value.flatMap(collectStrings);
-  }
-
-  if (typeof value === "object") {
-    return Object.values(value).flatMap(collectStrings);
-  }
-
-  return [];
-}
-
-function tokenize(value) {
-  const normalized = normalizeArabic(value);
-
-  if (!normalized) {
-    return [];
-  }
-
-  return normalized.split(/\s+/).filter(Boolean);
-}
-
-function getMeaningfulTokens(value) {
-  const allTokens = tokenize(value);
-
-  const usefulTokens = allTokens.filter(
-    (word) => !STOP_WORDS.has(word)
-  );
-
-  return usefulTokens.length > 0 ? usefulTokens : allTokens;
-}
-
-/*
-|--------------------------------------------------------------------------
-| أشكال مختلفة للكلمة
-|--------------------------------------------------------------------------
-*/
-
-function getBasicVariants(word) {
-  const normalizedWord = normalizeArabic(word);
-  const variants = new Set();
-
-  if (!normalizedWord) {
-    return variants;
-  }
-
-  variants.add(normalizedWord);
-
-  if (
-    normalizedWord.startsWith("ال") &&
-    normalizedWord.length > 4
-  ) {
-    variants.add(normalizedWord.slice(2));
-  }
-
-  if (
-    normalizedWord.startsWith("و") &&
-    normalizedWord.length > 4
-  ) {
-    variants.add(normalizedWord.slice(1));
-  }
-
-  return variants;
-}
-
-function expandToken(word) {
-  const results = new Set();
-  const queue = [...getBasicVariants(word)];
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-
-    if (!current || results.has(current)) {
-      continue;
-    }
-
-    results.add(current);
-
-    const synonyms = SYNONYM_MAP.get(current) || [];
-
-    synonyms.forEach((synonym) => {
-      getBasicVariants(synonym).forEach((variant) => {
-        if (!results.has(variant)) {
-          queue.push(variant);
-        }
-      });
-    });
-  }
-
-  return results;
-}
-
-/*
-|--------------------------------------------------------------------------
-| تحمل الأخطاء الإملائية البسيطة
-|--------------------------------------------------------------------------
-*/
-
-function levenshteinDistance(firstWord, secondWord) {
-  const first = String(firstWord || "");
-  const second = String(secondWord || "");
-
-  if (first === second) {
-    return 0;
-  }
-
-  if (!first.length) {
-    return second.length;
-  }
-
-  if (!second.length) {
-    return first.length;
-  }
-
-  const previousRow = Array.from(
-    { length: second.length + 1 },
-    (_, index) => index
-  );
-
-  for (
-    let firstIndex = 1;
-    firstIndex <= first.length;
-    firstIndex += 1
-  ) {
-    const currentRow = [firstIndex];
-
-    for (
-      let secondIndex = 1;
-      secondIndex <= second.length;
-      secondIndex += 1
-    ) {
-      const insertCost =
-        currentRow[secondIndex - 1] + 1;
-
-      const deleteCost =
-        previousRow[secondIndex] + 1;
-
-      const replaceCost =
-        previousRow[secondIndex - 1] +
-        (first[firstIndex - 1] ===
-        second[secondIndex - 1]
-          ? 0
-          : 1);
-
-      currentRow[secondIndex] = Math.min(
-        insertCost,
-        deleteCost,
-        replaceCost
-      );
-    }
-
-    for (
-      let index = 0;
-      index < currentRow.length;
-      index += 1
-    ) {
-      previousRow[index] = currentRow[index];
-    }
-  }
-
-  return previousRow[second.length];
-}
-
-function isCloseWord(queryWord, recipeWord) {
-  if (!queryWord || !recipeWord) {
-    return false;
-  }
-
-  if (queryWord.length < 4 || recipeWord.length < 4) {
-    return false;
-  }
-
-  const lengthDifference = Math.abs(
-    queryWord.length - recipeWord.length
-  );
-
-  if (lengthDifference > 2) {
-    return false;
-  }
-
-  const allowedDistance =
-    Math.max(queryWord.length, recipeWord.length) >= 7
-      ? 2
-      : 1;
-
-  return (
-    levenshteinDistance(queryWord, recipeWord) <=
-    allowedDistance
-  );
-}
-
-/*
-|--------------------------------------------------------------------------
-| تجهيز وصف مختصر للنتيجة
-|--------------------------------------------------------------------------
-*/
-
-function getRecipeMeta(recipe) {
-  const values = [
-    recipe?.country,
-    ...(Array.isArray(recipe?.category)
-      ? recipe.category
-      : []),
-    ...(Array.isArray(recipe?.tags) ? recipe.tags : []),
-  ]
-    .filter(Boolean)
-    .map(String);
-
-  return [...new Set(values)].slice(0, 2).join(" • ");
-}
-
-/*
-|--------------------------------------------------------------------------
-| حساب تطابق كل كلمة
-|--------------------------------------------------------------------------
-*/
-
-function getTokenMatchScore(queryToken, recipe) {
-  const variants = [...expandToken(queryToken)].filter(
-    (word) => word.length >= 2
-  );
-
-  let bestScore = 0;
-
-  for (const variant of variants) {
-    if (recipe.titleTokenSet.has(variant)) {
-      bestScore = Math.max(bestScore, 45);
-      continue;
-    }
-
-    if (recipe.titleNorm.startsWith(variant)) {
-      bestScore = Math.max(bestScore, 40);
-    }
-
-    if (recipe.titleNorm.includes(variant)) {
-      bestScore = Math.max(bestScore, 35);
-    }
-
-    const titlePrefixMatch = recipe.titleTokens.some(
-      (recipeToken) =>
-        recipeToken.startsWith(variant) ||
-        variant.startsWith(recipeToken)
-    );
-
-    if (titlePrefixMatch) {
-      bestScore = Math.max(bestScore, 30);
-    }
-
-    if (recipe.searchTokenSet.has(variant)) {
-      bestScore = Math.max(bestScore, 22);
-    }
-
-    const searchPrefixMatch = recipe.searchTokens.some(
-      (recipeToken) =>
-        recipeToken.startsWith(variant) ||
-        variant.startsWith(recipeToken)
-    );
-
-    if (searchPrefixMatch) {
-      bestScore = Math.max(bestScore, 16);
-    }
-  }
-
-  if (bestScore > 0) {
-    return bestScore;
-  }
-
-  for (const variant of variants) {
-    const closeTitleWord = recipe.titleTokens.some(
-      (recipeToken) =>
-        isCloseWord(variant, recipeToken)
-    );
-
-    if (closeTitleWord) {
-      return 18;
-    }
-  }
-
-  for (const variant of variants) {
-    const closeSearchWord = recipe.searchTokens.some(
-      (recipeToken) =>
-        isCloseWord(variant, recipeToken)
-    );
-
-    if (closeSearchWord) {
-      return 10;
-    }
-  }
-
-  return 0;
-}
-
-/*
-|--------------------------------------------------------------------------
-| ترتيب النتائج
-|--------------------------------------------------------------------------
-*/
-
-function calculateRecipeScore(recipe, query) {
-  const normalizedQuery = normalizeArabic(query);
-  const queryTokens = getMeaningfulTokens(query);
-
-  if (!normalizedQuery || queryTokens.length === 0) {
-    return null;
-  }
-
-  let score = 0;
-  let matchedTokens = 0;
-
-  const meaningfulPhrase = queryTokens.join(" ");
-
-  const phrases = [
-    ...new Set(
-      [normalizedQuery, meaningfulPhrase].filter(Boolean)
-    ),
-  ];
-
-  phrases.forEach((phrase) => {
-    if (recipe.titleNorm === phrase) {
-      score += 170;
-    } else if (recipe.titleNorm.startsWith(phrase)) {
-      score += 115;
-    } else if (recipe.titleNorm.includes(phrase)) {
-      score += 85;
-    } else if (recipe.searchNorm.includes(phrase)) {
-      score += 35;
-    }
-  });
-
-  queryTokens.forEach((queryToken) => {
-    const tokenScore = getTokenMatchScore(
-      queryToken,
-      recipe
-    );
-
-    if (tokenScore > 0) {
-      matchedTokens += 1;
-      score += tokenScore;
-    }
-  });
-
-  if (matchedTokens === 0) {
-    return null;
-  }
-
-  const coverage =
-    matchedTokens / queryTokens.length;
-
-  score += Math.round(coverage * 40);
-
-  if (matchedTokens === queryTokens.length) {
-    score += 45;
-  }
-
-  score -= Math.min(recipe.titleNorm.length / 30, 5);
-
-  return {
-    score,
-    matchedTokens,
-    coverage,
-  };
-}
-
-/*
-|--------------------------------------------------------------------------
-| تمييز كلمات البحث
-|--------------------------------------------------------------------------
-*/
-
-function highlightTitle(text, query) {
-  const queryTokens = getMeaningfulTokens(query);
-  const queryVariants = new Set();
-
-  queryTokens.forEach((token) => {
-    expandToken(token).forEach((variant) => {
-      queryVariants.add(variant);
-    });
-  });
-
-  return String(text || "")
-    .split(/(\s+)/)
-    .map((part, index) => {
-      if (!part.trim()) {
-        return part;
-      }
-
-      const normalizedPart = normalizeArabic(part);
-
-      if (!normalizedPart) {
-        return part;
-      }
-
-      const partVariants = expandToken(normalizedPart);
-
-      const matched = [...queryVariants].some(
-        (queryVariant) => {
-          if (partVariants.has(queryVariant)) {
-            return true;
-          }
-
-          if (
-            queryVariant.length >= 3 &&
-            normalizedPart.startsWith(queryVariant)
-          ) {
-            return true;
-          }
-
-          if (
-            normalizedPart.length >= 3 &&
-            queryVariant.startsWith(normalizedPart)
-          ) {
-            return true;
-          }
-
-          return isCloseWord(
-            queryVariant,
-            normalizedPart
-          );
-        }
-      );
-
-      if (!matched) {
-        return part;
-      }
-
-      return (
-        <mark
-          key={`${part}-${index}`}
-          className="rounded-md bg-orange-500/15 px-0.5 font-bold text-orange-500"
-        >
-          {part}
-        </mark>
-      );
-    });
-}
-
-/*
-|--------------------------------------------------------------------------
-| المكوّن
-|--------------------------------------------------------------------------
-*/
-
-export default function SearchFloating({
-  footerSelector = "#site-footer",
-}) {
-  const router = useRouter();
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedTerm, setDebouncedTerm] =
-    useState("");
-  const [open, setOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [footerVisible, setFooterVisible] = useState(false);
-
-  const debounceTimeout = useRef(null);
-  const boxRef = useRef(null);
-  const inputRef = useRef(null);
-  const resultsRef = useRef(null);
-
-  /*
-  |--------------------------------------------------------------------------
-  | بناء فهرس البحث مرة واحدة
-  |--------------------------------------------------------------------------
-  */
-
-  const recipesIndex = useMemo(() => {
-    return (Array.isArray(recipes) ? recipes : [])
-      .map((recipe) => {
-        const slug = String(
-          recipe?.slug || recipe?.id || ""
-        ).trim();
-
-        const title = String(
-          recipe?.title || "وصفة بدون عنوان"
-        ).trim();
-
-        const searchableFields = [
-          title,
-          recipe?.country,
-          recipe?.tags,
-          recipe?.category,
-          recipe?.intro,
-          recipe?.description,
-          recipe?.ingredients,
-          recipe?.data_box?.meal_type,
-          recipe?.data_box?.dish_type,
-          recipe?.data_box?.difficulty,
-        ];
-
-        const searchText = collectStrings(
-          searchableFields
-        )
-          .filter(Boolean)
-          .join(" ");
-
-        const titleNorm = normalizeArabic(title);
-        const searchNorm = normalizeArabic(searchText);
-
-        const titleTokens = [
-          ...new Set(tokenize(titleNorm)),
-        ];
-
-        const searchTokens = [
-          ...new Set(tokenize(searchNorm)),
-        ];
-
-        return {
-          slug,
-          title,
-          meta: getRecipeMeta(recipe),
-          titleNorm,
-          searchNorm,
-          titleTokens,
-          searchTokens,
-          titleTokenSet: new Set(titleTokens),
-          searchTokenSet: new Set(searchTokens),
-        };
-      })
-      .filter((recipe) => recipe.slug && recipe.title);
-  }, []);
-
-  /*
-  |--------------------------------------------------------------------------
-  | Debounce
-  |--------------------------------------------------------------------------
-  */
+/* =========================================================
+   Footer visibility
+   ========================================================= */
+
+function useFooterVisibility() {
+  const [
+    visible,
+    setVisible,
+  ] = useState(false);
 
   useEffect(() => {
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-    }
-
-    debounceTimeout.current = setTimeout(() => {
-      setDebouncedTerm(searchTerm);
-    }, 160);
-
-    return () => {
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-    };
-  }, [searchTerm]);
-
-  /*
-  |--------------------------------------------------------------------------
-  | النتائج
-  |--------------------------------------------------------------------------
-  */
-
-  const filteredResults = useMemo(() => {
-    const normalizedQuery =
-      normalizeArabic(debouncedTerm);
-
-    if (normalizedQuery.length < 2) {
-      return [];
-    }
-
-    const results = [];
-
-    for (const recipe of recipesIndex) {
-      const match = calculateRecipeScore(
-        recipe,
-        debouncedTerm
+    const footer =
+      document.getElementById(
+        "site-footer",
       );
 
-      if (!match) {
-        continue;
-      }
-
-      results.push({
-        ...recipe,
-        ...match,
-      });
-    }
-
-    return results
-      .sort((firstRecipe, secondRecipe) => {
-        if (
-          secondRecipe.score !== firstRecipe.score
-        ) {
-          return (
-            secondRecipe.score - firstRecipe.score
-          );
-        }
-
-        if (
-          secondRecipe.coverage !==
-          firstRecipe.coverage
-        ) {
-          return (
-            secondRecipe.coverage -
-            firstRecipe.coverage
-          );
-        }
-
-        return (
-          firstRecipe.title.length -
-          secondRecipe.title.length
-        );
-      })
-      .slice(0, 10);
-  }, [debouncedTerm, recipesIndex]);
-
-  const hasQuery =
-    normalizeArabic(searchTerm).length > 0;
-
-  const hasEnoughCharacters =
-    normalizeArabic(debouncedTerm).length >= 2;
-
-  const isSearching =
-    searchTerm !== debouncedTerm && hasQuery;
-
-  /*
-  |--------------------------------------------------------------------------
-  | فتح وإغلاق البحث
-  |--------------------------------------------------------------------------
-  */
-
-  const openSearch = useCallback(() => {
-    setOpen(true);
-  }, []);
-
-  const closeSearch = useCallback(() => {
-    setOpen(false);
-    setSearchTerm("");
-    setDebouncedTerm("");
-    setActiveIndex(0);
-  }, []);
-
-  /*
-  |--------------------------------------------------------------------------
-  | إخفاء زر البحث عند ظهور الفوتر
-  |--------------------------------------------------------------------------
-  */
-
-  useEffect(() => {
-    const footerElement = document.querySelector(footerSelector);
-
-    if (!footerElement) {
-      setFooterVisible(false);
+    if (!footer) {
       return;
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        const isFooterVisible = entry.isIntersecting;
+    /*
+     * Fallback للمتصفحات القديمة.
+     */
+    if (
+      typeof IntersectionObserver ===
+      "undefined"
+    ) {
+      const checkFooter =
+        () => {
+          const rect =
+            footer.getBoundingClientRect();
 
-        setFooterVisible(isFooterVisible);
+          const nearFooter =
+            rect.top <=
+              window.innerHeight +
+                80 &&
+            rect.bottom >= 0;
 
-        // إغلاق البحث وتنظيفه عند الوصول إلى الفوتر.
-        if (isFooterVisible) {
-          closeSearch();
-        }
-      },
-      {
-        root: null,
-        threshold: 0.01,
-        // يخفي الزر قبل ملامسة الفوتر بقليل حتى لا يغطي محتواه.
-        rootMargin: "0px 0px 40px 0px",
-      }
+          setVisible(
+            nearFooter,
+          );
+        };
+
+      checkFooter();
+
+      window.addEventListener(
+        "scroll",
+        checkFooter,
+        {
+          passive: true,
+        },
+      );
+
+      window.addEventListener(
+        "resize",
+        checkFooter,
+        {
+          passive: true,
+        },
+      );
+
+      return () => {
+        window.removeEventListener(
+          "scroll",
+          checkFooter,
+        );
+
+        window.removeEventListener(
+          "resize",
+          checkFooter,
+        );
+      };
+    }
+
+    const observer =
+      new IntersectionObserver(
+        ([entry]) => {
+          setVisible(
+            Boolean(
+              entry?.isIntersecting,
+            ),
+          );
+        },
+        {
+          root: null,
+          threshold: 0,
+          rootMargin:
+            "0px 0px 80px 0px",
+        },
+      );
+
+    observer.observe(
+      footer,
     );
-
-    observer.observe(footerElement);
 
     return () => {
       observer.disconnect();
     };
-  }, [footerSelector, closeSearch]);
-
-  const clearSearch = useCallback(() => {
-    setSearchTerm("");
-    setDebouncedTerm("");
-    setActiveIndex(0);
-
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
   }, []);
 
-  /*
-  |--------------------------------------------------------------------------
-  | فتح وصفة
-  |--------------------------------------------------------------------------
-  */
+  return visible;
+}
 
-  const openRecipe = useCallback(
-    (recipe) => {
-      if (!recipe?.slug) {
-        return;
-      }
+/* =========================================================
+   Visual viewport
+   ========================================================= */
 
-      router.push(
-        `/recipe/${encodeURIComponent(recipe.slug)}`
+/**
+ * بعض الموبايلات تغير ارتفاع الشاشة الحقيقي
+ * عند ظهور الكيبورد.
+ *
+ * visualViewport يعطينا الارتفاع الفعلي المتاح
+ * بدل الاعتماد على 100vh فقط.
+ */
+function useViewportHeight() {
+  const [
+    height,
+    setHeight,
+  ] = useState(0);
+
+  useEffect(() => {
+    const updateHeight =
+      () => {
+        const nextHeight =
+          window.visualViewport
+            ?.height ||
+          window.innerHeight;
+
+        setHeight(
+          Math.round(
+            nextHeight,
+          ),
+        );
+      };
+
+    updateHeight();
+
+    window.addEventListener(
+      "resize",
+      updateHeight,
+      {
+        passive: true,
+      },
+    );
+
+    window.visualViewport
+      ?.addEventListener(
+        "resize",
+        updateHeight,
       );
 
-      closeSearch();
-    },
-    [router, closeSearch]
-  );
+    return () => {
+      window.removeEventListener(
+        "resize",
+        updateHeight,
+      );
 
-  /*
-  |--------------------------------------------------------------------------
-  | اختيار اقتراح سريع
-  |--------------------------------------------------------------------------
-  */
-
-  const selectQuickSearch = useCallback((value) => {
-    setSearchTerm(value);
-    setDebouncedTerm(value);
-    setActiveIndex(0);
-
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
+      window.visualViewport
+        ?.removeEventListener(
+          "resize",
+          updateHeight,
+        );
+    };
   }, []);
 
-  /*
-  |--------------------------------------------------------------------------
-  | إعادة تحديد أول نتيجة
-  |--------------------------------------------------------------------------
-  */
+  return height;
+}
 
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [debouncedTerm]);
+/* =========================================================
+   Component
+   ========================================================= */
 
-  /*
-  |--------------------------------------------------------------------------
-  | إظهار النتيجة النشطة داخل القائمة
-  |--------------------------------------------------------------------------
-  */
+export default function SearchFloating() {
+  const router =
+    useRouter();
 
-  useEffect(() => {
-    if (!resultsRef.current) {
-      return;
-    }
+  const [
+    open,
+    setOpen,
+  ] = useState(false);
 
-    const activeElement =
-      resultsRef.current.querySelector(
-        `[data-result-index="${activeIndex}"]`
-      );
+  const [
+    query,
+    setQuery,
+  ] = useState("");
 
-    activeElement?.scrollIntoView({
-      block: "nearest",
-      behavior: "smooth",
-    });
-  }, [activeIndex]);
+  const [
+    results,
+    setResults,
+  ] = useState([]);
 
-  /*
-  |--------------------------------------------------------------------------
-  | الضغط خارج البحث
-  |--------------------------------------------------------------------------
-  */
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
 
-  const handleClickOutside = useCallback(
-    (event) => {
-      if (
-        boxRef.current &&
-        !boxRef.current.contains(event.target)
-      ) {
-        closeSearch();
-      }
-    },
-    [closeSearch]
-  );
+  const [
+    error,
+    setError,
+  ] = useState(false);
 
-  useEffect(() => {
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside
-    );
+  const [
+    activeIndex,
+    setActiveIndex,
+  ] = useState(0);
 
-    document.addEventListener(
-      "touchstart",
-      handleClickOutside
-    );
+  const panelRef =
+    useRef(null);
 
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside
-      );
+  const inputRef =
+    useRef(null);
 
-      document.removeEventListener(
-        "touchstart",
-        handleClickOutside
-      );
-    };
-  }, [handleClickOutside]);
+  const footerVisible =
+    useFooterVisibility();
 
-  /*
-  |--------------------------------------------------------------------------
-  | اختصار Ctrl + K
-  |--------------------------------------------------------------------------
-  */
+  const viewportHeight =
+    useViewportHeight();
 
-  useEffect(() => {
-    const handleShortcut = (event) => {
-      const isShortcut =
-        (event.ctrlKey || event.metaKey) &&
-        event.key.toLowerCase() === "k";
+  /* =======================================================
+     Close
+     ======================================================= */
 
-      if (!isShortcut) {
-        return;
-      }
+  const close =
+    useCallback(() => {
+      setOpen(false);
+      setActiveIndex(0);
+    }, []);
 
-      event.preventDefault();
-
-      if (open) {
-        inputRef.current?.focus();
-      } else {
-        setOpen(true);
-      }
-    };
-
-    document.addEventListener(
-      "keydown",
-      handleShortcut
-    );
-
-    return () => {
-      document.removeEventListener(
-        "keydown",
-        handleShortcut
-      );
-    };
-  }, [open]);
-
-  /*
-  |--------------------------------------------------------------------------
-  | التركيز التلقائي
-  |--------------------------------------------------------------------------
-  */
+  /* =======================================================
+     Focus + outside click + Escape
+     ======================================================= */
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    const timeout = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 120);
+    /*
+     * Safari وبعض أجهزة Android تحتاج مهلة صغيرة
+     * بعد ظهور العنصر قبل focus.
+     */
+    let focusTimer = 0;
 
-    return () => clearTimeout(timeout);
-  }, [open]);
+    const frame =
+      window.requestAnimationFrame(
+        () => {
+          focusTimer =
+            window.setTimeout(
+              () => {
+                try {
+                  inputRef.current?.focus(
+                    {
+                      preventScroll:
+                        true,
+                    },
+                  );
+                } catch {
+                  /*
+                   * Fallback للمتصفحات القديمة
+                   * التي لا تدعم preventScroll.
+                   */
+                  inputRef.current?.focus();
+                }
+              },
+              60,
+            );
+        },
+      );
 
-  /*
-  |--------------------------------------------------------------------------
-  | التنقل بلوحة المفاتيح
-  |--------------------------------------------------------------------------
-  */
+    const handlePointerDown =
+      (event) => {
+        if (
+          panelRef.current &&
+          !panelRef.current.contains(
+            event.target,
+          )
+        ) {
+          close();
+        }
+      };
 
-  const handleKeyDown = useCallback(
-    (event) => {
-      if (event.key === "Escape") {
-        closeSearch();
-        return;
-      }
+    const handleKeyDown =
+      (event) => {
+        if (
+          event.key ===
+          "Escape"
+        ) {
+          close();
+        }
+      };
 
-      if (!filteredResults.length) {
-        return;
-      }
+    document.addEventListener(
+      "pointerdown",
+      handlePointerDown,
+      {
+        passive: true,
+      },
+    );
 
-      if (event.key === "ArrowDown") {
-        event.preventDefault();
+    document.addEventListener(
+      "keydown",
+      handleKeyDown,
+    );
 
-        setActiveIndex((current) =>
-          current >= filteredResults.length - 1
-            ? 0
-            : current + 1
+    return () => {
+      window.cancelAnimationFrame(
+        frame,
+      );
+
+      if (focusTimer) {
+        window.clearTimeout(
+          focusTimer,
         );
-
-        return;
       }
 
-      if (event.key === "ArrowUp") {
-        event.preventDefault();
+      document.removeEventListener(
+        "pointerdown",
+        handlePointerDown,
+      );
 
-        setActiveIndex((current) =>
-          current <= 0
-            ? filteredResults.length - 1
-            : current - 1
-        );
+      document.removeEventListener(
+        "keydown",
+        handleKeyDown,
+      );
+    };
+  }, [
+    open,
+    close,
+  ]);
 
-        return;
-      }
+  /* =======================================================
+     Search API
+     ======================================================= */
 
-      if (event.key === "Enter") {
-        event.preventDefault();
+  useEffect(() => {
+    const safeQuery =
+      normalizeQuery(
+        query,
+      );
 
-        const selectedRecipe =
-          filteredResults[activeIndex] ||
-          filteredResults[0];
+    if (
+      safeQuery.length <
+      MIN_QUERY_LENGTH
+    ) {
+      setResults([]);
+      setLoading(false);
+      setError(false);
+      setActiveIndex(0);
 
-        openRecipe(selectedRecipe);
-      }
-    },
-    [
-      activeIndex,
-      filteredResults,
-      closeSearch,
-      openRecipe,
-    ]
-  );
+      return;
+    }
 
-  if (footerVisible) {
+    let cancelled = false;
+
+    /*
+     * AbortController مدعوم في المتصفحات الحديثة.
+     * بنستخدم fallback بسيط لو جهاز قديم جدًا.
+     */
+    const controller =
+      typeof AbortController !==
+      "undefined"
+        ? new AbortController()
+        : null;
+
+    const timer =
+      window.setTimeout(
+        async () => {
+          setLoading(true);
+          setError(false);
+
+          try {
+            const options = {
+              method: "GET",
+              headers: {
+                Accept:
+                  "application/json",
+              },
+            };
+
+            if (controller) {
+              options.signal =
+                controller.signal;
+            }
+
+            const response =
+              await fetch(
+                `/api/search?q=${encodeURIComponent(
+                  safeQuery,
+                )}`,
+                options,
+              );
+
+            if (
+              !response.ok
+            ) {
+              throw new Error(
+                `Search failed: ${response.status}`,
+              );
+            }
+
+            const payload =
+              await response.json();
+
+            if (cancelled) {
+              return;
+            }
+
+            const nextResults =
+              Array.isArray(
+                payload?.results,
+              )
+                ? payload.results
+                : [];
+
+            setResults(
+              nextResults.slice(
+                0,
+                MAX_RESULTS,
+              ),
+            );
+
+            setActiveIndex(0);
+          } catch (
+            requestError
+          ) {
+            if (
+              cancelled
+            ) {
+              return;
+            }
+
+            if (
+              requestError?.name ===
+              "AbortError"
+            ) {
+              return;
+            }
+
+            setResults([]);
+            setError(true);
+          } finally {
+            if (
+              !cancelled
+            ) {
+              setLoading(false);
+            }
+          }
+        },
+        DEBOUNCE_MS,
+      );
+
+    return () => {
+      cancelled = true;
+
+      window.clearTimeout(
+        timer,
+      );
+
+      controller?.abort();
+    };
+  }, [query]);
+
+  /* =======================================================
+     Keyboard navigation
+     ======================================================= */
+
+  const handleInputKeyDown =
+    useCallback(
+      (event) => {
+        if (
+          event.key ===
+            "ArrowDown" &&
+          results.length >
+            0
+        ) {
+          event.preventDefault();
+
+          setActiveIndex(
+            (current) =>
+              (current + 1) %
+              results.length,
+          );
+
+          return;
+        }
+
+        if (
+          event.key ===
+            "ArrowUp" &&
+          results.length >
+            0
+        ) {
+          event.preventDefault();
+
+          setActiveIndex(
+            (current) =>
+              current <= 0
+                ? results.length -
+                  1
+                : current - 1,
+          );
+
+          return;
+        }
+
+        if (
+          event.key ===
+            "Enter" &&
+          results.length >
+            0
+        ) {
+          const selected =
+            results[
+              activeIndex
+            ] ||
+            results[0];
+
+          if (
+            !selected?.slug
+          ) {
+            return;
+          }
+
+          event.preventDefault();
+
+          close();
+
+          router.push(
+            `/recipe/${encodeURIComponent(
+              selected.slug,
+            )}`,
+          );
+        }
+      },
+      [
+        activeIndex,
+        close,
+        results,
+        router,
+      ],
+    );
+
+  /* =======================================================
+     Hide near footer
+     ======================================================= */
+
+  if (
+    footerVisible
+  ) {
     return null;
   }
 
+  /* =======================================================
+     Dynamic mobile heights
+     ======================================================= */
+
+  const availableHeight =
+    viewportHeight > 0
+      ? Math.max(
+          280,
+          viewportHeight -
+            105,
+        )
+      : undefined;
+
+  const resultsHeight =
+    viewportHeight > 0
+      ? Math.max(
+          150,
+          Math.min(
+            360,
+            viewportHeight -
+              245,
+          ),
+        )
+      : 360;
+
+  /* =======================================================
+     UI
+     ======================================================= */
+
   return (
     <div
-      ref={boxRef}
+      ref={panelRef}
       dir="rtl"
-      className="fixed bottom-20 right-3 z-[9999] sm:right-6"
+      className="
+        fixed
+        right-3
+        z-[80]
+        sm:right-6
+      "
+      style={{
+        bottom:
+          "calc(5rem + env(safe-area-inset-bottom, 0px))",
+      }}
     >
-      <AnimatePresence mode="wait">
-        {!open ? (
-          /*
-          |--------------------------------------------------------------------------
-          | زر البحث الثابت
-          |--------------------------------------------------------------------------
-          */
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(true);
+          }}
+          aria-label="فتح البحث عن وصفة"
+          aria-expanded={
+            false
+          }
+          className="
+            relative
+            grid
+            h-14
+            w-14
+            touch-manipulation
+            place-items-center
+            rounded-2xl
+            border
+            border-white/20
+            bg-orange-500
+            text-white
+            shadow-xl
+            shadow-orange-950/25
+            transition
+            duration-150
 
-          <motion.button
-            key="closed-search-button"
-            type="button"
-            aria-label="فتح البحث الذكي"
-            initial={{
-              opacity: 0,
-              scale: 0.75,
-            }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-            }}
-            exit={{
-              opacity: 0,
-              scale: 0.75,
-            }}
-            whileHover={{
-              scale: 1.06,
-            }}
-            whileTap={{
-              scale: 0.92,
-            }}
-            onClick={openSearch}
-            className="group relative flex h-14 w-14 items-center justify-center rounded-2xl border border-white/20 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white shadow-[0_18px_45px_-15px_rgba(249,115,22,0.85)] outline-none transition-shadow duration-300 hover:shadow-[0_22px_55px_-15px_rgba(249,115,22,1)] focus-visible:ring-4 focus-visible:ring-orange-300/60"
+            hover:-translate-y-0.5
+            hover:bg-orange-600
+
+            active:scale-95
+
+            focus-visible:outline-none
+            focus-visible:ring-4
+            focus-visible:ring-orange-300/50
+          "
+        >
+          <Search
+            size={24}
+            strokeWidth={
+              2.4
+            }
+            aria-hidden="true"
+          />
+
+          <span
+            aria-hidden="true"
+            className="
+              absolute
+              -right-1
+              -top-1
+              h-3.5
+              w-3.5
+              rounded-full
+              border-2
+              border-white
+              bg-emerald-400
+            "
+          />
+        </button>
+      ) : (
+        <section
+          aria-label="البحث عن وصفة"
+          role="dialog"
+          aria-modal="false"
+          className="
+            flex
+            w-[calc(100vw-1.5rem)]
+            max-w-[410px]
+            flex-col
+            overflow-hidden
+            rounded-3xl
+            border
+            border-slate-200
+            bg-white/95
+            shadow-2xl
+            backdrop-blur-xl
+
+            dark:border-white/10
+            dark:bg-slate-900/95
+          "
+          style={{
+            maxHeight:
+              availableHeight
+                ? `${availableHeight}px`
+                : "calc(100vh - 7rem)",
+          }}
+        >
+          {/* Header */}
+          <div
+            className="
+              shrink-0
+              border-b
+              border-slate-200
+              p-4
+
+              dark:border-white/10
+            "
           >
-            <span className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            <div
+              className="
+                mb-3
+                flex
+                items-center
+                justify-between
+                gap-3
+              "
+            >
+              <div
+                className="
+                  flex
+                  min-w-0
+                  items-center
+                  gap-2.5
+                "
+              >
+                <span
+                  className="
+                    grid
+                    h-10
+                    w-10
+                    shrink-0
+                    place-items-center
+                    rounded-xl
+                    bg-orange-500
+                    text-white
+                  "
+                >
+                  <ChefHat
+                    size={
+                      20
+                    }
+                    aria-hidden="true"
+                  />
+                </span>
 
-            <span className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-400 shadow-sm" />
+                <div className="min-w-0">
+                  <h2
+                    className="
+                      flex
+                      items-center
+                      gap-1.5
+                      text-sm
+                      font-black
+                      text-slate-950
 
-            <Search
-              size={25}
-              strokeWidth={2.4}
-              className="relative z-10"
-            />
-          </motion.button>
-        ) : (
-          /*
-          |--------------------------------------------------------------------------
-          | صندوق البحث
-          |--------------------------------------------------------------------------
-          */
+                      dark:text-white
+                    "
+                  >
+                    البحث الذكي
 
-          <motion.section
-            key="opened-search"
-            initial={{
-              opacity: 0,
-              scale: 0.92,
-              y: 18,
-            }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              scale: 0.92,
-              y: 18,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 320,
-              damping: 27,
-            }}
-            className="w-[calc(100vw-1.5rem)] max-w-[410px] overflow-hidden rounded-[26px] border border-gray-200/80 bg-white/95 shadow-[0_30px_80px_-25px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-colors duration-300 dark:border-white/10 dark:bg-[#111827]/95 dark:shadow-[0_30px_80px_-25px_rgba(0,0,0,0.75)]"
-          >
-            {/*
-            |--------------------------------------------------------------------------
-            | رأس الصندوق
-            |--------------------------------------------------------------------------
-            */}
-
-            <div className="relative overflow-hidden border-b border-gray-200 px-4 pb-4 pt-4 transition-colors duration-300 dark:border-white/10">
-              <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-orange-500/15 blur-3xl" />
-
-              <div className="pointer-events-none absolute -bottom-20 -left-12 h-40 w-40 rounded-full bg-amber-400/10 blur-3xl" />
-
-              <div className="relative mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/25">
-                    <ChefHat
-                      size={21}
-                      strokeWidth={2.2}
+                    <Sparkles
+                      size={
+                        14
+                      }
+                      className="text-orange-500"
+                      aria-hidden="true"
                     />
-                  </div>
+                  </h2>
 
-                  <div>
-                    <h2 className="flex items-center gap-1.5 text-sm font-bold text-gray-900 dark:text-white">
-                      البحث الذكي
+                  <p
+                    className="
+                      truncate
+                      text-[11px]
+                      font-semibold
+                      text-slate-500
 
-                      <Sparkles
-                        size={14}
-                        className="text-orange-400"
-                      />
-                    </h2>
-
-                    <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
-                      اكتب كلمة واحدة وسنجد الأقرب
-                    </p>
-                  </div>
+                      dark:text-slate-400
+                    "
+                  >
+                    ابحث في وصفات شيف
+                    العرب بسرعة
+                  </p>
                 </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={
+                  close
+                }
+                aria-label="إغلاق البحث"
+                className="
+                  grid
+                  h-9
+                  w-9
+                  shrink-0
+                  touch-manipulation
+                  place-items-center
+                  rounded-xl
+                  border
+                  border-slate-200
+                  bg-slate-50
+                  text-slate-600
+                  transition
+
+                  hover:bg-slate-100
+
+                  active:scale-95
+
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-orange-500
+
+                  dark:border-white/10
+                  dark:bg-white/5
+                  dark:text-slate-300
+                "
+              >
+                <X
+                  size={
+                    18
+                  }
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+
+            {/* Search input */}
+            <div className="relative">
+              <Search
+                size={19}
+                aria-hidden="true"
+                className="
+                  pointer-events-none
+                  absolute
+                  right-4
+                  top-1/2
+                  -translate-y-1/2
+                  text-orange-500
+                "
+              />
+
+              <input
+                ref={
+                  inputRef
+                }
+                type="search"
+                value={
+                  query
+                }
+                onChange={(
+                  event,
+                ) => {
+                  setQuery(
+                    event
+                      .target
+                      .value,
+                  );
+                }}
+                onKeyDown={
+                  handleInputKeyDown
+                }
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={
+                  false
+                }
+                enterKeyHint="search"
+                maxLength={
+                  80
+                }
+                placeholder="مثال: دجاج، أرز، حلويات..."
+                aria-label="ابحث عن وصفة"
+                className="
+                  h-12
+                  w-full
+                  rounded-2xl
+                  border
+                  border-slate-200
+                  bg-slate-50
+                  py-2
+                  pl-11
+                  pr-11
+                  text-base
+                  font-bold
+                  text-slate-900
+                  outline-none
+                  transition
+
+                  focus:border-orange-500
+                  focus:ring-4
+                  focus:ring-orange-500/10
+
+                  dark:border-white/10
+                  dark:bg-black/20
+                  dark:text-white
+
+                  sm:text-sm
+                "
+              />
+
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery(
+                      "",
+                    );
+
+                    setResults(
+                      [],
+                    );
+
+                    setError(
+                      false,
+                    );
+
+                    try {
+                      inputRef.current?.focus(
+                        {
+                          preventScroll:
+                            true,
+                        },
+                      );
+                    } catch {
+                      inputRef.current?.focus();
+                    }
+                  }}
+                  aria-label="مسح البحث"
+                  className="
+                    absolute
+                    left-2
+                    top-1/2
+                    grid
+                    h-8
+                    w-8
+                    -translate-y-1/2
+                    touch-manipulation
+                    place-items-center
+                    rounded-lg
+                    text-slate-500
+
+                    hover:bg-slate-200
+                    active:scale-95
+
+                    dark:hover:bg-white/10
+                  "
+                >
+                  <X
+                    size={
+                      15
+                    }
+                    aria-hidden="true"
+                  />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Results */}
+          <div
+            className="
+              min-h-0
+              flex-1
+              overscroll-contain
+              overflow-y-auto
+              p-2
+            "
+            style={{
+              maxHeight:
+                `${resultsHeight}px`,
+              WebkitOverflowScrolling:
+                "touch",
+            }}
+            aria-live="polite"
+          >
+            {normalizeQuery(
+              query,
+            ).length <
+            MIN_QUERY_LENGTH ? (
+              <div
+                className="
+                  px-4
+                  py-8
+                  text-center
+                  text-sm
+                  font-bold
+                  text-slate-500
+
+                  dark:text-slate-400
+                "
+              >
+                اكتب حرفين على الأقل
+                لعرض النتائج.
+              </div>
+            ) : loading ? (
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-center
+                  gap-3
+                  px-4
+                  py-8
+                  text-sm
+                  font-bold
+                  text-slate-500
+
+                  dark:text-slate-400
+                "
+              >
+                <span
+                  className="
+                    h-5
+                    w-5
+                    animate-spin
+                    rounded-full
+                    border-2
+                    border-slate-300
+                    border-t-orange-500
+                  "
+                  aria-hidden="true"
+                />
+
+                جاري البحث...
+              </div>
+            ) : error ? (
+              <div
+                className="
+                  px-4
+                  py-8
+                  text-center
+                "
+              >
+                <p
+                  className="
+                    text-sm
+                    font-bold
+                    text-red-600
+
+                    dark:text-red-400
+                  "
+                >
+                  تعذر إكمال البحث
+                  الآن.
+                </p>
 
                 <button
                   type="button"
-                  aria-label="إغلاق البحث"
-                  onClick={closeSearch}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-gray-100 text-gray-500 transition duration-200 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400 dark:hover:border-red-400/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                  onClick={() => {
+                    /*
+                     * إعادة تشغيل البحث
+                     * بتغيير القيمة مؤقتًا.
+                     */
+                    const current =
+                      query;
+
+                    setQuery(
+                      "",
+                    );
+
+                    window.setTimeout(
+                      () => {
+                        setQuery(
+                          current,
+                        );
+                      },
+                      0,
+                    );
+                  }}
+                  className="
+                    mt-3
+                    rounded-xl
+                    bg-orange-500
+                    px-4
+                    py-2
+                    text-xs
+                    font-bold
+                    text-white
+                    transition
+
+                    hover:bg-orange-600
+                    active:scale-95
+                  "
                 >
-                  <X
-                    size={18}
-                    strokeWidth={2.2}
-                  />
+                  إعادة المحاولة
                 </button>
               </div>
+            ) : results.length >
+              0 ? (
+              <ul
+                className="space-y-1"
+                aria-label="نتائج البحث"
+              >
+                {results.map(
+                  (
+                    recipe,
+                    index,
+                  ) => {
+                    const active =
+                      index ===
+                      activeIndex;
 
-              {/*
-              |--------------------------------------------------------------------------
-              | حقل البحث
-              |--------------------------------------------------------------------------
-              */}
-
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
-                  {isSearching ? (
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-orange-500 dark:border-gray-600 dark:border-t-orange-500" />
-                  ) : (
-                    <Search
-                      size={20}
-                      className="text-orange-500"
-                    />
-                  )}
-                </div>
-
-                <input
-                  ref={inputRef}
-                  type="search"
-                  value={searchTerm}
-                  autoComplete="off"
-                  enterKeyHint="search"
-                  aria-label="ابحث عن وصفة"
-                  placeholder="مثال: دجاج، رز، حلويات..."
-                  onKeyDown={handleKeyDown}
-                  onChange={(event) => {
-                    setSearchTerm(event.target.value);
-                  }}
-                  className="h-[54px] w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-12 pr-12 text-sm font-medium text-gray-900 outline-none transition duration-200 placeholder:text-gray-400 focus:border-orange-500/70 focus:bg-white focus:ring-4 focus:ring-orange-500/10 dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-black/30 sm:text-[15px]"
-                />
-
-                {hasQuery ? (
-                  <button
-                    type="button"
-                    aria-label="مسح البحث"
-                    onClick={clearSearch}
-                    className="absolute inset-y-0 left-3 my-auto flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-200 hover:text-gray-800 dark:hover:bg-white/10 dark:hover:text-white"
-                  >
-                    <X size={16} />
-                  </button>
-                ) : (
-                  <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                    <div className="hidden items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-[10px] font-semibold text-gray-500 dark:border-white/10 dark:bg-white/5 sm:flex">
-                      <Command size={11} />
-                      <span>K</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/*
-            |--------------------------------------------------------------------------
-            | المحتوى والنتائج
-            |--------------------------------------------------------------------------
-            */}
-
-            <div className="bg-gradient-to-b from-transparent to-gray-50 transition-colors duration-300 dark:to-black/10">
-              <AnimatePresence mode="wait">
-                {!hasQuery ? (
-                  /*
-                  |--------------------------------------------------------------------------
-                  | الاقتراحات السريعة
-                  |--------------------------------------------------------------------------
-                  */
-
-                  <motion.div
-                    key="quick-searches"
-                    initial={{
-                      opacity: 0,
-                    }}
-                    animate={{
-                      opacity: 1,
-                    }}
-                    exit={{
-                      opacity: 0,
-                    }}
-                    className="p-4"
-                  >
-                    <div className="mb-3 flex items-center justify-between">
-                      <p className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300">
-                        <Sparkles
-                          size={14}
-                          className="text-orange-500"
-                        />
-
-                        اقتراحات سريعة
-                      </p>
-
-                      <span className="text-[10px] text-gray-500">
-                        اختر بكلمة واحدة
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {QUICK_SEARCHES.map(
-                        (suggestion) => (
-                          <button
-                            key={suggestion}
-                            type="button"
-                            onClick={() =>
-                              selectQuickSearch(
-                                suggestion
-                              )
-                            }
-                            className="group flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-gray-300 dark:hover:border-orange-500/40 dark:hover:bg-orange-500/10 dark:hover:text-orange-400"
-                          >
-                            <UtensilsCrossed
-                              size={13}
-                              className="text-gray-500 transition group-hover:text-orange-500"
-                            />
-
-                            {suggestion}
-                          </button>
+                    const meta =
+                      [
+                        recipe.country,
+                        recipe.category,
+                      ]
+                        .filter(
+                          Boolean,
                         )
-                      )}
-                    </div>
+                        .join(
+                          " • ",
+                        );
 
-                    <div className="mt-4 rounded-2xl border border-orange-500/15 bg-orange-500/[0.06] p-3">
-                      <p className="flex items-start gap-2 text-[11px] leading-5 text-gray-500 dark:text-gray-400">
-                        <Sparkles
-                          size={14}
-                          className="mt-0.5 shrink-0 text-orange-500"
-                        />
-
-                        يفهم البحث كلمات مثل فراخ بدل
-                        دجاج، رز بدل أرز، وبندورة بدل
-                        طماطم.
-                      </p>
-                    </div>
-                  </motion.div>
-                ) : !hasEnoughCharacters ? (
-                  /*
-                  |--------------------------------------------------------------------------
-                  | أقل من حرفين
-                  |--------------------------------------------------------------------------
-                  */
-
-                  <motion.div
-                    key="minimum-characters"
-                    initial={{
-                      opacity: 0,
-                      y: 4,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    exit={{
-                      opacity: 0,
-                    }}
-                    className="flex flex-col items-center justify-center px-6 py-9 text-center"
-                  >
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500">
-                      <Search size={23} />
-                    </div>
-
-                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
-                      أكمل كتابة الكلمة
-                    </p>
-
-                    <p className="mt-1 text-xs text-gray-500">
-                      اكتب حرفين على الأقل لعرض النتائج
-                    </p>
-                  </motion.div>
-                ) : filteredResults.length > 0 ? (
-                  /*
-                  |--------------------------------------------------------------------------
-                  | قائمة النتائج
-                  |--------------------------------------------------------------------------
-                  */
-
-                  <motion.div
-                    key="search-results"
-                    initial={{
-                      opacity: 0,
-                      y: 5,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    exit={{
-                      opacity: 0,
-                    }}
-                  >
-                    <div className="flex items-center justify-between px-4 pb-2 pt-3">
-                      <p className="text-[11px] font-medium text-gray-500">
-                        وجدنا {filteredResults.length} نتائج
-                        مناسبة
-                      </p>
-
-                      <p className="hidden text-[10px] text-gray-600 sm:block dark:text-gray-400">
-                        ↑ ↓ للتنقل • Enter للفتح
-                      </p>
-                    </div>
-
-                    <div
-                      ref={resultsRef}
-                      className="max-h-[340px] overflow-y-auto px-2 pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-orange-500/60"
-                    >
-                      {filteredResults.map(
-                        (recipe, index) => {
-                          const isActive =
-                            activeIndex === index;
-
-                          return (
-                            <Link
-                              key={recipe.slug}
-                              data-result-index={index}
-                              href={`/recipe/${encodeURIComponent(
-                                recipe.slug
-                              )}`}
-                              onClick={closeSearch}
-                              onMouseEnter={() =>
-                                setActiveIndex(index)
-                              }
-                              className={`group relative mb-1 flex items-center gap-3 overflow-hidden rounded-2xl border px-3 py-3 transition-all duration-200 ${
-                                isActive
-                                  ? "border-orange-500/40 bg-orange-500/10 shadow-[0_10px_30px_-18px_rgba(249,115,22,0.8)]"
-                                  : "border-transparent hover:border-gray-200 hover:bg-white dark:hover:border-white/10 dark:hover:bg-white/[0.04]"
-                              }`}
-                            >
-                              {isActive && (
-                                <motion.span
-                                  layoutId="active-search-result"
-                                  className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-orange-500"
-                                  transition={{
-                                    type: "spring",
-                                    stiffness: 420,
-                                    damping: 35,
-                                  }}
-                                />
-                              )}
-
-                              <div
-                                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition duration-200 ${
-                                  isActive
-                                    ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/20"
-                                    : "bg-gray-100 text-gray-500 group-hover:bg-orange-500/10 group-hover:text-orange-500 dark:bg-white/[0.05]"
-                                }`}
-                              >
-                                <ChefHat
-                                  size={20}
-                                  strokeWidth={2}
-                                />
-                              </div>
-
-                              <div className="min-w-0 flex-1">
-                                <p
-                                  className={`line-clamp-2 text-[13px] font-bold leading-6 transition ${
-                                    isActive
-                                      ? "text-gray-900 dark:text-white"
-                                      : "text-gray-700 group-hover:text-gray-900 dark:text-gray-200 dark:group-hover:text-white"
-                                  }`}
-                                >
-                                  {highlightTitle(
-                                    recipe.title,
-                                    debouncedTerm
-                                  )}
-                                </p>
-
-
-                                {recipe.meta && (
-                                  <p className="mt-0.5 truncate text-[10px] text-gray-500 dark:text-gray-400">
-                                    {recipe.meta}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div
-                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition duration-200 ${
-                                  isActive
-                                    ? "bg-orange-500 text-white"
-                                    : "text-gray-500 group-hover:bg-orange-500/10 group-hover:text-orange-500 dark:text-gray-400"
-                                }`}
-                              >
-                                <ArrowUpLeft
-                                  size={16}
-                                  strokeWidth={2.2}
-                                />
-                              </div>
-
-                              {index === 0 && (
-                                <span className="absolute left-3 top-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[8px] font-bold text-emerald-400">
-                                  الأقرب
-                                </span>
-                              )}
-                            </Link>
-                          );
+                    return (
+                      <li
+                        key={
+                          recipe.slug ||
+                          recipe.id
                         }
-                      )}
-                    </div>
-                  </motion.div>
-                ) : (
-                  /*
-                  |--------------------------------------------------------------------------
-                  | لا توجد نتائج
-                  |--------------------------------------------------------------------------
-                  */
+                      >
+                        <Link
+                          href={`/recipe/${encodeURIComponent(
+                            recipe.slug,
+                          )}`}
+                          prefetch={
+                            false
+                          }
+                          onClick={
+                            close
+                          }
+                          onMouseEnter={() => {
+                            setActiveIndex(
+                              index,
+                            );
+                          }}
+                          onFocus={() => {
+                            setActiveIndex(
+                              index,
+                            );
+                          }}
+                          className={`
+                            flex
+                            touch-manipulation
+                            items-center
+                            gap-3
+                            rounded-2xl
+                            border
+                            px-3
+                            py-3
+                            transition
+                            duration-150
 
-                  <motion.div
-                    key="no-results"
-                    initial={{
-                      opacity: 0,
-                      scale: 0.96,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                    }}
-                    exit={{
-                      opacity: 0,
-                    }}
-                    className="flex flex-col items-center justify-center px-6 py-10 text-center"
-                  >
-                    <div className="relative mb-4">
-                      <div className="absolute inset-0 rounded-2xl bg-orange-500/20 blur-xl" />
+                            ${
+                              active
+                                ? "border-orange-500/40 bg-orange-500/10"
+                                : "border-transparent hover:bg-slate-50 dark:hover:bg-white/[0.04]"
+                            }
+                          `}
+                        >
+                          <span
+                            className={`
+                              grid
+                              h-10
+                              w-10
+                              shrink-0
+                              place-items-center
+                              rounded-xl
 
-                      <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/10 text-orange-500">
-                        <UtensilsCrossed size={25} />
-                      </div>
-                    </div>
+                              ${
+                                active
+                                  ? "bg-orange-500 text-white"
+                                  : "bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300"
+                              }
+                            `}
+                          >
+                            <ChefHat
+                              size={
+                                18
+                              }
+                              aria-hidden="true"
+                            />
+                          </span>
 
-                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
-                      لم نجد وصفة مطابقة
-                    </p>
+                          <span
+                            className="
+                              min-w-0
+                              flex-1
+                            "
+                          >
+                            <span
+                              className="
+                                line-clamp-2
+                                block
+                                text-[13px]
+                                font-black
+                                leading-6
+                                text-slate-900
 
-                    <p className="mt-1 max-w-[260px] text-xs leading-5 text-gray-500">
-                      جرّب كلمة أبسط مثل دجاج، أرز،
-                      بطاطس أو حلويات.
-                    </p>
+                                dark:text-white
+                              "
+                            >
+                              {
+                                recipe.title
+                              }
+                            </span>
 
-                    <button
-                      type="button"
-                      onClick={clearSearch}
-                      className="mt-4 rounded-xl bg-orange-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-orange-600 active:scale-95"
-                    >
-                      البحث بكلمة أخرى
-                    </button>
-                  </motion.div>
+                            {meta && (
+                              <span
+                                className="
+                                  mt-0.5
+                                  block
+                                  truncate
+                                  text-[10px]
+                                  font-semibold
+                                  text-slate-500
+
+                                  dark:text-slate-400
+                                "
+                              >
+                                {
+                                  meta
+                                }
+                              </span>
+                            )}
+                          </span>
+
+                          <ArrowUpLeft
+                            size={
+                              16
+                            }
+                            aria-hidden="true"
+                            className="
+                              shrink-0
+                              text-orange-500
+                            "
+                          />
+                        </Link>
+                      </li>
+                    );
+                  },
                 )}
-              </AnimatePresence>
-            </div>
+              </ul>
+            ) : (
+              <div
+                className="
+                  px-4
+                  py-8
+                  text-center
+                  text-sm
+                  font-bold
+                  text-slate-500
 
-            {/*
-            |--------------------------------------------------------------------------
-            | الشريط السفلي
-            |--------------------------------------------------------------------------
-            */}
-
-            <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] text-gray-500 transition-colors duration-300 dark:border-white/10 dark:bg-black/10">
-              <span className="flex items-center gap-1.5">
-                <Sparkles
-                  size={12}
-                  className="text-orange-500"
-                />
-
-                بحث سريع وذكي
-              </span>
-
-              
-            </div>
-          </motion.section>
-        )}
-      </AnimatePresence>
+                  dark:text-slate-400
+                "
+              >
+                لم نجد وصفة مطابقة.
+                جرّب كلمة أبسط.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

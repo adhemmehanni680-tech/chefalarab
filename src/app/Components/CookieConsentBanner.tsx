@@ -1,23 +1,9 @@
-// CookieConsentBanner.tsx
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-} from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import {
-  BarChart3,
-  Check,
-  Cookie,
-  LockKeyhole,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { Cookie, ShieldCheck } from "lucide-react";
 
 import {
   applyConsent,
@@ -25,763 +11,616 @@ import {
   storeConsent,
   type ConsentChoice,
 } from "@/lib/consent";
+import { isAdFreePath } from "@/lib/routePolicy";
+
+type ConsentProvider = "checking" | "google" | "custom";
+
+type TcfTcData = {
+  gdprApplies?: boolean;
+  listenerId?: number;
+};
+
+type TcfApi = (
+  command: string,
+  version: number,
+  callback: (data: unknown, success?: boolean) => void,
+  parameter?: unknown,
+) => void;
+
+type GoogleFcCallbackEntry =
+  | (() => void)
+  | {
+      CONSENT_API_READY?: () => void;
+      CONSENT_DATA_READY?: () => void;
+      CONSENT_MODE_DATA_READY?: () => void;
+    };
+
+type GoogleFc = {
+  callbackQueue?: GoogleFcCallbackEntry[];
+  showRevocationMessage?: () => void;
+};
+
+declare global {
+  interface Window {
+    __tcfapi?: TcfApi;
+    googlefc?: GoogleFc;
+  }
+}
+
+/*
+ * Keep this short.
+ *
+ * A long wait can make the consent UI appear late and become a Lighthouse
+ * LCP candidate. This component never blocks the page content or navigation.
+ */
+const GOOGLE_CMP_DECISION_TIMEOUT = 2500;
 
 /* =========================================================
-   الصفحات التي يجب أن يستطيع المستخدم قراءتها قبل الاختيار
+   Google CMP helpers
    ========================================================= */
 
-const LEGAL_ROUTES = [
-  "/cookie_policy",
-  "/privacy_policy",
-  "/terms_conditions",
-];
+function isGoogleCmpPreview(): boolean {
+  try {
+    const params = new URLSearchParams(window.location.search);
+
+    const forceShow = params.get("fc") === "alwaysshow";
+    const type = params.get("fctype");
+
+    return forceShow && (type === null || type === "gdpr");
+  } catch {
+    return false;
+  }
+}
+
+function ensureGoogleCallbackQueue(): GoogleFcCallbackEntry[] {
+  window.googlefc = window.googlefc || {};
+
+  window.googlefc.callbackQueue =
+    window.googlefc.callbackQueue || [];
+
+  return window.googlefc.callbackQueue;
+}
+
+function openGoogleCmpPrivacySettings(): void {
+  const openGoogleSettings = () => {
+    const showRevocationMessage =
+      window.googlefc?.showRevocationMessage;
+
+    if (typeof showRevocationMessage === "function") {
+      showRevocationMessage.call(window.googlefc);
+    }
+  };
+
+  /*
+   * Google CMP may already be ready.
+   */
+  openGoogleSettings();
+
+  /*
+   * Otherwise wait until Google signals that its consent API is ready.
+   */
+  if (
+    typeof window.googlefc?.showRevocationMessage !== "function"
+  ) {
+    ensureGoogleCallbackQueue().push({
+      CONSENT_API_READY: openGoogleSettings,
+    });
+  }
+}
 
 /* =========================================================
-   Cookie Consent
+   IAB TCF watcher
+   ========================================================= */
+
+/**
+ * Watches for an IAB TCF CMP without blocking the page.
+ *
+ * If Google CMP loads after the local timeout, the listener remains active
+ * temporarily and can still switch the provider to Google. This helps avoid
+ * showing two consent interfaces at the same time.
+ */
+function watchTcf(
+  onResult: (gdprApplies: boolean) => void,
+): () => void {
+  let active = true;
+  let listenerId: number | undefined;
+  let attached = false;
+
+  const attachTcfListener = () => {
+    if (
+      !active ||
+      attached ||
+      typeof window.__tcfapi !== "function"
+    ) {
+      return;
+    }
+
+    try {
+      window.__tcfapi(
+        "addEventListener",
+        2,
+        (data, success) => {
+          if (
+            !active ||
+            success === false ||
+            !data ||
+            typeof data !== "object"
+          ) {
+            return;
+          }
+
+          const tcData = data as TcfTcData;
+
+          if (typeof tcData.listenerId === "number") {
+            listenerId = tcData.listenerId;
+          }
+
+          if (typeof tcData.gdprApplies === "boolean") {
+            onResult(tcData.gdprApplies);
+          }
+        },
+      );
+
+      attached = true;
+    } catch {
+      /*
+       * Google CMP may not be fully initialized yet.
+       * Polling / callbackQueue can retry later.
+       */
+    }
+  };
+
+  /*
+   * Try immediately.
+   */
+  attachTcfListener();
+
+  /*
+   * Try again when Google CMP says its consent API is ready.
+   */
+  ensureGoogleCallbackQueue().push({
+    CONSENT_API_READY: attachTcfListener,
+  });
+
+  /*
+   * Short lightweight polling window for CMP implementations that expose
+   * __tcfapi after hydration without firing Google's callback immediately.
+   */
+  const pollTimer = window.setInterval(
+    attachTcfListener,
+    150,
+  );
+
+  const stopPollTimer = window.setTimeout(() => {
+    window.clearInterval(pollTimer);
+  }, 12000);
+
+  return () => {
+    active = false;
+
+    window.clearInterval(pollTimer);
+    window.clearTimeout(stopPollTimer);
+
+    if (
+      typeof listenerId === "number" &&
+      typeof window.__tcfapi === "function"
+    ) {
+      try {
+        window.__tcfapi(
+          "removeEventListener",
+          2,
+          () => {},
+          listenerId,
+        );
+      } catch {
+        /*
+         * Ignore CMP cleanup failures.
+         */
+      }
+    }
+  };
+}
+
+/* =========================================================
+   Component
    ========================================================= */
 
 export default function CookieConsentBanner() {
   const pathname = usePathname();
 
-  /*
-   * تبدأ بـ false حتى لا تظهر النافذة لحظيًا
-   * قبل قراءة اختيار المستخدم المحفوظ.
-   */
+  const [provider, setProvider] =
+    useState<ConsentProvider>("checking");
+
   const [open, setOpen] = useState(false);
-
-  /*
-   * mounted لمعرفة أن الكومبوننت أصبح داخل المتصفح.
-   */
-  const [mounted, setMounted] = useState(false);
-
-  /*
-   * يمنع رسم نافذة الموافقة قبل انتهاء فحص localStorage.
-   */
-  const [consentChecked, setConsentChecked] =
-    useState(false);
 
   const [manuallyOpened, setManuallyOpened] =
     useState(false);
 
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const acceptButtonRef =
-    useRef<HTMLButtonElement>(null);
+  const providerRef =
+    useRef<ConsentProvider>("checking");
 
-  const isLegalPage = LEGAL_ROUTES.some(
-    (route) =>
-      pathname === route ||
-      pathname.startsWith(`${route}/`),
-  );
+  const initializedCustomRef = useRef(false);
 
-  /*
-   * نسمح بقراءة صفحات السياسات بدون موافقة.
-   * عند الانتقال لأي صفحة أخرى تعود شاشة الاختيار.
-   */
-  const shouldShow =
-    consentChecked &&
-    open &&
-    (!isLegalPage || manuallyOpened);
+  const adFreeRoute = isAdFreePath(pathname);
 
-  /* =========================================================
-     قراءة الاختيار المحفوظ
-     ========================================================= */
+  /* =======================================================
+     Detect Google CMP / custom consent provider
+     ======================================================= */
 
   useEffect(() => {
-    setMounted(true);
+    /*
+     * Google Funding Choices preview mode.
+     */
+    if (isGoogleCmpPreview()) {
+      providerRef.current = "google";
 
-    try {
-      const storedConsent = getStoredConsent();
+      setProvider("google");
+      setOpen(false);
+      setManuallyOpened(false);
 
-      if (storedConsent) {
-        /*
-         * المستخدم اختار من قبل.
-         * نطبّق اختياره ولا نظهر النافذة.
-         */
-        applyConsent(storedConsent);
-        setOpen(false);
-      } else {
-        /*
-         * لا يوجد اختيار محفوظ.
-         * نرفض الكوكيز غير الضرورية مؤقتًا،
-         * ثم نظهر نافذة الاختيار.
-         */
-        applyConsent("rejected");
-        setOpen(true);
-      }
-    } catch (error) {
-      console.error(
-        "Failed to read cookie consent:",
-        error,
-      );
-
-      /*
-       * في حالة حدوث مشكلة في التخزين،
-       * نستخدم الوضع الآمن ونظهر الاختيار.
-       */
-      applyConsent("rejected");
-      setOpen(true);
-    } finally {
-      /*
-       * لا يتم رسم النافذة إلا بعد اكتمال الفحص.
-       */
-      setConsentChecked(true);
+      return;
     }
 
-    const openHandler = () => {
+    let settled = false;
+
+    /*
+     * Important:
+     *
+     * These functions intentionally do NOT start with "use".
+     * Names beginning with "use" are interpreted by ESLint as React Hooks.
+     */
+    const activateCustomProvider = () => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+
+      providerRef.current = "custom";
+
+      setProvider("custom");
+    };
+
+    const activateGoogleProvider = () => {
+      settled = true;
+
+      providerRef.current = "google";
+
+      setProvider("google");
+      setOpen(false);
+      setManuallyOpened(false);
+    };
+
+    const stopWatchingTcf = watchTcf(
+      (gdprApplies) => {
+        if (gdprApplies) {
+          activateGoogleProvider();
+          return;
+        }
+
+        activateCustomProvider();
+      },
+    );
+
+    /*
+     * Don't hold rendering while waiting for Google CMP.
+     *
+     * If no applicable Google/IAB CMP is detected quickly,
+     * use the local consent UI.
+     */
+    const decisionTimer = window.setTimeout(
+      activateCustomProvider,
+      GOOGLE_CMP_DECISION_TIMEOUT,
+    );
+
+    return () => {
+      window.clearTimeout(decisionTimer);
+      stopWatchingTcf();
+    };
+  }, []);
+
+  /* =======================================================
+     Initialize custom consent
+     ======================================================= */
+
+  useEffect(() => {
+    if (
+      provider !== "custom" ||
+      initializedCustomRef.current
+    ) {
+      return;
+    }
+
+    initializedCustomRef.current = true;
+
+    const storedConsent = getStoredConsent();
+
+    /*
+     * Returning visitor:
+     * restore the previously selected choice.
+     */
+    if (storedConsent) {
+      applyConsent(storedConsent);
+      setOpen(false);
+
+      return;
+    }
+
+    /*
+     * Privacy-first default.
+     *
+     * Analytics / ad consent remains denied until the visitor accepts,
+     * while the site's content and navigation remain fully accessible.
+     */
+    applyConsent("rejected");
+    setOpen(true);
+  }, [provider]);
+
+  /* =======================================================
+     Global privacy-settings event
+     ======================================================= */
+
+  useEffect(() => {
+    const openConsentManager = () => {
+      /*
+       * European visitor handled by Google-certified CMP.
+       */
+      if (providerRef.current === "google") {
+        openGoogleCmpPrivacySettings();
+        return;
+      }
+
+      /*
+       * Other visitors use Chef Al Arab's local consent UI.
+       */
       setManuallyOpened(true);
       setOpen(true);
     };
 
     window.addEventListener(
       "open-consent-manager",
-      openHandler,
+      openConsentManager,
     );
 
     return () => {
       window.removeEventListener(
         "open-consent-manager",
-        openHandler,
+        openConsentManager,
       );
     };
   }, []);
 
-  /* =========================================================
-     منع التمرير والتفاعل مع الموقع
-     ========================================================= */
+  /* =======================================================
+     User choice
+     ======================================================= */
 
-  useEffect(() => {
-    if (
-      !mounted ||
-      !consentChecked ||
-      !shouldShow
-    ) {
+  const choose = (choice: ConsentChoice): void => {
+    /*
+     * Never let the local UI override Google CMP.
+     */
+    if (providerRef.current !== "custom") {
       return;
     }
 
-    const html = document.documentElement;
-    const body = document.body;
+    storeConsent(choice);
+    applyConsent(choice);
 
-    const previousHtmlOverflow = html.style.overflow;
-    const previousBodyOverflow = body.style.overflow;
-    const previousBodyOverscrollBehavior =
-      body.style.overscrollBehavior;
-    const previousBodyPaddingRight =
-      body.style.paddingRight;
-
-    /*
-     * منع تحرك الصفحة عند اختفاء شريط التمرير.
-     */
-    const scrollbarWidth =
-      window.innerWidth -
-      document.documentElement.clientWidth;
-
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    body.style.overscrollBehavior = "none";
-
-    if (scrollbarWidth > 0) {
-      body.style.paddingRight = `${scrollbarWidth}px`;
-    }
-
-    /*
-     * تعطيل جميع عناصر الصفحة الموجودة خلف نافذة الموافقة.
-     */
-    const overlay = document.getElementById(
-      "cookie-consent-overlay",
-    );
-
-    const disabledElements: Array<{
-      element: HTMLElement;
-      hadInert: boolean;
-      previousAriaHidden: string | null;
-    }> = [];
-
-    if (overlay) {
-      Array.from(document.body.children).forEach(
-        (child) => {
-          if (!(child instanceof HTMLElement)) return;
-          if (child === overlay) return;
-          if (child.contains(overlay)) return;
-
-          disabledElements.push({
-            element: child,
-            hadInert: child.hasAttribute("inert"),
-            previousAriaHidden:
-              child.getAttribute("aria-hidden"),
-          });
-
-          child.setAttribute("inert", "");
-          child.setAttribute("aria-hidden", "true");
-        },
-      );
-    }
-
-    /*
-     * وضع المؤشر داخل النافذة تلقائيًا.
-     */
-    const focusFrame =
-      window.requestAnimationFrame(() => {
-        acceptButtonRef.current?.focus();
-      });
-
-    /*
-     * حبس التنقل بالكيبورد داخل نافذة الموافقة،
-     * ومنع إغلاقها بزر Escape.
-     */
-    const handleKeyDown = (
-      event: globalThis.KeyboardEvent,
-    ) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-
-      if (event.key !== "Tab") return;
-
-      const dialog = dialogRef.current;
-
-      if (!dialog) return;
-
-      const focusableElements = Array.from(
-        dialog.querySelectorAll<HTMLElement>(
-          [
-            "button:not([disabled])",
-            "a[href]",
-            "input:not([disabled])",
-            "select:not([disabled])",
-            "textarea:not([disabled])",
-            '[tabindex]:not([tabindex="-1"])',
-          ].join(","),
-        ),
-      ).filter(
-        (element) =>
-          element.offsetWidth > 0 ||
-          element.offsetHeight > 0 ||
-          element === document.activeElement,
-      );
-
-      if (focusableElements.length === 0) {
-        event.preventDefault();
-        return;
-      }
-
-      const firstElement = focusableElements[0];
-      const lastElement =
-        focusableElements[
-          focusableElements.length - 1
-        ];
-
-      if (
-        event.shiftKey &&
-        document.activeElement === firstElement
-      ) {
-        event.preventDefault();
-        lastElement.focus();
-        return;
-      }
-
-      if (
-        !event.shiftKey &&
-        document.activeElement === lastElement
-      ) {
-        event.preventDefault();
-        firstElement.focus();
-      }
-    };
-
-    document.addEventListener(
-      "keydown",
-      handleKeyDown,
-      true,
-    );
-
-    return () => {
-      window.cancelAnimationFrame(focusFrame);
-
-      document.removeEventListener(
-        "keydown",
-        handleKeyDown,
-        true,
-      );
-
-      html.style.overflow = previousHtmlOverflow;
-      body.style.overflow = previousBodyOverflow;
-      body.style.overscrollBehavior =
-        previousBodyOverscrollBehavior;
-      body.style.paddingRight =
-        previousBodyPaddingRight;
-
-      disabledElements.forEach(
-        ({
-          element,
-          hadInert,
-          previousAriaHidden,
-        }) => {
-          if (!hadInert) {
-            element.removeAttribute("inert");
-          }
-
-          if (previousAriaHidden === null) {
-            element.removeAttribute("aria-hidden");
-          } else {
-            element.setAttribute(
-              "aria-hidden",
-              previousAriaHidden,
-            );
-          }
-        },
-      );
-    };
-  }, [mounted, consentChecked, shouldShow]);
-
-  /* =========================================================
-     حفظ الاختيار
-     ========================================================= */
-
-  const choose = (choice: ConsentChoice) => {
-    try {
-      storeConsent(choice);
-      applyConsent(choice);
-      logConsent(choice);
-
-      setOpen(false);
-      setManuallyOpened(false);
-    } catch (error) {
-      console.error(
-        "Failed to save cookie consent:",
-        error,
-      );
-    }
+    setOpen(false);
+    setManuallyOpened(false);
   };
 
-  /*
-   * منع زر Escape من إغلاق النافذة.
-   */
-  const preventDialogClose = (
-    event: ReactKeyboardEvent<HTMLDivElement>,
-  ) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  };
+  /* =======================================================
+     Visibility rules
+     ======================================================= */
 
-  /*
-   * لا نعرض أي شيء أثناء SSR أو أثناء فحص الاختيار.
-   * هذا هو الجزء الذي يمنع ظهور النافذة لعدة ثوانٍ
-   * للمستخدم الذي سبق له الاختيار.
-   */
   if (
-    !mounted ||
-    !consentChecked ||
-    !shouldShow
+    provider !== "custom" ||
+    !open ||
+    (adFreeRoute && !manuallyOpened)
   ) {
     return null;
   }
 
-  const consentContent = (
-    <div
-      id="cookie-consent-overlay"
+  /* =======================================================
+     UI
+     ======================================================= */
+
+  return (
+    <aside
       dir="rtl"
-      role="presentation"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="cookie-consent-title"
+      aria-describedby="cookie-consent-description"
       className="
-        fixed inset-0 z-[2147483647]
-        flex min-h-[100dvh] items-center justify-center
-        overflow-y-auto px-3 py-5 sm:px-6 sm:py-8
+        fixed
+        inset-x-3
+        bottom-3
+        z-[100]
+        mx-auto
+        max-w-3xl
+        rounded-2xl
+        border
+        border-slate-200
+        bg-white/95
+        p-4
+        shadow-2xl
+        shadow-slate-950/20
+        backdrop-blur-md
+        dark:border-slate-700
+        dark:bg-slate-900/95
+        sm:bottom-5
+        sm:p-5
       "
     >
-      {/* خلفية مظلمة تمنع رؤية الصفحة بوضوح */}
-      <div
-        aria-hidden="true"
-        className="
-          absolute inset-0
-          bg-slate-950/90
-          backdrop-blur-xl
-        "
-      />
-
-      {/* تأثيرات جمالية */}
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute left-[-140px] top-[-140px]
-          h-[360px] w-[360px] rounded-full
-          bg-orange-500/20 blur-[110px]
-        "
-      />
-
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute bottom-[-160px] right-[-130px]
-          h-[400px] w-[400px] rounded-full
-          bg-amber-400/10 blur-[120px]
-        "
-      />
-
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute right-[20%] top-[20%]
-          h-[280px] w-[280px] rounded-full
-          bg-sky-500/10 blur-[120px]
-        "
-      />
-
-      {/* الإطار الخارجي المتدرج */}
-      <div
-        className="
-          relative z-10 w-full max-w-3xl
-          rounded-[30px]
-          bg-gradient-to-br
-          from-orange-400/80
-          via-white/15
-          to-slate-700/40
-          p-[1px]
-          shadow-[0_30px_100px_rgba(0,0,0,0.65)]
-        "
-      >
+      <div className="flex items-start gap-3">
         <div
-          ref={dialogRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="cookie-consent-title"
-          aria-describedby="cookie-consent-description"
-          onKeyDown={preventDialogClose}
           className="
-            relative overflow-hidden rounded-[29px]
-            border border-white/5
-            bg-[linear-gradient(145deg,rgba(15,23,42,0.99),rgba(2,6,23,0.99))]
+            grid
+            h-11
+            w-11
+            shrink-0
+            place-items-center
+            rounded-xl
+            bg-orange-50
+            text-orange-600
+            dark:bg-orange-500/10
+            dark:text-orange-400
           "
         >
-          {/* الزخرفة العلوية */}
-          <div
+          <Cookie
+            className="h-5 w-5"
             aria-hidden="true"
-            className="
-              absolute inset-x-0 top-0 h-32
-              bg-gradient-to-b from-orange-500/10 to-transparent
-            "
           />
+        </div>
 
-          <div className="relative p-5 sm:p-7 lg:p-9">
-            {/* رأس النافذة */}
-            <div className="flex flex-col items-center text-center">
-              <div className="relative">
-                <div
-                  aria-hidden="true"
-                  className="
-                    absolute inset-0 scale-150 rounded-full
-                    bg-orange-500/25 blur-2xl
-                  "
-                />
+        <div className="min-w-0 flex-1">
+          <div
+            className="
+              flex
+              items-center
+              gap-2
+              text-xs
+              font-bold
+              text-emerald-700
+              dark:text-emerald-300
+            "
+          >
+            <ShieldCheck
+              className="h-4 w-4"
+              aria-hidden="true"
+            />
 
-                <div
-                  className="
-                    relative flex h-16 w-16 items-center justify-center
-                    rounded-2xl
-                    border border-orange-300/30
-                    bg-gradient-to-br from-orange-400 to-orange-600
-                    text-slate-950
-                    shadow-[0_14px_40px_rgba(249,115,22,0.32)]
-                    sm:h-[72px] sm:w-[72px]
-                  "
-                >
-                  <Cookie
-                    className="h-8 w-8 sm:h-9 sm:w-9"
-                    strokeWidth={2.2}
-                  />
-                </div>
+            ملفات الموقع الضرورية مفعّلة دائمًا
+          </div>
 
-                <span
-                  className="
-                    absolute -bottom-1 -left-1
-                    flex h-7 w-7 items-center justify-center
-                    rounded-full border-4 border-slate-950
-                    bg-emerald-500 text-white
-                  "
-                >
-                  <LockKeyhole className="h-3.5 w-3.5" />
-                </span>
-              </div>
+          <h2
+            id="cookie-consent-title"
+            className="
+              mt-1
+              text-lg
+              font-black
+              text-slate-950
+              dark:text-white
+            "
+          >
+            إعدادات الخصوصية والكوكيز
+          </h2>
 
-              <div
-                className="
-                  mt-5 inline-flex items-center gap-2
-                  rounded-full border border-orange-400/20
-                  bg-orange-400/10 px-3 py-1.5
-                  text-xs font-bold text-orange-300
-                "
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                خصوصيتك واختيارك أولًا
-              </div>
+          <p
+            id="cookie-consent-description"
+            className="
+              mt-1
+              text-sm
+              font-medium
+              leading-6
+              text-slate-600
+              dark:text-slate-300
+            "
+          >
+            يمكنك السماح بملفات التحليلات والإعلانات أو
+            رفضها. لن يمنعك هذا الإشعار من قراءة المحتوى
+            أو استخدام الموقع.
+          </p>
 
-              <h2
-                id="cookie-consent-title"
-                className="
-                  mt-4 max-w-2xl
-                  text-2xl font-black leading-tight text-white
-                  sm:text-3xl
-                "
-              >
-                اختر إعدادات الخصوصية للمتابعة
-              </h2>
-
-              <p
-                id="cookie-consent-description"
-                className="
-                  mt-3 max-w-2xl
-                  text-sm leading-7 text-slate-300
-                  sm:text-base sm:leading-8
-                "
-              >
-                لن تتمكن من تصفح أو استخدام الموقع قبل تحديد
-                اختيارك. نستخدم ملفات ضرورية لتشغيل الموقع،
-                وملفات اختيارية لتحليل الأداء وعرض الإعلانات.
-              </p>
-            </div>
-
-            {/* شرح أنواع الملفات */}
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div
-                className="
-                  rounded-2xl border border-emerald-400/15
-                  bg-emerald-400/[0.06] p-4
-                "
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className="
-                      flex h-10 w-10 shrink-0 items-center justify-center
-                      rounded-xl border border-emerald-400/20
-                      bg-emerald-400/10 text-emerald-400
-                    "
-                  >
-                    <ShieldCheck className="h-5 w-5" />
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-bold text-white">
-                      ملفات ضرورية
-                    </h3>
-
-                    <p className="mt-1 text-xs leading-6 text-slate-400">
-                      مطلوبة للأمان وحفظ اختيارك وتشغيل الوظائف
-                      الأساسية للموقع.
-                    </p>
-
-                    <span
-                      className="
-                        mt-2 inline-flex items-center gap-1.5
-                        text-xs font-semibold text-emerald-400
-                      "
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                      مفعّلة دائمًا
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="
-                  rounded-2xl border border-sky-400/15
-                  bg-sky-400/[0.06] p-4
-                "
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className="
-                      flex h-10 w-10 shrink-0 items-center justify-center
-                      rounded-xl border border-sky-400/20
-                      bg-sky-400/10 text-sky-400
-                    "
-                  >
-                    <BarChart3 className="h-5 w-5" />
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-bold text-white">
-                      ملفات اختيارية
-                    </h3>
-
-                    <p className="mt-1 text-xs leading-6 text-slate-400">
-                      تُستخدم لقياس الأداء وتحسين المحتوى وعرض
-                      الإعلانات طبقًا لاختيارك.
-                    </p>
-
-                    <span
-                      className="
-                        mt-2 inline-flex items-center gap-1.5
-                        text-xs font-semibold text-sky-400
-                      "
-                    >
-                      <LockKeyhole className="h-3.5 w-3.5" />
-                      تحتاج إلى موافقتك
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* روابط السياسات */}
-            <div
+          <div
+            className="
+              mt-3
+              flex
+              flex-wrap
+              gap-x-4
+              gap-y-2
+              text-xs
+              font-bold
+            "
+          >
+            <Link
+              href="/privacy_policy"
               className="
-                mt-5 rounded-2xl border border-white/[0.07]
-                bg-white/[0.035] px-4 py-3
+                text-orange-600
+                hover:underline
+                dark:text-orange-400
               "
             >
-              <p className="text-center text-xs leading-6 text-slate-400 sm:text-sm">
-                يمكنك مراجعة التفاصيل قبل اختيارك من خلال{" "}
-                <Link
-                  href="/cookie_policy"
-                  className="
-                    font-semibold text-orange-300
-                    underline decoration-orange-400/30
-                    underline-offset-4
-                    transition-colors hover:text-orange-200
-                  "
-                >
-                  سياسة ملفات الارتباط
-                </Link>
-                {"، "}
-                <Link
-                  href="/privacy_policy"
-                  className="
-                    font-semibold text-orange-300
-                    underline decoration-orange-400/30
-                    underline-offset-4
-                    transition-colors hover:text-orange-200
-                  "
-                >
-                  سياسة الخصوصية
-                </Link>
-                {" و "}
-                <Link
-                  href="/terms_conditions"
-                  className="
-                    font-semibold text-orange-300
-                    underline decoration-orange-400/30
-                    underline-offset-4
-                    transition-colors hover:text-orange-200
-                  "
-                >
-                  الشروط والأحكام
-                </Link>
-                .
-              </p>
-            </div>
+              سياسة الخصوصية
+            </Link>
 
-            {/* أزرار الاختيار */}
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <button
-                ref={acceptButtonRef}
-                type="button"
-                onClick={() => choose("accepted")}
-                className="
-                  group inline-flex min-h-14 w-full
-                  items-center justify-center gap-2.5
-                  rounded-2xl
-                  border border-orange-300/30
-                  bg-gradient-to-r from-orange-500 to-amber-500
-                  px-5 py-3
-                  text-sm font-black text-slate-950
-                  shadow-[0_14px_35px_rgba(249,115,22,0.22)]
-                  transition
-                  hover:-translate-y-0.5
-                  hover:from-orange-400 hover:to-amber-400
-                  hover:shadow-[0_18px_42px_rgba(249,115,22,0.32)]
-                  focus-visible:outline-none
-                  focus-visible:ring-4
-                  focus-visible:ring-orange-400/30
-                  active:translate-y-0
-                  sm:text-base
-                "
-              >
-                <Check
-                  className="
-                    h-5 w-5 transition-transform
-                    group-hover:scale-110
-                  "
-                />
-                قبول جميع الملفات
-              </button>
-
-              <button
-                type="button"
-                onClick={() => choose("rejected")}
-                className="
-                  inline-flex min-h-14 w-full
-                  items-center justify-center gap-2.5
-                  rounded-2xl
-                  border border-slate-600
-                  bg-slate-800/90
-                  px-5 py-3
-                  text-sm font-bold text-white
-                  shadow-lg
-                  transition
-                  hover:-translate-y-0.5
-                  hover:border-slate-500
-                  hover:bg-slate-700
-                  focus-visible:outline-none
-                  focus-visible:ring-4
-                  focus-visible:ring-slate-500/30
-                  active:translate-y-0
-                  sm:text-base
-                "
-              >
-                <ShieldCheck className="h-5 w-5 text-emerald-400" />
-                المتابعة بالضروري فقط
-              </button>
-            </div>
-
-            <p className="mt-4 text-center text-[11px] leading-5 text-slate-500 sm:text-xs">
-              سيتم حفظ اختيارك على هذا الجهاز، ويمكنك تغييره
-              لاحقًا من إعدادات الخصوصية.
-            </p>
+            <Link
+              href="/cookie_policy"
+              className="
+                text-orange-600
+                hover:underline
+                dark:text-orange-400
+              "
+            >
+              سياسة الكوكيز
+            </Link>
           </div>
         </div>
       </div>
-    </div>
+
+      <div
+        className="
+          mt-4
+          grid
+          grid-cols-2
+          gap-3
+          sm:flex
+          sm:justify-end
+        "
+      >
+        <button
+          type="button"
+          onClick={() => choose("rejected")}
+          className="
+            min-h-11
+            rounded-xl
+            border
+            border-slate-300
+            bg-white
+            px-5
+            py-2.5
+            text-sm
+            font-extrabold
+            text-slate-800
+            transition
+            hover:bg-slate-100
+            focus-visible:outline-none
+            focus-visible:ring-2
+            focus-visible:ring-orange-500
+            dark:border-slate-600
+            dark:bg-slate-800
+            dark:text-white
+            dark:hover:bg-slate-700
+          "
+        >
+          رفض الاختياري
+        </button>
+
+        <button
+          type="button"
+          onClick={() => choose("accepted")}
+          className="
+            min-h-11
+            rounded-xl
+            bg-orange-600
+            px-5
+            py-2.5
+            text-sm
+            font-extrabold
+            text-white
+            transition
+            hover:bg-orange-700
+            focus-visible:outline-none
+            focus-visible:ring-2
+            focus-visible:ring-orange-500
+            focus-visible:ring-offset-2
+            dark:ring-offset-slate-900
+          "
+        >
+          قبول الكل
+        </button>
+      </div>
+    </aside>
   );
-
-  return createPortal(
-    consentContent,
-    document.body,
-  );
-}
-
-/* =========================================================
-   تسجيل مبسط للاختيار على الجهاز
-   ========================================================= */
-
-function logConsent(choice: ConsentChoice) {
-  try {
-    const storageKey = "consent_logs";
-
-    const currentLogs = JSON.parse(
-      localStorage.getItem(storageKey) || "[]",
-    );
-
-    const logs = Array.isArray(currentLogs)
-      ? currentLogs
-      : [];
-
-    logs.push({
-      choice,
-      date: new Date().toISOString(),
-      policyVersion: "1.0",
-    });
-
-    /*
-     * الاحتفاظ بآخر 50 اختيارًا فقط لمنع تضخم localStorage.
-     */
-    localStorage.setItem(
-      storageKey,
-      JSON.stringify(logs.slice(-50)),
-    );
-  } catch {
-    // تجاهل أخطاء التخزين
-  }
 }

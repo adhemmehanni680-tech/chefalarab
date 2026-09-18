@@ -1,14 +1,5 @@
-"use client";
-
-import {
-  memo,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
 import Image from "next/image";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   Beef,
@@ -31,18 +22,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import ChefImage from "../../public/Heeder.webp";
 import { adsEnabled } from "@/lib/ads";
 
-const AdSenseBanner = dynamic(
-  () => import("./Components/AdSenseBanner"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-[90px] w-full rounded-2xl bg-gray-800" />
-    ),
-  }
-);
+import AdSenseBanner from "./Components/AdSenseBanner";
 
 /* =============================== */
 /* Types */
@@ -86,7 +68,7 @@ type HomeClientProps = {
 /* =============================== */
 
 const FALLBACK_IMAGE = "/Heeder.webp";
-const NEXT_IMAGE_QUALITY = 70;
+const NEXT_IMAGE_QUALITY = 72;
 
 const IMAGE_BLUR_DATA =
   "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23121b29'/%3E%3Crect x='0' y='6' width='16' height='3' fill='%23f97316'/%3E%3C/svg%3E";
@@ -953,54 +935,13 @@ function RecipeCardImage({
   recipe: Recipe;
   priority?: boolean;
 }) {
-  const sources = useMemo(
-    () =>
-      getRecipeImageSources(
-        recipe
-      ),
-    [recipe]
-  );
-
-  const sourcesKey =
-    sources.join("|");
-
-  const [
-    sourceIndex,
-    setSourceIndex,
-  ] = useState(0);
-
-  const [failed, setFailed] =
-    useState(false);
-
-  useEffect(() => {
-    setSourceIndex(0);
-    setFailed(false);
-  }, [sourcesKey]);
-
   const currentSource =
-    sources[sourceIndex];
-
-  if (
-    !currentSource ||
-    failed
-  ) {
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-gray-800">
-        <UtensilsCrossed
-          size={44}
-          className="text-gray-500"
-        />
-      </div>
-    );
-  }
+    getRecipeImageSources(recipe)[0] ||
+    FALLBACK_IMAGE;
 
   const isRemote =
-    currentSource.startsWith(
-      "http://"
-    ) ||
-    currentSource.startsWith(
-      "https://"
-    );
+    currentSource.startsWith("http://") ||
+    currentSource.startsWith("https://");
 
   return (
     <Image
@@ -1008,39 +949,15 @@ function RecipeCardImage({
       alt={getRecipeAlt(recipe)}
       fill
       sizes="(max-width: 640px) 92vw, (max-width: 768px) 46vw, (max-width: 1024px) 31vw, 300px"
-      quality={
-        NEXT_IMAGE_QUALITY
-      }
+      quality={NEXT_IMAGE_QUALITY}
       placeholder="blur"
-      blurDataURL={
-        IMAGE_BLUR_DATA
-      }
-      className="object-cover transition-transform duration-700 group-hover:scale-[1.06]"
+      blurDataURL={IMAGE_BLUR_DATA}
+      className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
       preload={priority}
-      loading={
-        priority
-          ? undefined
-          : "lazy"
-      }
+      loading={priority ? undefined : "lazy"}
       decoding="async"
       draggable={false}
       unoptimized={isRemote}
-      onError={() => {
-        setSourceIndex(
-          (current) => {
-            if (
-              current <
-              sources.length - 1
-            ) {
-              return current + 1;
-            }
-
-            setFailed(true);
-
-            return current;
-          }
-        );
-      }}
     />
   );
 }
@@ -1049,16 +966,15 @@ function RecipeCardImage({
 /* Recipe Card */
 /* =============================== */
 
-const RecipeCard = memo(
-  function RecipeCard({
+function RecipeCard({
     recipe,
     sectionCategory,
     priority = false,
-  }: {
-    recipe: Recipe;
-    sectionCategory: string;
-    priority?: boolean;
-  }) {
+}: {
+  recipe: Recipe;
+  sectionCategory: string;
+  priority?: boolean;
+}) {
     const recipeUrl =
       `/recipe/${encodeURIComponent(
         String(recipe.slug)
@@ -1215,8 +1131,7 @@ const RecipeCard = memo(
         </Link>
       </article>
     );
-  }
-);
+}
 
 /* =============================== */
 /* Category Section */
@@ -1353,28 +1268,14 @@ function HomeCategorySection({
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {section.items.map(
-          (
-            recipe,
-            recipeIndex
-          ) => (
-            <RecipeCard
-              key={
-                recipe.slug ||
-                recipe.id
-              }
-              recipe={recipe}
-              sectionCategory={
-                section.cat
-              }
-              priority={
-                sectionIndex ===
-                  0 &&
-                recipeIndex < 2
-              }
-            />
-          )
-        )}
+        {section.items.map((recipe) => (
+          <RecipeCard
+            key={recipe.slug || recipe.id}
+            recipe={recipe}
+            sectionCategory={section.cat}
+            priority={false}
+          />
+        ))}
       </div>
     </section>
   );
@@ -1389,12 +1290,14 @@ function HomeHero() {
     <header className="relative w-full overflow-hidden">
       <div className="relative min-h-[520px] w-full sm:min-h-[560px] lg:min-h-[640px]">
         <Image
-          src={ChefImage}
+          src="/Heeder.webp"
           alt="شيف العرب – وصفات طبخ عربية وعالمية"
           preload
           fill
           sizes="100vw"
+          quality={72}
           placeholder="blur"
+          blurDataURL={IMAGE_BLUR_DATA}
           className="object-cover"
         />
 
@@ -1520,19 +1423,12 @@ function EmptyHomeState() {
 export default function HomeClient({
   sectionsData,
 }: HomeClientProps) {
-  const safeSections =
-    useMemo(() => {
-      return (
-        sectionsData || []
-      ).filter(
-        (section) =>
-          section?.cat &&
-          Array.isArray(
-            section.items
-          ) &&
-          section.items.length > 0
-      );
-    }, [sectionsData]);
+  const safeSections = (sectionsData || []).filter(
+    (section) =>
+      section?.cat &&
+      Array.isArray(section.items) &&
+      section.items.length > 0,
+  );
 
   return (
     <main
@@ -1540,10 +1436,6 @@ export default function HomeClient({
       className="min-h-screen bg-orange-50 text-gray-900 transition-colors duration-300 dark:bg-gray-950 dark:text-white"
     >
       <HomeHero />
-
-      <div className="relative z-10 -mt-7">
-        <AdBox type="auto" />
-      </div>
 
       <CategoryNavigation />
 

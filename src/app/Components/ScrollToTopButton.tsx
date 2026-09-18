@@ -1,23 +1,39 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { ArrowUp } from "lucide-react";
 
 interface ScrollToTopButtonProps {
-  /** المسافة من الأعلى التي يظهر بعدها الزر */
   threshold?: number;
-
-  /** المسافة من الأسفل */
   bottom?: string;
-
-  /** المسافة من اليمين */
   right?: string;
-
-  /** محدد عنصر الفوتر */
   footerSelector?: string;
-
-  /** زر مخصص */
   customButton?: ReactNode;
+}
+
+function getScrollTop(): number {
+  return Math.max(
+    window.scrollY || 0,
+    document.scrollingElement?.scrollTop || 0,
+    document.documentElement.scrollTop || 0,
+    document.body.scrollTop || 0,
+  );
+}
+
+function setScrollTop(value: number): void {
+  const scrollingElement =
+    document.scrollingElement || document.documentElement;
+
+  scrollingElement.scrollTop = value;
+  document.documentElement.scrollTop = value;
+  document.body.scrollTop = value;
 }
 
 export default function ScrollToTopButton({
@@ -27,88 +43,129 @@ export default function ScrollToTopButton({
   footerSelector = "#site-footer",
   customButton,
 }: ScrollToTopButtonProps) {
+  const animationFrameRef = useRef<number | null>(null);
+  const scrollAnimationRef = useRef<number | null>(null);
+
   const [passedThreshold, setPassedThreshold] = useState(false);
   const [footerVisible, setFooterVisible] = useState(false);
 
-  /*
-  |--------------------------------------------------------------------------
-  | إظهار الزر بعد تجاوز المسافة المحددة
-  |--------------------------------------------------------------------------
-  */
-
   useEffect(() => {
-    let animationFrameId: number | null = null;
-
     const updateScrollState = () => {
-      setPassedThreshold(window.scrollY > threshold);
-      animationFrameId = null;
+      setPassedThreshold(getScrollTop() > threshold);
+      animationFrameRef.current = null;
     };
 
     const handleScroll = () => {
-      if (animationFrameId !== null) return;
+      if (animationFrameRef.current !== null) return;
 
-      animationFrameId = window.requestAnimationFrame(
-        updateScrollState
-      );
+      animationFrameRef.current =
+        window.requestAnimationFrame(updateScrollState);
     };
 
     updateScrollState();
-
-    window.addEventListener("scroll", handleScroll, {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    document.addEventListener("scroll", handleScroll, {
       passive: true,
+      capture: true,
     });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("scroll", handleScroll, true);
 
-      if (animationFrameId !== null) {
-        window.cancelAnimationFrame(animationFrameId);
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, [threshold]);
-
-  /*
-  |--------------------------------------------------------------------------
-  | إخفاء الزر عند ظهور الفوتر
-  |--------------------------------------------------------------------------
-  */
 
   useEffect(() => {
     const footerElement =
       document.querySelector<HTMLElement>(footerSelector);
 
-    if (!footerElement) {
+    if (!footerElement || !("IntersectionObserver" in window)) {
       setFooterVisible(false);
-      return;
+      return undefined;
     }
 
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        setFooterVisible(entry.isIntersecting);
-      },
+      ([entry]) => setFooterVisible(entry.isIntersecting),
       {
         root: null,
         threshold: 0.01,
-        /*
-         * يبدأ إخفاء الزر قبل دخول الفوتر قليلًا،
-         * حتى لا يظهر الزر فوق محتوى الفوتر.
-         */
         rootMargin: "0px 0px 40px 0px",
-      }
+      },
     );
 
     observer.observe(footerElement);
-
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [footerSelector]);
 
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+  useEffect(
+    () => () => {
+      if (scrollAnimationRef.current !== null) {
+        window.cancelAnimationFrame(scrollAnimationRef.current);
+      }
+    },
+    [],
+  );
+
+  const scrollToTop = useCallback(() => {
+    if (scrollAnimationRef.current !== null) {
+      window.cancelAnimationFrame(scrollAnimationRef.current);
+    }
+
+    const startPosition = getScrollTop();
+
+    if (startPosition <= 0) return;
+
+    const reduceMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (reduceMotion) {
+      setScrollTop(0);
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    const duration = Math.min(
+      700,
+      Math.max(300, startPosition * 0.28),
+    );
+    const startTime = performance.now();
+
+    const animateScroll = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const nextPosition = Math.round(
+        startPosition * (1 - easedProgress),
+      );
+
+      setScrollTop(nextPosition);
+
+      if (progress < 1 && getScrollTop() > 0) {
+        scrollAnimationRef.current =
+          window.requestAnimationFrame(animateScroll);
+        return;
+      }
+
+      setScrollTop(0);
+      window.scrollTo(0, 0);
+      scrollAnimationRef.current = null;
+    };
+
+    scrollAnimationRef.current =
+      window.requestAnimationFrame(animateScroll);
+  }, []);
+
+  const handleCustomKeyDown = (
+    event: KeyboardEvent<HTMLDivElement>,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    scrollToTop();
   };
 
   const shouldShow = passedThreshold && !footerVisible;
@@ -119,16 +176,11 @@ export default function ScrollToTopButton({
     return (
       <div
         onClick={scrollToTop}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            scrollToTop();
-          }
-        }}
+        onKeyDown={handleCustomKeyDown}
         role="button"
         tabIndex={0}
         aria-label="العودة للأعلى"
-        className={`fixed ${bottom} ${right} z-[9999] cursor-pointer`}
+        className={`fixed ${bottom} ${right} z-[9999] cursor-pointer touch-manipulation`}
       >
         {customButton}
       </div>
@@ -140,23 +192,23 @@ export default function ScrollToTopButton({
       type="button"
       onClick={scrollToTop}
       aria-label="العودة للأعلى"
+      title="العودة للأعلى"
       className={`
         fixed ${bottom} ${right} z-[9999]
-        flex h-12 w-12 items-center justify-center
-       rounded-2xl border border-white/20 bg-gradient-to-br
-        bg-orange-500
-        text-white
-        shadow-xl shadow-black/20
-        transition duration-300
-        hover:scale-110
-        hover:bg-orange-600
-        active:scale-95
-        focus:outline-none
-        focus-visible:ring-4
+        flex h-12 w-12 touch-manipulation select-none
+        items-center justify-center rounded-2xl
+        border border-white/20 bg-orange-500 text-white
+        shadow-xl shadow-black/20 transition duration-300
+        hover:scale-110 hover:bg-orange-600 active:scale-95
+        focus:outline-none focus-visible:ring-4
         focus-visible:ring-orange-300/60
       `}
+      style={{
+        WebkitTapHighlightColor: "transparent",
+        WebkitTouchCallout: "none",
+      }}
     >
-      <ArrowUp size={22} strokeWidth={2.4} />
+      <ArrowUp size={22} strokeWidth={2.4} aria-hidden="true" />
     </button>
   );
 }

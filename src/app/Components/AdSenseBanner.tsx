@@ -1,13 +1,10 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
-import { adsEnabled } from "@/lib/ads";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { usePathname } from "next/navigation";
+
+import { adsEnabled, adsenseClient } from "@/lib/ads";
+import { isAdFreePath } from "@/lib/routePolicy";
 
 type AdSenseBannerProps = {
   adSlot: string;
@@ -18,10 +15,17 @@ type AdSenseBannerProps = {
   minHeight?: number;
 };
 
-const ADSENSE_CLIENT =
-  process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-9717868267549745";
-const MIN_SAFE_AD_WIDTH = 250;
+const VALID_CLIENT = /^ca-pub-\d+$/i;
+const MIN_SAFE_AD_WIDTH = 200;
 
+/**
+ * Manual AdSense unit.
+ *
+ * - Never renders on legal/about/contact routes.
+ * - Reserves vertical space before the ad arrives to limit CLS.
+ * - Creates the actual <ins> only shortly before it reaches the viewport.
+ * - Uses ResizeObserver instead of repeated layout polling/retry timers.
+ */
 export default function AdSenseBanner({
   adSlot,
   adFormat = "auto",
@@ -30,28 +34,38 @@ export default function AdSenseBanner({
   layoutKey,
   minHeight = 90,
 }: AdSenseBannerProps) {
+  const pathname = usePathname();
+  const blockedOnThisRoute = isAdFreePath(pathname);
+  const client = adsenseClient.trim();
+  const canRender =
+    adsEnabled && VALID_CLIENT.test(client) && !blockedOnThisRoute;
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const adElementRef = useRef<HTMLModElement | null>(null);
+  const adElementRef = useRef<HTMLModElement>(null);
   const pushedRef = useRef(false);
   const [isNearViewport, setIsNearViewport] = useState(false);
 
-  const adAttributes = useMemo(
-    () =>
-      layoutKey
-        ? ({ "data-ad-layout-key": layoutKey } as Record<string, string>)
-        : {},
-    [layoutKey],
-  );
+  useEffect(() => {
+    pushedRef.current = false;
+    setIsNearViewport(false);
+  }, [adSlot, blockedOnThisRoute]);
 
   useEffect(() => {
-    if (!adsEnabled || !containerRef.current) return;
+    if (!canRender) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setIsNearViewport(true);
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsNearViewport(true);
-          observer.disconnect();
-        }
+        if (!entry?.isIntersecting) return;
+        setIsNearViewport(true);
+        observer.disconnect();
       },
       {
         threshold: 0,
@@ -59,13 +73,13 @@ export default function AdSenseBanner({
       },
     );
 
-    observer.observe(containerRef.current);
+    observer.observe(container);
     return () => observer.disconnect();
-  }, []);
+  }, [canRender, adSlot]);
 
   useEffect(() => {
     if (
-      !adsEnabled ||
+      !canRender ||
       !isNearViewport ||
       pushedRef.current ||
       !containerRef.current ||
@@ -75,84 +89,65 @@ export default function AdSenseBanner({
     }
 
     const container = containerRef.current;
-    let retryTimer: number | null = null;
     let resizeObserver: ResizeObserver | null = null;
+    let frame = 0;
     let cancelled = false;
-    let attempts = 0;
 
-    const clearRetry = () => {
-      if (retryTimer !== null) {
-        window.clearTimeout(retryTimer);
-        retryTimer = null;
-      }
-    };
-
-    const pushAd = () => {
+    const pushAd = (knownWidth?: number) => {
       if (cancelled || pushedRef.current) return;
 
-      const availableWidth = Math.floor(container.getBoundingClientRect().width);
+      const availableWidth = Math.floor(
+        knownWidth ?? container.clientWidth,
+      );
 
-      // AdSense throws "No slot size" when the component is mounted while a
-      // sidebar/accordion is collapsed. Wait until a real usable width exists.
-      if (availableWidth < MIN_SAFE_AD_WIDTH) {
-        attempts += 1;
-        clearRetry();
-
-        if (attempts < 40) {
-          retryTimer = window.setTimeout(pushAd, 250);
-        }
-        return;
-      }
+      // Avoid "No slot size for availableWidth=0" while responsive
+      // containers are still being laid out.
+      if (availableWidth < MIN_SAFE_AD_WIDTH) return;
 
       try {
         window.adsbygoogle = window.adsbygoogle || [];
         window.adsbygoogle.push({});
         pushedRef.current = true;
-        clearRetry();
         resizeObserver?.disconnect();
       } catch (error) {
-        attempts += 1;
-
         if (process.env.NODE_ENV !== "production") {
-          console.warn("AdSense slot initialization was delayed:", error);
-        }
-
-        clearRetry();
-        if (attempts < 40) {
-          retryTimer = window.setTimeout(pushAd, 300);
+          console.warn("AdSense slot initialization failed:", error);
         }
       }
     };
 
     if (typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(() => {
-        if (!pushedRef.current) pushAd();
+      resizeObserver = new ResizeObserver((entries) => {
+        const width = entries[0]?.contentRect.width;
+        pushAd(width);
       });
       resizeObserver.observe(container);
     }
 
-    // Give layout, fonts, and sidebar transitions one frame to settle.
-    const frame = window.requestAnimationFrame(pushAd);
+    frame = window.requestAnimationFrame(() => pushAd());
 
     return () => {
       cancelled = true;
       window.cancelAnimationFrame(frame);
-      clearRetry();
       resizeObserver?.disconnect();
     };
-  }, [isNearViewport, adSlot, adFormat, layoutKey]);
+  }, [canRender, isNearViewport, adSlot, adFormat, layoutKey]);
 
-  if (!adsEnabled) return null;
+  if (!canRender) return null;
 
   return (
     <div
       ref={containerRef}
       className={`flex w-full min-w-0 items-center justify-center overflow-hidden ${className}`}
-      style={{ minHeight, ...style }}
+      style={{
+        minHeight,
+        ...style,
+      }}
       data-ad-container
     >
       {isNearViewport && (
         <ins
+          key={adSlot}
           ref={adElementRef}
           className="adsbygoogle"
           style={{
@@ -161,11 +156,11 @@ export default function AdSenseBanner({
             maxWidth: "100%",
             minWidth: 0,
           }}
-          data-ad-client={ADSENSE_CLIENT}
+          data-ad-client={client}
           data-ad-slot={adSlot}
           data-ad-format={adFormat}
           data-full-width-responsive="true"
-          {...adAttributes}
+          {...(layoutKey ? { "data-ad-layout-key": layoutKey } : {})}
         />
       )}
     </div>

@@ -1,125 +1,72 @@
-// src/app/contact_us/ContactClient.jsx
-"use client";
-
-
-import { Mail, MessageCircle, ShieldCheck, HelpCircle } from "lucide-react";
+import { HelpCircle, Mail, MessageCircle, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
-import dynamic from "next/dynamic";
-
-
-
-const adsEnabled = process.env.NEXT_PUBLIC_ADS_ENABLED === "true";
-
-const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
-  ssr: false,
-});
-const AdSenseBanner = dynamic(() => import("../Components/AdSenseBanner"), {
-  ssr: false,
-});
-const showAdsOnThisPage = false;
-
 export default function ContactClient() {
+  return (
+    <main
+      dir="rtl"
+      className="min-h-screen overflow-x-hidden bg-gray-50 px-4 py-16 text-gray-900 dark:bg-[#0b1220] dark:text-gray-100 sm:px-6"
+    >
+      <div className="mx-auto mt-8 max-w-4xl text-center">
+        <h1 className="text-3xl font-black sm:text-4xl">تواصل معنا</h1>
 
-    return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden">
-      <style jsx global>{`
-        html,
-        body {
-          overflow-x: hidden !important;
-        }
-        * {
-          max-width: 100vw !important;
-        }
-      `}</style>
-
-      {/*     */} 
-      {adsEnabled && showAdsOnThisPage && <InterstitialAd interstitialUnitID="2901613977" />}
-
-      <div className="max-w-4xl mx-auto text-center mt-10">
-    <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6">تواصل معنا
-        </h1>
-
-        {/*  مقدمة  (  ) */}
-        <p
-          className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6 transition-colors duration-500"
-         
-        >
-          يسعدنا تواصلك معنا في أي وقت! إذا كان لديك اقتراح لتحسين الموقع، أو بلاغ عن مشكلة في صفحة أو وصفة، أو رغبة في طلب إضافة وصفة جديدة، أو التعاون والإعلان الرسمي، يسعدنا استقبال رسائلكم عبر الوسائل التالية. نحن نهتم بقراءة جميع الرسائل ونعمل باستمرار على تطوير تجربة "<Link href="/" className="font-semibold text-blue-400 hover:underline">
-              شيف العرب
-            </Link>{" "}".
+        <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-gray-700 dark:text-gray-300 sm:text-lg">
+          يسعدنا تواصلك مع <Link href="/" className="font-bold text-orange-600 hover:underline dark:text-orange-400">شيف العرب</Link> بخصوص اقتراح، مشكلة في صفحة أو وصفة، طلب إضافة وصفة، تعاون، أو استفسار عام.
         </p>
 
-        <p
-          className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed mb-8"
-         
-        >
-          لضمان سرعة الرد، يُفضّل أن تكتب عنوان رسالتك بوضوح (مثال: “مشكلة في وصفة” أو “اقتراح” أو
-          “تعاون”). وإذا كانت الرسالة عن وصفة معينة، أرفق رابط الصفحة أو اسم الوصفة.
+        <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-gray-600 dark:text-gray-400 sm:text-base">
+          اكتب عنوان رسالتك بوضوح، وإذا كان استفسارك متعلقًا بوصفة محددة أرفق اسم الوصفة أو رابط الصفحة لتسهيل المراجعة.
         </p>
 
-        {/*  Card  */}
-        <div
-          dir="rtl"
-          className="bg-gray-800 shadow-md rounded-2xl p-8 inline-block text-right space-y-5 w-full sm:w-auto"
-         
+        <section
+          aria-labelledby="contact-methods"
+          className="mx-auto mt-8 w-full max-w-2xl rounded-3xl border border-gray-200 bg-white p-6 text-right shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8"
         >
-          <div className="flex items-center gap-3 justify-start">
-            <Mail className="text-blue-500" />
-            <Link
-              href="mailto:chefalarabonline@gmail.com"
-              className="text-blue-400 font-semibold hover:underline break-all"
-              aria-label="مراسلة شيف العرب عبر البريد الإلكتروني"
-              title="مراسلة شيف العرب عبر البريد الإلكتروني"
-            >
-              chefalarabonline@gmail.com
-            </Link>
+          <h2 id="contact-methods" className="mb-5 text-xl font-black">
+            وسائل التواصل
+          </h2>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 rounded-2xl bg-gray-50 p-4 dark:bg-gray-800/70">
+              <Mail className="shrink-0 text-orange-500" aria-hidden="true" />
+              <Link
+                href="mailto:chefalarabonline@gmail.com"
+                className="break-all font-bold text-blue-600 hover:underline dark:text-blue-400"
+              >
+                chefalarabonline@gmail.com
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-2xl bg-gray-50 p-4 dark:bg-gray-800/70">
+              <MessageCircle className="shrink-0 text-green-500" aria-hidden="true" />
+              <a
+                target="_blank"
+                href="https://wa.me/201107232016?text=مرحبا_بكم_فى_شيف_العرب"
+                rel="noopener noreferrer"
+                className="font-bold text-green-700 hover:underline dark:text-green-400"
+              >
+                تواصل معنا عبر واتساب
+              </a>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 justify-start">
-            <MessageCircle className="text-green-500" />
-            <Link
-              target="_blank"
-              href="https://wa.me/201107232016?text= مرحبا_بكم_فى_شيف_العرب "
-              rel="noopener noreferrer"
-              className="text-green-400 font-semibold hover:underline"
-              aria-label="التواصل مع شيف العرب عبر واتساب"
-              title="التواصل مع شيف العرب عبر واتساب"
-            >
-              تواصل معنا عبر واتس آب
-            </Link>
-          </div>
-
-          {/*  معلومات    */}
-          <div className="pt-2 space-y-3">
-            <div className="flex items-start gap-3">
-              <HelpCircle className="text-orange-400 mt-0.5" />
-              <p className="text-sm text-gray-300 leading-relaxed">
-                وقت الرد التقريبي: من 24 إلى 48 ساعة حسب ضغط الرسائل.
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className="flex items-start gap-3 rounded-2xl border border-gray-200 p-4 dark:border-gray-700">
+              <HelpCircle className="mt-0.5 shrink-0 text-orange-500" aria-hidden="true" />
+              <p className="text-sm leading-6 text-gray-600 dark:text-gray-300">
+                وقت الرد المعتاد من 24 إلى 48 ساعة حسب ضغط الرسائل.
               </p>
             </div>
 
-            <div className="flex items-start gap-3">
-              <ShieldCheck className="text-lime-400 mt-0.5" />
-              <p className="text-sm text-gray-300 leading-relaxed">
-                ملاحظة: لا نطلب منك أي بيانات حساسة. رجاءً لا ترسل كلمات مرور أو معلومات مالية في الرسائل.
+            <div className="flex items-start gap-3 rounded-2xl border border-gray-200 p-4 dark:border-gray-700">
+              <ShieldCheck className="mt-0.5 shrink-0 text-emerald-500" aria-hidden="true" />
+              <p className="text-sm leading-6 text-gray-600 dark:text-gray-300">
+                لا ترسل كلمات مرور أو بيانات مالية أو أي معلومات حساسة عبر الرسائل.
               </p>
             </div>
           </div>
-        </div>
+        </section>
       </div>
-
-      {/*  Banner  */}
-      {adsEnabled && showAdsOnThisPage && (
-        <div className="flex justify-center my-8">
-          <AdSenseBanner
-            adSlot="2901613977"
-            adFormat="fluid"
-            layoutKey="-fc+5g+70-cl-1m"
-            style={{ display: "block" }}
-          />
-        </div>
-      )}
-    </div>
+    </main>
   );
 }

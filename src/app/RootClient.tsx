@@ -1,181 +1,82 @@
 "use client";
 
 import dynamic from "next/dynamic";
-
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import CookieConsentBanner from "./Components/CookieConsentBanner";
+import SearchFloating from "./Components/SearchFloating";
+import InstallAppButton from "./Components/InstallAppButton";
 import PWARegister from "./Components/PWARegister";
+import ScrollToTopButton from "./Components/ScrollToTopButton";
 
-import {
-  adsEnabled,
-} from "@/lib/ads";
+import { localAdsEnabled } from "@/lib/ads";
+import { isAdFreePath } from "@/lib/routePolicy";
 
-/* =========================================================
-   Dynamic components
-   ========================================================= */
+const LocalAdBanner = dynamic(
+  () => import("./Components/LocalAdBanner/LocalAdBanner"),
+  { ssr: false },
+);
 
-const SearchFloating =
-  dynamic(
-    () =>
-      import(
-        "./Components/SearchFloating"
-      ),
-    {
-      ssr: false,
-    },
-  );
+type WindowWithIdleCallback = Window & {
+  requestIdleCallback?: (
+    callback: IdleRequestCallback,
+    options?: IdleRequestOptions,
+  ) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
 
-const ScrollToTopButton =
-  dynamic(
-    () =>
-      import(
-        "./Components/ScrollToTopButton"
-      ),
-    {
-      ssr: false,
-    },
-  );
-
-const LocalAdBanner =
-  dynamic(
-    () =>
-      import(
-        "./Components/LocalAdBanner/LocalAdBanner"
-      ),
-    {
-      ssr: false,
-    },
-  );
-
-const InstallAppButton =
-  dynamic(
-    () =>
-      import(
-        "./Components/InstallAppButton"
-      ),
-    {
-      ssr: false,
-    },
-  );
-
-/* =========================================================
-   Window types
-   ========================================================= */
-
-type WindowWithIdleCallback =
-  Window & {
-    requestIdleCallback?: (
-      callback:
-        IdleRequestCallback,
-      options?:
-        IdleRequestOptions,
-    ) => number;
-
-    cancelIdleCallback?: (
-      handle: number,
-    ) => void;
-  };
-
-/* =========================================================
-   Root Client
-   ========================================================= */
-
-export default function RootClient() {
-  const [
-    loadSecondaryUi,
-    setLoadSecondaryUi,
-  ] =
-    useState(false);
+function useDeferredReady(
+  delay: number,
+  idleTimeout = 1000,
+): boolean {
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const browserWindow =
-      window as WindowWithIdleCallback;
+    const browserWindow = window as WindowWithIdleCallback;
+    let idleId: number | null = null;
 
-    /*
-     * العناصر غير المهمة لأول Paint
-     * يتم تحميلها عند هدوء المتصفح.
-     */
-
-    if (
-      browserWindow.requestIdleCallback
-    ) {
-      const idleId =
-        browserWindow.requestIdleCallback(
-          () => {
-            setLoadSecondaryUi(
-              true,
-            );
-          },
-          {
-            timeout:
-              1400,
-          },
+    const timer = window.setTimeout(() => {
+      if (browserWindow.requestIdleCallback) {
+        idleId = browserWindow.requestIdleCallback(
+          () => setReady(true),
+          { timeout: idleTimeout },
         );
+        return;
+      }
 
-      return () => {
-        browserWindow.cancelIdleCallback?.(
-          idleId,
-        );
-      };
-    }
-
-    const timer =
-      window.setTimeout(
-        () => {
-          setLoadSecondaryUi(
-            true,
-          );
-        },
-        700,
-      );
+      setReady(true);
+    }, delay);
 
     return () => {
-      window.clearTimeout(
-        timer,
-      );
+      window.clearTimeout(timer);
+
+      if (idleId !== null) {
+        browserWindow.cancelIdleCallback?.(idleId);
+      }
     };
-  }, []);
+  }, [delay, idleTimeout]);
+
+  return ready;
+}
+
+export default function RootClient() {
+  const pathname = usePathname();
+  const loadNonCriticalUi = useDeferredReady(8000, 1500);
+  const adFreeRoute = isAdFreePath(pathname);
 
   return (
     <>
-      {/* =====================================================
-          Cookie Consent
-          ===================================================== */}
-
       <CookieConsentBanner />
-
-      {/* =====================================================
-          PWA
-          ===================================================== */}
-
       <PWARegister />
-
-      {/* =====================================================
-          Important floating UI
-
-          تظهر مباشرة بدون انتظار requestIdleCallback.
-          ===================================================== */}
-
+      <InstallAppButton />
       <SearchFloating />
 
+      {/* خفيف ويجب أن يكون جاهزًا فورًا على كل الموبايلات. */}
       <ScrollToTopButton />
 
-      {/* =====================================================
-          Secondary UI
-          ===================================================== */}
-
-      {loadSecondaryUi && (
-        <>
-          <InstallAppButton />
-
-          {adsEnabled && (
-            <LocalAdBanner />
-          )}
-        </>
+      {loadNonCriticalUi && localAdsEnabled && !adFreeRoute && (
+        <LocalAdBanner initialDelay={12000} />
       )}
     </>
   );

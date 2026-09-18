@@ -1,21 +1,29 @@
 // /src/app/about_us/page.jsx
+
 import AboutUsClient from "./AboutUsClient";
 
 export const metadata = {
-  title: "من نحن – وصفات عربية موثوقة",
+  title: "من نحن – شيف العرب | وصفات عربية وعالمية",
   description:
-    "تعرف على شيف العرب، موقع وصفات الطبخ العربي والعالمي. نقدم وصفات واضحة ومجرّبة، نصائح عملية، وتجربة تصفح سريعة. رسالتنا، رؤيتنا، وقيمنا في مكان واحد.",
+    "تعرف على شيف العرب، هدف الموقع، نوع المحتوى الذي نقدمه، طريقة إعداد وتنظيم الوصفات، وما نقدمه للزائر، وكيفية التواصل مع إدارة الموقع.",
   keywords: [
     "من نحن شيف العرب",
+    "شيف العرب",
     "موقع وصفات عربية",
-    "طبخ عربي",
+    "وصفات طبخ عربية",
+    "وصفات عالمية",
+    "موقع طبخ",
     "وصفات موثوقة",
-    "شيف العرب عن الموقع",
   ],
+
+  alternates: {
+    canonical: "https://chefalarab.com/about_us",
+  },
+
   openGraph: {
     title: "من نحن – شيف العرب",
     description:
-      "موقع وصفات عربية وعالمية بطريقة بسيطة وعملية. تعرف على قصتنا ورسالتنا وقيمنا.",
+      "تعرف على هدف شيف العرب، طريقة إعداد وتنظيم الوصفات، وما يقدمه الموقع للزائر.",
     url: "https://chefalarab.com/about_us",
     siteName: "شيف العرب",
     images: [
@@ -29,35 +37,44 @@ export const metadata = {
     locale: "ar_AR",
     type: "website",
   },
+
   twitter: {
     card: "summary_large_image",
     title: "من نحن – شيف العرب",
     description:
-      "موقع وصفات عربية وعالمية بطريقة بسيطة وعملية. تعرف على قصتنا ورسالتنا وقيمنا.",
+      "تعرف على هدف شيف العرب، وطريقة إعداد الوصفات، وما يقدمه الموقع للزائر.",
     images: ["https://chefalarab.com/og-image.jpg"],
   },
-  alternates: {
-    canonical: "https://chefalarab.com/about_us",
+
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
 export default function AboutPage() {
-  // بيانات منظمة (Organization) لتعزيز الظهور في نتائج البحث
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
+
     name: "شيف العرب",
+    alternateName: "Chef Al Arab",
+
     url: "https://chefalarab.com",
-    logo: "https://chefalarab.com/favicon.webp",
+
+    logo: {
+      "@type": "ImageObject",
+      url: "https://chefalarab.com/favicon.webp",
+    },
+
     description:
-      "موقع وصفات الطبخ العربية والعالمية. وصفات واضحة ومجرّبة، نصائح عملية، وتجربة استخدام سريعة.",
-    sameAs: [
-      "https://www.facebook.com/chefalarab",
-      "https://www.instagram.com/chefalarab",
-    ],
+      "شيف العرب موقع عربي متخصص في تقديم وصفات الطبخ العربية والعالمية بطريقة واضحة ومنظمة، مع مقادير وخطوات ونصائح تساعد المستخدم على إعداد الوصفات في المنزل.",
+
     contactPoint: {
       "@type": "ContactPoint",
-      contactType: "customer service",
+      contactType: "customer support",
+      availableLanguage: ["Arabic"],
+      email: "chefalarabonline@gmail.com",
       url: "https://chefalarab.com/contact_us",
     },
   };
@@ -66,9 +83,13 @@ export default function AboutPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd),
+        }}
       />
+
       <AboutUsClient />
     </>
   );
 }
+

@@ -1,6 +1,4 @@
 // PrivacyPolicyClient
-"use client";
-
 import {
   ShieldCheck,
   Lock,
@@ -16,14 +14,6 @@ import {
   Settings,
 } from "lucide-react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-import { adsEnabled } from "@/lib/ads";
-
-
-
-const InterstitialAd = dynamic(() => import("../Components/InterstitialAd"), {
-  ssr: false,
-});
 
 export default function PrivacyPolicyClient() {
 
@@ -83,9 +73,9 @@ export default function PrivacyPolicyClient() {
     },
     {
       icon: ShieldCheck,
-      title: "الموافقة",
+      title: "اختيارات الخصوصية والموافقة",
       content:
-        "باستخدامك لموقع شيف العرب، فإنك توافق على هذه السياسة وعلى شروط جمع واستخدام المعلومات كما هو موضح. وقد يظهر إشعار لملفات الارتباط عند زيارتك الأولى للموقع.",
+        "استخدام الموقع لا يُعد موافقة تلقائية على ملفات التحليل أو الإعلانات الاختيارية. عند الحاجة إلى الموافقة، يمكنك القبول أو الرفض من أداة إدارة الخصوصية، ويمكنك تغيير اختيارك لاحقًا من رابط إعدادات الخصوصية في تذييل الموقع. وفي المناطق التي تتطلب ذلك، تُدار موافقة الإعلانات من خلال منصة إدارة موافقة معتمدة ومتوافقة مع متطلبات Google.",
     },
     {
       icon: RefreshCw,
@@ -106,34 +96,22 @@ export default function PrivacyPolicyClient() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden transition-colors duration-500">
-      <style jsx global>{`
-        html,
-        body {
-          overflow-x: hidden !important;
-        }
-        * {
-          max-width: 100vw !important;
-        }
-      `}</style>
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden transition-colors duration-500">
 
-      {adsEnabled && <InterstitialAd interstitialUnitID="2901613977" />}
+
 
       <div className="max-w-5xl mx-auto mt-10">
         <h1
           className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"
-      
+
         >
           سياسة الخصوصية
         </h1>
 
         <div
           className="bg-gray-800 rounded-2xl shadow-md p-8 mb-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
         >
-          <p className="text-gray-300 text-sm sm:text-base leading-relaxed ">
+          <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
             نحن في موقع{" "}
             <Link href="/" className="font-semibold text-blue-400 ">
               شيف العرب
@@ -141,13 +119,14 @@ export default function PrivacyPolicyClient() {
             نلتزم بحماية خصوصية زوارنا، ونسعى لتوفير تجربة آمنة وموثوقة لجميع المستخدمين.
             تتناول سياسة الخصوصية هذه كيفية جمع واستخدام وحماية المعلومات التي يتم جمعها من خلال الموقع.
           </p>
+          <p className="mt-3 text-xs font-bold text-gray-400">آخر تحديث: 17 سبتمبر 2026</p>
         </div>
 
         {sections.map((section, idx) => (
           <section
             key={idx}
             className="bg-gray-800 rounded-2xl shadow-md p-8 mb-6"
-       
+
           >
             <div className="flex items-center gap-3 mb-3 ">
               <section.icon className="text-blue-400 dark:text-blue-400" />
@@ -185,7 +164,7 @@ export default function PrivacyPolicyClient() {
         ))}
       </div>
 
-   
-    </div>
+
+    </main>
   );
 }
