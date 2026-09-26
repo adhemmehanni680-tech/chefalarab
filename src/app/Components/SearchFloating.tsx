@@ -616,34 +616,50 @@ export default function SearchFloating() {
     <div
       ref={panelRef}
       dir="rtl"
-      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-3 z-[80] sm:right-6"
+      className="fixed right-6 z-[80] flex flex-col items-end gap-3"
+      style={{
+       
+        
+        bottom: "calc(4.75rem + env(safe-area-inset-bottom))",
+      }}
     >
-      {!open ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label="فتح البحث عن وصفة"
-          aria-expanded={false}
-          className="group relative inline-flex h-14 w-14 touch-manipulation items-center justify-center overflow-hidden rounded-[1.25rem] border border-white/20 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white shadow-[0_18px_45px_rgba(234,88,12,0.32)] outline-none transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_52px_rgba(234,88,12,0.4)] active:scale-95 focus-visible:ring-4 focus-visible:ring-orange-300/50 sm:h-14 sm:w-14"
-        >
-          <span
-            aria-hidden="true"
-            className="absolute inset-0 bg-white/0 transition group-hover:bg-white/[0.08]"
-          />
+      <button
+        type="button"
+        onClick={() => (open ? close() : setOpen(true))}
+        aria-label={open ? "إغلاق البحث" : "فتح البحث عن وصفة"}
+        aria-expanded={open}
+        className="group relative inline-flex h-14 w-14 shrink-0 touch-manipulation items-center justify-center overflow-hidden rounded-[1.25rem] border border-white/20 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white shadow-[0_18px_45px_rgba(234,88,12,0.32)] outline-none transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_52px_rgba(234,88,12,0.4)] active:scale-95 focus-visible:ring-4 focus-visible:ring-orange-300/50 sm:h-14 sm:w-14"
+      >
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 bg-white/0 transition group-hover:bg-white/[0.08]"
+        />
 
+        {open ? (
+          <X
+            size={22}
+            strokeWidth={2.6}
+            className="relative transition-transform duration-300 group-hover:rotate-90"
+            aria-hidden="true"
+          />
+        ) : (
           <Search
             size={23}
             strokeWidth={2.5}
             className="relative transition-transform duration-300 group-hover:scale-110"
             aria-hidden="true"
           />
+        )}
 
+        {!open ? (
           <span
             aria-hidden="true"
             className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-orange-500 bg-emerald-300 shadow-[0_0_0_3px_rgba(255,255,255,0.85)]"
           />
-        </button>
-      ) : (
+        ) : null}
+      </button>
+
+      {open ? (
         <section
           aria-label="البحث عن وصفة"
           role="dialog"
@@ -805,7 +821,7 @@ export default function SearchFloating() {
 
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[11px] font-black text-slate-900 dark:text-white sm:text-xs">
-                               {item.title}
+                            ابحث عن {item.title}
                           </span>
                           <span className="mt-0.5 block line-clamp-1 text-[9px] font-bold leading-5 text-slate-500 dark:text-slate-400">
                             اضغط للبحث في الوصفات
@@ -947,7 +963,7 @@ export default function SearchFloating() {
             )}
           </div>
         </section>
-      )}
+      ) : null}
 
       <style jsx>{`
         @keyframes search-pop {

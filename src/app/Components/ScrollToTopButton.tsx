@@ -38,7 +38,7 @@ function setScrollTop(value: number): void {
 
 export default function ScrollToTopButton({
   threshold = 400,
-  bottom = "bottom-4",
+  bottom = "bottom-2",
   right = "right-6",
   footerSelector = "#site-footer",
   customButton,
@@ -195,7 +195,7 @@ export default function ScrollToTopButton({
       title="العودة للأعلى"
       className={`
         fixed ${bottom} ${right} z-[9999]
-        flex h-12 w-12 touch-manipulation select-none
+        flex h-14 w-14 touch-manipulation select-none
         items-center justify-center rounded-2xl
         border border-white/20 bg-orange-500 text-white
         shadow-xl shadow-black/20 transition duration-300
@@ -208,7 +208,7 @@ export default function ScrollToTopButton({
         WebkitTouchCallout: "none",
       }}
     >
-      <ArrowUp size={22} strokeWidth={2.4} aria-hidden="true" />
+      <ArrowUp size={24} strokeWidth={2.6} aria-hidden="true" />
     </button>
   );
 }
