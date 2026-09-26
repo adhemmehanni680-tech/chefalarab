@@ -14,7 +14,6 @@ import {
   MapPin,
   Tag,
   Users,
- 
   UtensilsCrossed,
 } from "lucide-react";
 
@@ -727,16 +726,6 @@ function formatDate(
   ).format(date);
 }
 
-<<<<<<< HEAD
-function machineDate(value: unknown): string | undefined {
-  const text = asString(value);
-  if (!text) return undefined;
-  const date = new Date(text);
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
-}
-
-function SectionHeading({ icon, children }: { icon: string; children: ReactNode }) {
-=======
 /* =========================================================
    UI COMPONENTS
 ========================================================= */
@@ -748,7 +737,6 @@ function SectionHeading({
   icon: string;
   children: ReactNode;
 }) {
->>>>>>> developmentnew
   return (
     <div className="mb-4 flex items-center gap-3">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-orange-500 text-xl text-white shadow-md shadow-orange-500/20">
@@ -1042,14 +1030,6 @@ export default function RecipeView({
             value !== "",
         )
       : [];
-<<<<<<< HEAD
-  const categories = asStringList(recipe.category);
-  const tags = asStringList(recipe.tags).slice(0, 8);
-  const dataBox = recipe.data_box || {};
-  const rawUpdatedDate = recipe.updated_at || recipe.created_at;
-  const updatedDate = formatDate(rawUpdatedDate);
-  const updatedDateTime = machineDate(rawUpdatedDate);
-=======
 
   const categories =
     asStringList(recipe.category);
@@ -1068,7 +1048,6 @@ export default function RecipeView({
       recipe.updated_at ||
         recipe.created_at,
     );
->>>>>>> developmentnew
 
   type RawInfoItem = {
     label: string;
@@ -1304,9 +1283,7 @@ export default function RecipeView({
             {/* Hero */}
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] lg:items-center">
               <div>
-               
                 <div className="mb-3 flex flex-wrap gap-2">
-                 
                   {recipe.country && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-black text-orange-700 dark:bg-orange-500/10 dark:text-orange-300">
                       <MapPin
@@ -1324,7 +1301,6 @@ export default function RecipeView({
                         dataBox.meal_type,
                       )}
                     </span>
-                    
                   )}
                 </div>
 
@@ -1344,23 +1320,6 @@ export default function RecipeView({
                   {updatedDate && (
                     <span>
                       آخر تحديث:{" "}
-<<<<<<< HEAD
-                      <time dateTime={updatedDateTime}>{updatedDate}</time>
-                    </span>
-                  )}
-                  {tags.slice(0, 4).map((tag) => (
-                    <Link
-                      key={tag}
-                      href={`/recipes?tag=${encodeURIComponent(tag)}`}
-                      prefetch={false}
-                      className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 hover:text-orange-600 dark:bg-slate-900 dark:hover:text-orange-400"
-                    >
-                      <Tag className="h-3 w-3" aria-hidden="true" />
-                      {tag}
-                    </Link>
-                  ))}
-               
-=======
                       {updatedDate}
                     </span>
                   )}
@@ -1384,14 +1343,7 @@ export default function RecipeView({
                         {tag}
                       </Link>
                     ))}
->>>>>>> developmentnew
                 </div>
-                 {/* <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                         <User className="h-6 w-6 rounded-full text-xs font-black text-orange-900  dark:text-orange-500" ></User>
-                <p className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-black text-orange-900 dark:bg-orange-500/10 dark:text-orange-500"> 
-                Adhem Mehanni</p>
-             
-                </div> */}
               </div>
 
               {/* =================================================
@@ -1406,6 +1358,7 @@ export default function RecipeView({
                   sizes="(max-width: 1024px) 94vw, 520px"
                   quality={IMAGE_QUALITY}
                   preload
+                  fetchPriority="high"
                   placeholder="blur"
                   blurDataURL={
                     BLUR_DATA_URL
