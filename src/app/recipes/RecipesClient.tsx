@@ -1512,14 +1512,11 @@ function RecipeCard({
               }
               decoding="async"
               draggable={false}
-              unoptimized={
-                cardImageUrl!.startsWith(
-                  "http://",
-                ) ||
-                cardImageUrl!.startsWith(
-                  "https://",
-                )
-              }
+              // Keep recipe card images as their original URLs.
+              // This avoids Next/Image requesting /_next/image for local
+              // /card/... files, which can fail in production when the
+              // original static asset is served outside the optimizer.
+              unoptimized
               onError={() =>
                 onImageError(
                   recipe.id,
