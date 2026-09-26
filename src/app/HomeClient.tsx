@@ -1313,7 +1313,6 @@ export default function HomeClient({
                 className="mt-6 inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-black text-orange-600 shadow-lg transition hover:-translate-y-0.5 hover:bg-[#121b29] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 الذهاب إلى صفحة الوصفات
-
                 <ArrowLeft size={18} />
               </Link>
             </div>
