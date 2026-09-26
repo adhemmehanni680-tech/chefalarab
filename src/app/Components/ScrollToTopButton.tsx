@@ -29,8 +29,7 @@ function getScrollTop(): number {
 
 function setScrollTop(value: number): void {
   const scrollingElement =
-    document.scrollingElement || document.documentElement;
-
+  document.scrollingElement || document.documentElement;
   scrollingElement.scrollTop = value;
   document.documentElement.scrollTop = value;
   document.body.scrollTop = value;
