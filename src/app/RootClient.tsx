@@ -1,3 +1,4 @@
+//RootClient
 "use client";
 
 import dynamic from "next/dynamic";
@@ -72,7 +73,7 @@ export default function RootClient() {
       <InstallAppButton />
       <SearchFloating />
 
-      {/* خفيف ويجب أن يكون جاهزًا فورًا على كل الموبايلات. */}
+      
       <ScrollToTopButton />
 
       {loadNonCriticalUi && localAdsEnabled && !adFreeRoute && (

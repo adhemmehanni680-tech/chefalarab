@@ -9,9 +9,55 @@ type PageProps = {
 };
 
 const BASE_URL = "https://chefalarab.com";
+const SITE_NAME = "شيف العرب";
+const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.jpg`;
 
 function generateSeoTitle(title: string): string {
   return title.startsWith("طريقة عمل") ? title : `طريقة عمل ${title}`;
+}
+
+function cleanSeoTitle(value: string): string {
+  return value
+    .replace(/\s*[|–—-]\s*شيف العرب\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cleanText(value: unknown): string {
+  return String(value ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function seoDescription(value: unknown, fallback: string): string {
+  const text = cleanText(value) || fallback;
+  if (text.length <= 158) return text;
+
+  const shortened = text.slice(0, 158);
+  const lastSpace = shortened.lastIndexOf(" ");
+  return `${shortened.slice(0, lastSpace > 110 ? lastSpace : 155).trim()}…`;
+}
+
+function stringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map(cleanText).filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(/[,،]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function validDate(value: unknown): string | undefined {
+  const text = cleanText(value);
+  if (!text || Number.isNaN(Date.parse(text))) return undefined;
+  return new Date(text).toISOString();
 }
 
 function safelyDecodeSlug(slug: string): string {
@@ -156,28 +202,75 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!recipe) {
     return {
       title: "وصفة غير موجودة",
-      robots: { index: false, follow: false },
+      description:
+        "الوصفة التي تبحث عنها غير متاحة. تصفح وصفات شيف العرب العربية والعالمية.",
+      robots: { index: false, follow: true },
     };
   }
 
-  const title = recipe.seo?.meta_title || generateSeoTitle(recipe.title);
+  const title = cleanSeoTitle(
+    recipe.seo?.meta_title || generateSeoTitle(recipe.title),
+  );
   const baseDescription =
     recipe.seo?.meta_description || recipe.description || recipe.intro || "";
-  const description = baseDescription.trim().slice(0, 160);
+  const description = seoDescription(
+    baseDescription,
+    `تعرف على طريقة عمل ${recipe.title} بمقادير دقيقة وخطوات واضحة ونصائح عملية لنتيجة ناجحة من شيف العرب.`,
+  );
   const url = `${BASE_URL}/recipe/${encodeURIComponent(String(recipe.slug))}`;
   const imageValue =
     recipe.seo?.og_image ||
     (typeof recipe.img === "string" ? recipe.img : recipe.img?.url);
-  const imageUrl = absoluteUrl(imageValue);
+  const imageUrl = absoluteUrl(imageValue) || DEFAULT_OG_IMAGE;
   const imageAlt =
     typeof recipe.img === "string"
       ? recipe.title
       : recipe.img?.alt || recipe.title;
+  const imageWidth =
+    typeof recipe.img === "object" && Number(recipe.img?.width) > 0
+      ? Number(recipe.img.width)
+      : 1200;
+  const imageHeight =
+    typeof recipe.img === "object" && Number(recipe.img?.height) > 0
+      ? Number(recipe.img.height)
+      : 800;
+  const categories = stringList(recipe.category);
+  const tags = stringList(recipe.tags);
+  const keywords = Array.from(
+    new Set(
+      [
+        ...stringList(recipe.seo?.keywords),
+        ...tags,
+        ...categories.map((category) => category.replace(/-/g, " ")),
+        cleanText(recipe.country),
+        cleanText(recipe.data_box?.meal_type),
+        cleanText(recipe.data_box?.dish_type),
+        recipe.title,
+        `طريقة عمل ${recipe.title}`,
+        "وصفات شيف العرب",
+      ].filter(Boolean),
+    ),
+  ).slice(0, 20);
+  const publishedTime = validDate(recipe.created_at || recipe.datePublished);
+  const modifiedTime = validDate(
+    recipe.updated_at || recipe.dateModified || recipe.created_at,
+  );
 
   return {
     title,
     description,
-    alternates: { canonical: url },
+    keywords,
+    authors: [{ name: SITE_NAME, url: `${BASE_URL}/about_us` }],
+    creator: SITE_NAME,
+    publisher: SITE_NAME,
+    category: categories[0]?.replace(/-/g, " ") || "وصفات طبخ",
+    alternates: {
+      canonical: url,
+      languages: {
+        "ar-EG": url,
+        ar: url,
+      },
+    },
     robots: {
       index: true,
       follow: true,
@@ -193,25 +286,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       url,
-      siteName: "شيف العرب",
+      siteName: SITE_NAME,
       type: "article",
       locale: "ar_AR",
-      images: imageUrl
-        ? [
-            {
-              url: imageUrl,
-              width: 1200,
-              height: 800,
-              alt: imageAlt,
-            },
-          ]
-        : undefined,
+      publishedTime,
+      modifiedTime,
+      authors: [`${BASE_URL}/about_us`],
+      section: categories[0]?.replace(/-/g, " ") || "وصفات طبخ",
+      tags,
+      images: [
+        {
+          url: imageUrl,
+          width: imageWidth,
+          height: imageHeight,
+          alt: imageAlt,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: imageUrl ? [imageUrl] : undefined,
+      images: [imageUrl],
     },
   };
 }

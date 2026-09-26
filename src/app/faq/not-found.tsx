@@ -1,12 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "الصفحة غير موجودة | شيف العرب",
+
   description:
-    "عذرًا، الصفحة التي تبحث عنها غير موجودة أو ربما تم تغيير رابطها. يمكنك العودة إلى شيف العرب ومتابعة التصفح.",
+    "الصفحة التي تبحث عنها غير موجودة أو ربما تم تغيير رابطها. يمكنك العودة إلى شيف العرب أو تصفح وصفات الطبخ.",
+
   robots: {
     index: false,
     follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+    },
   },
 };
 
@@ -53,6 +60,7 @@ export default function NotFound() {
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-8rem)] max-w-6xl items-center justify-center">
         <section
+          aria-labelledby="not-found-title"
           className="
             relative w-full max-w-4xl overflow-hidden
             rounded-[2rem]
@@ -66,7 +74,10 @@ export default function NotFound() {
           "
         >
           {/* Top accent */}
-          <div className="h-1.5 w-full bg-gradient-to-l from-lime-400 via-yellow-400 to-orange-400" />
+          <div
+            aria-hidden="true"
+            className="h-1.5 w-full bg-gradient-to-l from-lime-400 via-yellow-400 to-orange-400"
+          />
 
           <div className="relative px-6 py-12 sm:px-10 sm:py-16 lg:px-16 lg:py-20">
             {/* Decorative kitchen elements */}
@@ -103,7 +114,7 @@ export default function NotFound() {
             </div>
 
             <div className="mx-auto max-w-2xl text-center">
-              {/* Small status */}
+              {/* Status */}
               <div
                 className="
                   mx-auto mb-6 inline-flex items-center gap-2
@@ -119,8 +130,15 @@ export default function NotFound() {
                 "
               >
                 <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-40" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-orange-400" />
+                  <span
+                    aria-hidden="true"
+                    className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-40"
+                  />
+
+                  <span
+                    aria-hidden="true"
+                    className="relative inline-flex h-2.5 w-2.5 rounded-full bg-orange-400"
+                  />
                 </span>
 
                 يبدو أن هذا الرابط لم يعد متاحًا
@@ -163,6 +181,7 @@ export default function NotFound() {
 
               {/* Title */}
               <h1
+                id="not-found-title"
                 className="
                   mb-4
                   text-2xl font-black
@@ -188,7 +207,7 @@ export default function NotFound() {
                 "
               >
                 ممكن يكون الرابط اتغير، أو الصفحة اتحذفت، أو فيه خطأ بسيط في
-                العنوان. متقلقش، تقدر ترجع للرئيسية أو تكمل تصفح وصفات شيف
+                العنوان. تقدر ترجع للصفحة الرئيسية أو تتابع تصفح وصفات شيف
                 العرب.
               </p>
 
@@ -235,6 +254,7 @@ export default function NotFound() {
                   الصفحة الرئيسية
 
                   <span
+                    aria-hidden="true"
                     className="
                       transition-transform duration-300
                       group-hover:-translate-x-1
@@ -288,6 +308,7 @@ export default function NotFound() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
+
                     <path
                       d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"
                       stroke="currentColor"
@@ -315,6 +336,7 @@ export default function NotFound() {
                 "
               >
                 <div
+                  aria-hidden="true"
                   className="
                     mt-0.5 flex h-9 w-9 shrink-0
                     items-center justify-center
@@ -328,7 +350,6 @@ export default function NotFound() {
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
-                    aria-hidden="true"
                     className="h-5 w-5"
                   >
                     <path
@@ -336,12 +357,14 @@ export default function NotFound() {
                       stroke="currentColor"
                       strokeWidth="1.8"
                     />
+
                     <path
                       d="M12 10v6"
                       stroke="currentColor"
                       strokeWidth="1.8"
                       strokeLinecap="round"
                     />
+
                     <path
                       d="M12 7h.01"
                       stroke="currentColor"

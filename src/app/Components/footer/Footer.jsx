@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import ConsentSettingsButton from "../ConsentSettingsButton";
 
 const FOOTER_GROUPS = [
@@ -33,30 +36,59 @@ const FOOTER_GROUPS = [
   },
 ];
 
-function FooterLink({ link }) {
-  const className = "transition-colors hover:text-orange-400";
+function isActivePath(pathname, href) {
+  if (!pathname) return false;
+  if (href === "/") return pathname === "/";
+
+  // صفحة تفاصيل أي وصفة تتبع قسم الوصفات في الفوتر.
+  if (href === "/recipes" && pathname.startsWith("/recipe/")) return true;
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function FooterLink({ link, pathname }) {
+  const active = isActivePath(pathname, link.href);
+  const className = `relative inline-flex rounded-lg border-r-2 px-2.5 py-1.5 outline-none transition-[color,background-color,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-orange-400 ${
+    active
+      ? "border-orange-400 bg-orange-500/10 font-bold text-orange-300"
+      : "border-transparent text-gray-400 hover:border-orange-400/40 hover:bg-white/[0.04] hover:text-orange-400"
+  }`;
 
   if (link.external) {
     return (
-      <a href={link.href} className={className}>
+      <a
+        href={link.href}
+        className={className}
+        aria-current={active ? "page" : undefined}
+      >
         {link.title}
       </a>
     );
   }
 
   return (
-    <Link href={link.href} className={className}>
+    <Link
+      href={link.href}
+      className={className}
+      aria-current={active ? "page" : undefined}
+    >
       {link.title}
     </Link>
   );
 }
 
 export default function Footer() {
+  const pathname = usePathname();
+
   return (
     <footer id="site-footer" className="mt-10 w-full bg-gray-900 text-white">
       <div className="mx-auto flex max-w-screen-xl flex-col gap-8 px-4 py-8 sm:flex-row sm:items-start sm:justify-between lg:py-10">
         <div className="flex items-center">
-          <Link href="/" className="flex items-center gap-3" aria-label="شيف العرب - الصفحة الرئيسية">
+          <Link
+            href="/"
+            className="flex items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+            aria-label="شيف العرب - الصفحة الرئيسية"
+          >
             <Image
               src="/favicon.webp"
               alt="شعار شيف العرب"
@@ -73,18 +105,21 @@ export default function Footer() {
         <div className="hidden grid-cols-3 gap-8 sm:grid">
           {FOOTER_GROUPS.map((group) => (
             <section key={group.id} aria-labelledby={`footer-${group.id}`}>
-              <h2 id={`footer-${group.id}`} className="mb-4 text-sm font-semibold text-white">
+              <h2
+                id={`footer-${group.id}`}
+                className="mb-4 text-sm font-semibold text-white"
+              >
                 {group.title}
               </h2>
-              <ul className="space-y-2 font-medium text-gray-400">
+              <ul className="space-y-1 font-medium">
                 {group.links.map((link) => (
                   <li key={link.href}>
-                    <FooterLink link={link} />
+                    <FooterLink link={link} pathname={pathname} />
                   </li>
                 ))}
                 {group.consent && (
-                  <li>
-                    <ConsentSettingsButton className="text-right transition-colors hover:text-orange-400" />
+                  <li className="px-2.5 py-1.5">
+                    <ConsentSettingsButton className="text-right text-gray-400 transition-colors hover:text-orange-400" />
                   </li>
                 )}
               </ul>
@@ -97,18 +132,22 @@ export default function Footer() {
             <details key={group.id} className="group border-b border-white/10 pb-3">
               <summary className="flex cursor-pointer list-none items-center justify-between text-lg font-semibold text-white [&::-webkit-details-marker]:hidden">
                 {group.title}
-                <span aria-hidden="true" className="text-2xl leading-none group-open:hidden">+</span>
-                <span aria-hidden="true" className="hidden text-2xl leading-none group-open:inline">−</span>
+                <span aria-hidden="true" className="text-2xl leading-none group-open:hidden">
+                  +
+                </span>
+                <span aria-hidden="true" className="hidden text-2xl leading-none group-open:inline">
+                  −
+                </span>
               </summary>
-              <ul className="mt-3 space-y-2 font-medium text-gray-400">
+              <ul className="mt-3 space-y-1 font-medium">
                 {group.links.map((link) => (
                   <li key={link.href}>
-                    <FooterLink link={link} />
+                    <FooterLink link={link} pathname={pathname} />
                   </li>
                 ))}
                 {group.consent && (
-                  <li>
-                    <ConsentSettingsButton className="text-right transition-colors hover:text-orange-400" />
+                  <li className="px-2.5 py-1.5">
+                    <ConsentSettingsButton className="text-right text-gray-400 transition-colors hover:text-orange-400" />
                   </li>
                 )}
               </ul>

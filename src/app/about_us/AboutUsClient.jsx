@@ -76,6 +76,21 @@ export default function AboutUsClient() {
       className="min-h-screen bg-gray-50 dark:bg-[#0b1220] px-4 py-14 sm:px-6 lg:px-8"
     >
       <div className="mx-auto mt-8 max-w-5xl">
+        <nav
+          aria-label="مسار التنقل"
+          className="mb-6 flex items-center gap-2 text-sm font-semibold text-gray-500 dark:text-gray-400"
+        >
+          <Link
+            href="/"
+            className="rounded-md outline-none transition-colors hover:text-orange-600 focus-visible:ring-2 focus-visible:ring-orange-400 dark:hover:text-orange-400"
+          >
+            الرئيسية
+          </Link>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page" className="text-gray-800 dark:text-gray-200">
+            من نحن
+          </span>
+        </nav>
 
         {/* =========================================
             Header
@@ -92,7 +107,7 @@ export default function AboutUsClient() {
           </div>
 
           <h1 className="text-3xl font-bold text-gray-950 dark:text-white sm:text-4xl">
-            من نحن
+            من نحن في شيف العرب؟
           </h1>
 
         </header>
@@ -103,7 +118,7 @@ export default function AboutUsClient() {
 
         <section
           aria-labelledby="about-chefalarab"
-          className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8"
+          className="rounded-3xl border border-gray-900 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8"
         >
           <h2
             id="about-chefalarab"
@@ -154,7 +169,7 @@ export default function AboutUsClient() {
             return (
               <article
                 key={card.title}
-                className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md dark:border-gray-800 dark:bg-gray-900"
+                className="rounded-3xl border border-gray-900 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md dark:border-gray-800 dark:bg-gray-900"
               >
                 <div className="mb-4 flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500/10">
@@ -181,7 +196,7 @@ export default function AboutUsClient() {
             Preparation process
         ========================================= */}
 
-        <section className="mt-8 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section className="mt-8 overflow-hidden rounded-3xl border border-gray-900 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex w-full items-center justify-between gap-4 p-6 text-right transition hover:bg-gray-50 dark:hover:bg-gray-800/60 sm:p-7">
             <div className="flex items-center gap-3">
               <ListChecks
@@ -230,7 +245,7 @@ export default function AboutUsClient() {
             What visitors get
         ========================================= */}
 
-        <section className="mt-8 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section className="mt-8 overflow-hidden rounded-3xl border border-gray-900 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex w-full items-center justify-between gap-4 p-6 text-right transition hover:bg-gray-50 dark:hover:bg-gray-800/60 sm:p-7">
             <div className="flex items-center gap-3">
               <HeartHandshake
@@ -274,7 +289,7 @@ export default function AboutUsClient() {
             Management
         ========================================= */}
 
-        <section className="mt-8 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section className="mt-8 overflow-hidden rounded-3xl border border-gray-900 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex w-full items-center justify-between gap-4 p-6 text-right transition hover:bg-gray-50 dark:hover:bg-gray-800/60 sm:p-7">
             <div className="flex items-center gap-3">
               <Users
@@ -317,7 +332,7 @@ export default function AboutUsClient() {
             Editorial policy
         ========================================= */}
 
-        <section className="mt-8 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section className="mt-8 overflow-hidden rounded-3xl border border-gray-900 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex w-full items-center justify-between gap-4 p-6 text-right transition hover:bg-gray-50 dark:hover:bg-gray-800/60 sm:p-7">
             <div className="flex items-center gap-3">
               <BookOpen
@@ -398,7 +413,7 @@ export default function AboutUsClient() {
 
         <nav
           aria-label="روابط معلومات الموقع"
-          className="mt-8 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+          className="mt-8 rounded-3xl border border-gray-900 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
         >
           <h2 className="mb-5 text-xl font-bold text-gray-950 dark:text-white">
             معلومات وسياسات الموقع
@@ -407,28 +422,28 @@ export default function AboutUsClient() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/contact_us"
-              className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-orange-400 hover:text-orange-600 dark:border-gray-700 dark:text-gray-300 dark:hover:text-orange-400"
+              className="rounded-xl border border-gray-900 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-orange-400 hover:text-orange-600 dark:border-gray-700 dark:text-gray-300 dark:hover:text-orange-400"
             >
               تواصل معنا
             </Link>
 
             <Link
               href="/privacy_policy"
-              className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-orange-400 hover:text-orange-600 dark:border-gray-700 dark:text-gray-300 dark:hover:text-orange-400"
+              className="rounded-xl border border-gray-900 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-orange-400 hover:text-orange-600 dark:border-gray-700 dark:text-gray-300 dark:hover:text-orange-400"
             >
               سياسة الخصوصية
             </Link>
 
             <Link
               href="/cookie_policy"
-              className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-orange-400 hover:text-orange-600 dark:border-gray-700 dark:text-gray-300 dark:hover:text-orange-400"
+              className="rounded-xl border border-gray-900 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-orange-400 hover:text-orange-600 dark:border-gray-700 dark:text-gray-300 dark:hover:text-orange-400"
             >
               سياسة ملفات الارتباط
             </Link>
 
             <Link
               href="/terms_conditions"
-              className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-orange-400 hover:text-orange-600 dark:border-gray-700 dark:text-gray-300 dark:hover:text-orange-400"
+              className="rounded-xl border border-gray-900 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-orange-400 hover:text-orange-600 dark:border-gray-700 dark:text-gray-300 dark:hover:text-orange-400"
             >
               الشروط والأحكام
             </Link>

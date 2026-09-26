@@ -1,3 +1,4 @@
+//HOMEClient
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -698,10 +699,10 @@ function getCategoryIcon(
   }
 
   if (
-    name.includes("مشروبات-ساخنة") ||
-    name.includes(
-      "المشروبات الساخنة"
-    )
+    name.includes("مشروبات ساخنة") ||
+    name.includes("المشروبات الساخنة") ||
+    name.includes("مشروبات ساخنه") ||
+    name.includes("المشروبات الساخنه")
   ) {
     return Coffee;
   }

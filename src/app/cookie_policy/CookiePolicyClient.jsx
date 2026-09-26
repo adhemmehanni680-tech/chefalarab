@@ -86,9 +86,28 @@ export default function CookiePolicyClient() {
   ];
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden">
+    <main
+      dir="rtl"
+      className="min-h-screen overflow-x-hidden bg-gray-50 px-6 py-16 dark:bg-gray-900"
+    >
 
       <div className="max-w-5xl mx-auto mt-10">
+        <nav
+          aria-label="مسار التنقل"
+          className="mb-6 flex items-center gap-2 text-sm font-semibold text-gray-500 dark:text-gray-400"
+        >
+          <Link
+            href="/"
+            className="rounded-md outline-none transition-colors hover:text-blue-600 focus-visible:ring-2 focus-visible:ring-blue-400 dark:hover:text-blue-400"
+          >
+            الرئيسية
+          </Link>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page" className="text-gray-800 dark:text-gray-200">
+            سياسة الكوكيز
+          </span>
+        </nav>
+
         <h1
           className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"
         >
@@ -106,7 +125,10 @@ export default function CookiePolicyClient() {
             لملفات تعريف الارتباط، مع التأكيد على عدم تفعيل أي ملفات غير ضرورية
             إلا بعد موافقتك.
           </p>
-          <p className="mt-3 text-xs font-bold text-gray-400">آخر تحديث: 17 سبتمبر 2026</p>
+          <p className="mt-3 text-xs font-bold text-gray-400">
+            آخر تحديث:{" "}
+            <time dateTime="2026-09-17">17 سبتمبر 2026</time>
+          </p>
         </div>
 
         {sections.map((section, idx) => (
@@ -140,8 +162,12 @@ export default function CookiePolicyClient() {
                     <a
                       key={i}
                       href={l.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      target={l.href.startsWith("http") ? "_blank" : undefined}
+                      rel={
+                        l.href.startsWith("http")
+                          ? "noopener noreferrer"
+                          : undefined
+                      }
                       className="text-blue-400 hover:underline text-sm"
                     >
                       {l.label}

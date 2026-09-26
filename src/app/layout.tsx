@@ -77,8 +77,7 @@ const arefRuqaa =
    Site
    ========================================================= */
 
-const SITE_URL =
-  "https://chefalarab.com";
+const SITE_URL = "https://chefalarab.com";
 
 /* =========================================================
    Google Tag Manager
@@ -251,25 +250,94 @@ export const metadata:
   applicationName:
     "شيف العرب",
 
-  keywords: [
-    "شيف العرب",
-    "وصفات عربية",
-    "وصفات طبخ",
-    "أكلات مصرية",
-    "أكلات شرقية",
-    "وصفات عالمية",
-    "سلطات",
-    "مخللات",
-    "حلويات",
-    "مثلجات",
-    "مشروبات",
-    "وصفات سهلة وسريعة",
-  ],
+keywords: [
+  // العربية
+  "شيف العرب",
+  "وصفات طبخ",
+  "وصفات عربية",
+  "وصفات مصرية",
+  "أكلات مصرية",
+  "وصفات عالمية",
+  "وصفات سهلة",
+  "وصفات حلويات",
+  "وصفات سلطات",
+  "وصفات مشروبات",
+  "مخللات",
+  "مثلجات",
+  "طريقة عمل",
+  "وصفات",
+  "المطبخ العربي",
+  "المطبخ الآسيوي",
+  "المطبخ الأمريكي",
+  "المطبخ الأوروبي",
+  "المطبخ اللاتيني",
+  "المطبخ الأفريقي",
+  "المطبخ الرمضاني",
+  "حلويات",
+  "الحلويات الشرقية",
+  "المخبوزات والمعجنات",
+  "مشروبات ساخنة",
+  "وجبات سريعة",
+  "سندويشات",
+  "أطباق رئيسية",
+  "آيس كريم",
+  "السلطات",
+  "أكلات نباتية",
+  "الغداء",
+  "العشاء",
+  "الإفطار",
+  "يخنات",
+  "محاشي",
+  "شوربة",
+  "أكلات عيد الأضحى",
+  "عصائر",
+
+  // English
+  "chefalarab",
+  "Arabic recipes",
+  "Arabic cooking recipes",
+  "Egyptian recipes",
+  "Egyptian food",
+  "international recipes",
+  "easy recipes",
+  "dessert recipes",
+  "salad recipes",
+  "drink recipes",
+  "pickle recipes",
+  "frozen dessert recipes",
+  "how to cook",
+  "recipes",
+  "Arabic cuisine",
+  "Asian cuisine",
+  "American cuisine",
+  "European cuisine",
+  "Latin American cuisine",
+  "African cuisine",
+  "Ramadan recipes",
+  "desserts",
+  "Middle Eastern desserts",
+  "baked goods and pastries",
+  "hot drinks",
+  "quick meals",
+  "sandwich recipes",
+  "main dishes",
+  "ice cream recipes",
+  "salads",
+  "vegetarian recipes",
+  "lunch recipes",
+  "dinner recipes",
+  "breakfast recipes",
+  "stew recipes",
+  "stuffed vegetables",
+  "soup recipes",
+  "Eid al-Adha recipes",
+  "juice recipes",
+],
 
   authors: [
     {
       name:
-        "Adhem Mehanni",
+        "شيف العرب",
 
       url:
         SITE_URL,

@@ -1,12 +1,22 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "الصفحة غير موجودة | شيف العرب",
+export const metadata: Metadata = {
+  title: {
+    absolute: "الصفحة غير موجودة | شيف العرب",
+  },
   description:
     "عذرًا، الصفحة التي تبحث عنها غير موجودة أو ربما تم تغيير رابطها. يمكنك العودة إلى شيف العرب ومتابعة التصفح.",
   robots: {
     index: false,
     follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 

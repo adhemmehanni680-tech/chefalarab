@@ -1,5 +1,4 @@
 import {
-
   FileText,
   ShieldCheck,
   Copyright,
@@ -13,7 +12,6 @@ import {
 import Link from "next/link";
 
 export default function TermsConditionsClient() {
-
   const sections = [
     {
       icon: ShieldCheck,
@@ -25,49 +23,66 @@ export default function TermsConditionsClient() {
       icon: FileText,
       title: "طبيعة المحتوى والغرض منه",
       content:
-        "يقدم موقع شيف العرب وصفات ومعلومات طبخ لأغراض معرفية وتثقيفية عامة. قد تختلف النتائج حسب المكونات والأدوات وطرق الطهي. أنت تتحمل مسؤولية تطبيق الوصفات والتحقق من الملاءمة الغذائية والحساسية وسلامة الطعام.",
+        "يقدم موقع شيف العرب وصفات ومعلومات عن الطبخ لأغراض معرفية وتثقيفية عامة. قد تختلف النتائج حسب المكونات والأدوات وطرق التحضير والطهي. تقع مسؤولية التحقق من ملاءمة المكونات للحالة الغذائية أو الحساسية وسلامة الطعام على المستخدم.",
     },
     {
       icon: AlertTriangle,
       title: "حدود المسؤولية",
       content:
-        "نبذل جهدًا لتقديم محتوى دقيق ومفيد، ومع ذلك لا نضمن خلو المحتوى من الأخطاء أو اكتماله في جميع الأوقات. لا يتحمل الموقع أي مسؤولية عن أي أضرار مباشرة أو غير مباشرة ناتجة عن استخدام المحتوى أو الاعتماد عليه.",
+        "نبذل جهدًا معقولًا لتقديم محتوى دقيق ومفيد، ومع ذلك قد يحتوي المحتوى أحيانًا على أخطاء أو معلومات غير مكتملة. لا يُعد محتوى الموقع بديلًا عن الإرشادات المتخصصة المتعلقة بسلامة الغذاء أو الحساسية الغذائية أو أي احتياج مهني متخصص.",
     },
     {
       icon: Copyright,
       title: "حقوق الملكية الفكرية",
       content:
-        "جميع النصوص والتصاميم والشعارات والمحتوى المنشور في الموقع مملوكة لموقع شيف العرب أو لأصحابها إن وُجد، ومحميّة بموجب حقوق الملكية الفكرية. لا يجوز نسخ أو إعادة نشر أو توزيع أي جزء من المحتوى دون إذن كتابي مسبق، باستثناء الاستخدام الشخصي غير التجاري مع الإشارة للمصدر.",
+        "جميع النصوص والتصاميم والشعارات والمحتوى المنشور في الموقع مملوكة لموقع شيف العرب أو لأصحاب الحقوق المعنيين، ومحمية بموجب القوانين المعمول بها. لا يجوز نسخ أو إعادة نشر أو توزيع المحتوى المنشور على الموقع لأغراض تجارية دون الحصول على إذن مسبق من صاحب الحق. يُسمح بالاستخدام الشخصي غير التجاري مع احترام حقوق الملكية والإشارة إلى المصدر عند الاقتباس المسموح به.",
     },
     {
       icon: Link2,
       title: "الروابط الخارجية",
       content:
-        "قد يحتوي الموقع على روابط لمواقع أو خدمات خارجية. نحن غير مسؤولين عن محتوى تلك المواقع أو سياسات الخصوصية الخاصة بها، ويكون استخدامك لها على مسؤوليتك.",
+        "قد يحتوي الموقع على روابط لمواقع أو خدمات خارجية. لا نتحكم في محتوى هذه المواقع أو ممارسات الخصوصية الخاصة بها، ولذلك ننصح بمراجعة سياسات الخصوصية والشروط الخاصة بأي موقع خارجي قبل استخدامه.",
     },
     {
       icon: BadgeInfo,
       title: "الإعلانات والأطراف الثالثة (AdSense)",
       content:
-        "قد يعرض الموقع إعلانات من أطراف ثالثة مثل Google AdSense. قد تستخدم هذه الجهات ملفات تعريف الارتباط وتقنيات مشابهة لعرض الإعلانات وقياس الأداء. نحن لسنا مسؤولين عن محتوى الإعلانات المعروضة من أطراف ثالثة.",
+        "قد يعرض الموقع إعلانات من أطراف ثالثة، بما في ذلك Google AdSense. قد تستخدم الجهات الإعلانية ملفات تعريف الارتباط وتقنيات مشابهة وفقًا لسياساتها الخاصة، وذلك لأغراض مثل عرض الإعلانات وقياس الأداء وتخصيصها عندما يكون ذلك متاحًا ومسموحًا به. لا يتحكم موقع شيف العرب في محتوى الإعلانات التي تعرضها الجهات الخارجية.",
       links: [
-        { label: "سياسة Google للإعلانات", href: "https://policies.google.com/technologies/ads" },
-        { label: "سياسة الخصوصية", href: "/privacy_policy", internal: true },
-        { label: "سياسة الكوكيز", href: "/cookie_policy", internal: true },
+        {
+          label: "سياسة Google لتقنيات الإعلانات",
+          href: "https://policies.google.com/technologies/ads",
+        },
+        {
+          label: "سياسة الخصوصية",
+          href: "/privacy_policy",
+          internal: true,
+        },
+        {
+          label: "سياسة ملفات تعريف الارتباط",
+          href: "/cookie_policy",
+          internal: true,
+        },
       ],
     },
     {
       icon: Cookie,
       title: "ملفات تعريف الارتباط",
       content:
-        "قد يستخدم الموقع ملفات تعريف الارتباط لتحسين الأداء وتجربة المستخدم وقياس الزيارات ودعم الإعلانات. يمكنك إدارة ملفات الارتباط من إعدادات المتصفح لديك.",
-      links: [{ label: "اقرأ سياسة الكوكيز بالتفصيل", href: "/cookie_policy", internal: true }],
+        "قد يستخدم الموقع ملفات تعريف الارتباط وتقنيات مشابهة لتحسين الأداء وتجربة المستخدم وقياس الزيارات ودعم بعض وظائف الموقع والإعلانات. يمكنك إدارة ملفات تعريف الارتباط من خلال إعدادات المتصفح أو خيارات الخصوصية المتاحة على الموقع، بحسب ما هو متاح.",
+      links: [
+        {
+          label: "اقرأ سياسة ملفات تعريف الارتباط بالتفصيل",
+          href: "/cookie_policy",
+          internal: true,
+        },
+      ],
     },
     {
       icon: RefreshCw,
       title: "التعديلات على الشروط",
       content:
-        "يحتفظ موقع شيف العرب بالحق في تعديل هذه الشروط والأحكام في أي وقت. يتم نشر النسخة المحدثة على هذه الصفحة وتصبح سارية فور نشرها. ننصح بمراجعة الصفحة دوريًا.",
+        "قد يتم تحديث هذه الشروط والأحكام من وقت لآخر لمواكبة التغييرات في الموقع أو الخدمات أو المتطلبات القانونية. عند إجراء أي تحديث، سيتم نشر النسخة الجديدة على هذه الصفحة مع تحديث تاريخ المراجعة.",
     },
     {
       icon: Mail,
@@ -75,7 +90,10 @@ export default function TermsConditionsClient() {
       content: (
         <>
           لأي استفسار بخصوص الشروط والأحكام يمكنك التواصل معنا عبر البريد:{" "}
-          <Link href="mailto:chefalarabonline@gmail.com" className="text-white font-semibold">
+          <Link
+            href="mailto:chefalarabonline@gmail.com"
+            className="font-semibold text-blue-400 hover:underline"
+          >
             chefalarabonline@gmail.com
           </Link>
         </>
@@ -84,61 +102,108 @@ export default function TermsConditionsClient() {
   ];
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16 px-6 overflow-x-hidden transition-colors duration-500">
+    <main
+      dir="rtl"
+      className="
+        min-h-screen
+        overflow-x-hidden
+        bg-gray-50
+        px-6
+        py-16
+        transition-colors
+        duration-500
+        dark:bg-gray-900
+      "
+    >
+      <div className="mx-auto mt-10 max-w-5xl">
+        <header className="mb-10 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100">
+            الشروط والأحكام
+          </h1>
 
+          <p className="text-xs font-bold text-gray-500 dark:text-gray-400">
+            آخر تحديث: 25 سبتمبر 2026
+          </p>
+        </header>
 
-      <div className="max-w-5xl mx-auto mt-10">
-        <h1
-          className="text-4xl font-bold text-gray-900 dark:text-gray-100 text-center mb-8"
-        >
-          الشروط والأحكام
-        </h1>
-        <p className="mb-8 text-center text-xs font-bold text-gray-500 dark:text-gray-400">آخر تحديث: 17 سبتمبر 2026</p>
+        {sections.map((section, idx) => {
+          const Icon = section.icon;
 
-        {sections.map((section, idx) => (
-          <section
-            key={idx}
-            className="bg-gray-800 rounded-2xl shadow-md p-8 mb-6"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <section.icon className="text-blue-400 dark:text-blue-400" />
-              <h2 className="text-2xl font-semibold text-gray-100">{section.title}</h2>
-            </div>
+          return (
+            <section
+              key={idx}
+              className="
+                mb-6
+                rounded-2xl
+                bg-gray-800
+                p-8
+                shadow-md
+              "
+            >
+              <div className="mb-3 flex items-center gap-3">
+                <Icon className="text-blue-400" />
 
-            <p className="text-gray-300 text-sm sm:text-base leading-relaxed   p-2 rounded-lg  hover:bg-orange-500 hover:text-black break-words">
-              {section.content}
-            </p>
-
-            {section.links?.length > 0 && (
-              <div className="mt-4 flex flex-col gap-2">
-                {section.links.map((l, i) =>
-                  l.internal ? (
-                    <Link
-                      key={i}
-                      href={l.href}
-                      className="text-blue-400 hover:underline text-sm break-words"
-                    >
-                      {l.label}
-                    </Link>
-                  ) : (
-                    <a
-                      key={i}
-                      href={l.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:underline text-sm break-words"
-                    >
-                      {l.label}
-                    </a>
-                  )
-                )}
+                <h2 className="text-2xl font-semibold text-gray-100">
+                  {section.title}
+                </h2>
               </div>
-            )}
-          </section>
-        ))}
+
+              <div
+                className="
+                  break-words
+                  rounded-lg
+                  p-2
+                  text-sm
+                  leading-relaxed
+                  text-gray-300
+                  transition-colors
+                  sm:text-base
+                  hover:bg-orange-500
+                  hover:text-black
+                "
+              >
+                {section.content}
+              </div>
+
+              {section.links?.length > 0 && (
+                <div className="mt-4 flex flex-col gap-2">
+                  {section.links.map((link, i) =>
+                    link.internal ? (
+                      <Link
+                        key={i}
+                        href={link.href}
+                        className="
+                          break-words
+                          text-sm
+                          text-blue-400
+                          hover:underline
+                        "
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        key={i}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="
+                          break-words
+                          text-sm
+                          text-blue-400
+                          hover:underline
+                        "
+                      >
+                        {link.label}
+                      </a>
+                    )
+                  )}
+                </div>
+              )}
+            </section>
+          );
+        })}
       </div>
-
-
     </main>
   );
 }

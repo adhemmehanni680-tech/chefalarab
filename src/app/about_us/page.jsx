@@ -2,10 +2,19 @@
 
 import AboutUsClient from "./AboutUsClient";
 
+const SITE_URL = "https://chefalarab.com";
+const PAGE_URL = `${SITE_URL}/about_us`;
+const SITE_NAME = "شيف العرب";
+const DESCRIPTION =
+  "تعرف على شيف العرب، موقع عربي للوصفات العربية والعالمية، ومنهج إعداد المحتوى وتنظيم الوصفات ومراجعتها، وما نقدمه للزائر وطرق التواصل معنا.";
+
+function serializeJsonLd(value) {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
 export const metadata = {
-  title: "من نحن – شيف العرب | وصفات عربية وعالمية",
-  description:
-    "تعرف على شيف العرب، هدف الموقع، نوع المحتوى الذي نقدمه، طريقة إعداد وتنظيم الوصفات، وما نقدمه للزائر، وكيفية التواصل مع إدارة الموقع.",
+  title: "من نحن – منصة وصفات عربية وعالمية موثوقة",
+  description: DESCRIPTION,
   keywords: [
     "من نحن شيف العرب",
     "شيف العرب",
@@ -14,21 +23,31 @@ export const metadata = {
     "وصفات عالمية",
     "موقع طبخ",
     "وصفات موثوقة",
+    "محتوى طبخ عربي",
+    "إدارة شيف العرب",
   ],
 
+  authors: [{ name: SITE_NAME, url: PAGE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "الطبخ والوصفات",
+
   alternates: {
-    canonical: "https://chefalarab.com/about_us",
+    canonical: PAGE_URL,
+    languages: {
+      "ar-EG": PAGE_URL,
+      ar: PAGE_URL,
+    },
   },
 
   openGraph: {
-    title: "من نحن – شيف العرب",
-    description:
-      "تعرف على هدف شيف العرب، طريقة إعداد وتنظيم الوصفات، وما يقدمه الموقع للزائر.",
-    url: "https://chefalarab.com/about_us",
-    siteName: "شيف العرب",
+    title: "من نحن – شيف العرب ووصفاتنا العربية والعالمية",
+    description: DESCRIPTION,
+    url: PAGE_URL,
+    siteName: SITE_NAME,
     images: [
       {
-        url: "https://chefalarab.com/og-image.jpg",
+        url: `${SITE_URL}/og-image.jpg`,
         width: 1200,
         height: 630,
         alt: "شيف العرب - من نحن",
@@ -41,42 +60,105 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "من نحن – شيف العرب",
-    description:
-      "تعرف على هدف شيف العرب، وطريقة إعداد الوصفات، وما يقدمه الموقع للزائر.",
-    images: ["https://chefalarab.com/og-image.jpg"],
+    description: DESCRIPTION,
+    images: [`${SITE_URL}/og-image.jpg`],
   },
 
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
 export default function AboutPage() {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-
-    name: "شيف العرب",
-    alternateName: "Chef Al Arab",
-
-    url: "https://chefalarab.com",
-
-    logo: {
-      "@type": "ImageObject",
-      url: "https://chefalarab.com/favicon.webp",
-    },
-
-    description:
-      "شيف العرب موقع عربي متخصص في تقديم وصفات الطبخ العربية والعالمية بطريقة واضحة ومنظمة، مع مقادير وخطوات ونصائح تساعد المستخدم على إعداد الوصفات في المنزل.",
-
-    contactPoint: {
-      "@type": "ContactPoint",
-      contactType: "customer support",
-      availableLanguage: ["Arabic"],
-      email: "chefalarabonline@gmail.com",
-      url: "https://chefalarab.com/contact_us",
-    },
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
+        name: SITE_NAME,
+        alternateName: "Chef Al Arab",
+        url: SITE_URL,
+        logo: {
+          "@type": "ImageObject",
+          "@id": `${SITE_URL}/#logo`,
+          url: `${SITE_URL}/favicon.webp`,
+          contentUrl: `${SITE_URL}/favicon.webp`,
+          caption: "شعار شيف العرب",
+        },
+        image: { "@id": `${SITE_URL}/#logo` },
+        description: DESCRIPTION,
+        email: "chefalarabonline@gmail.com",
+        contactPoint: {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          availableLanguage: ["ar"],
+          areaServed: "Worldwide",
+          email: "chefalarabonline@gmail.com",
+          url: `${SITE_URL}/contact_us`,
+        },
+        knowsAbout: [
+          "وصفات الطبخ العربية",
+          "الوصفات العالمية",
+          "الحلويات والمخبوزات",
+          "المشروبات والسلطات",
+          "نصائح الطهي المنزلي",
+        ],
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        url: SITE_URL,
+        name: SITE_NAME,
+        alternateName: "Chef Al Arab",
+        inLanguage: "ar",
+        publisher: { "@id": `${SITE_URL}/#organization` },
+      },
+      {
+        "@type": "AboutPage",
+        "@id": `${PAGE_URL}#webpage`,
+        url: PAGE_URL,
+        name: "من نحن – شيف العرب",
+        description: DESCRIPTION,
+        inLanguage: "ar",
+        isPartOf: { "@id": `${SITE_URL}/#website` },
+        about: { "@id": `${SITE_URL}/#organization` },
+        mainEntity: { "@id": `${SITE_URL}/#organization` },
+        breadcrumb: { "@id": `${PAGE_URL}#breadcrumb` },
+        primaryImageOfPage: {
+          "@type": "ImageObject",
+          url: `${SITE_URL}/og-image.jpg`,
+          width: 1200,
+          height: 630,
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${PAGE_URL}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "الرئيسية",
+            item: SITE_URL,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "من نحن",
+            item: PAGE_URL,
+          },
+        ],
+      },
+    ],
   };
 
   return (
@@ -84,7 +166,7 @@ export default function AboutPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
+          __html: serializeJsonLd(jsonLd),
         }}
       />
 

@@ -11,6 +11,7 @@ import {
   MapPin,
   Tag,
   Users,
+ 
   UtensilsCrossed,
 } from "lucide-react";
 
@@ -340,6 +341,13 @@ function formatDate(value: unknown): string | null {
     month: "long",
     day: "numeric",
   }).format(date);
+}
+
+function machineDate(value: unknown): string | undefined {
+  const text = asString(value);
+  if (!text) return undefined;
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }
 
 function SectionHeading({ icon, children }: { icon: string; children: ReactNode }) {
@@ -1010,7 +1018,9 @@ export default function RecipeView({
   const categories = asStringList(recipe.category);
   const tags = asStringList(recipe.tags).slice(0, 8);
   const dataBox = recipe.data_box || {};
-  const updatedDate = formatDate(recipe.updated_at || recipe.created_at);
+  const rawUpdatedDate = recipe.updated_at || recipe.created_at;
+  const updatedDate = formatDate(rawUpdatedDate);
+  const updatedDateTime = machineDate(rawUpdatedDate);
 
   type RawInfoItem = {
     label: string;
@@ -1098,7 +1108,9 @@ export default function RecipeView({
 
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] lg:items-center">
               <div>
+               
                 <div className="mb-3 flex flex-wrap gap-2">
+                 
                   {recipe.country && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-black text-orange-700 dark:bg-orange-500/10 dark:text-orange-300">
                       <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
@@ -1109,6 +1121,7 @@ export default function RecipeView({
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                       {String(dataBox.meal_type)}
                     </span>
+                    
                   )}
                 </div>
 
@@ -1123,7 +1136,12 @@ export default function RecipeView({
                 )}
 
                 <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                  {updatedDate && <span>آخر تحديث: {updatedDate}</span>}
+                  {updatedDate && (
+                    <span>
+                      آخر تحديث:{" "}
+                      <time dateTime={updatedDateTime}>{updatedDate}</time>
+                    </span>
+                  )}
                   {tags.slice(0, 4).map((tag) => (
                     <Link
                       key={tag}
@@ -1135,7 +1153,14 @@ export default function RecipeView({
                       {tag}
                     </Link>
                   ))}
+               
                 </div>
+                 {/* <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                         <User className="h-6 w-6 rounded-full text-xs font-black text-orange-900  dark:text-orange-500" ></User>
+                <p className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-black text-orange-900 dark:bg-orange-500/10 dark:text-orange-500"> 
+                Adhem Mehanni</p>
+             
+                </div> */}
               </div>
 
               <div className="relative aspect-[3/2] overflow-hidden rounded-[30px] bg-slate-200 shadow-2xl dark:bg-slate-800">
@@ -1146,7 +1171,6 @@ export default function RecipeView({
                   sizes="(max-width: 1024px) 94vw, 520px"
                   quality={IMAGE_QUALITY}
                   preload
-                  fetchPriority="high"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
                   decoding="async"
