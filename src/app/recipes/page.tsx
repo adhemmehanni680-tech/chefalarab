@@ -15,13 +15,7 @@ type Recipe = {
   cookingTimeMinutes?: number | null;
   contentFlags?: unknown;
 
-  img: {
-    url?: string;
-    "url-card"?: string;
-    alt?: string;
-    width?: number;
-    height?: number;
-  };
+  img?: unknown;
 };
 
 type PageProps = {
@@ -58,6 +52,122 @@ function readableFilter(value: string): string {
     .replace(/[-_]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function normalizeImageUrl(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+
+  let clean = value.trim();
+  if (!clean) return undefined;
+
+  clean = clean.replace(/\\/g, "/");
+
+  if (clean.startsWith("//")) {
+    return `https:${clean}`;
+  }
+
+  if (/^https?:\/\//i.test(clean)) {
+    // The production site is HTTPS; prevent mixed-content blocking.
+    return clean.replace(/^http:\/\//i, "https://");
+  }
+
+  clean = clean.replace(/^\.\//, "");
+
+  return clean.startsWith("/") ? clean : `/${clean}`;
+}
+
+type RecipeImageData = {
+  url?: string;
+  "url-card"?: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+};
+
+function getRecipeImageData(value: unknown): RecipeImageData {
+  const result: RecipeImageData = {};
+  const visited = new Set<object>();
+
+  const setUrl = (
+    key: "url" | "url-card",
+    rawValue: unknown,
+  ) => {
+    const normalized = normalizeImageUrl(rawValue);
+    if (!normalized || result[key]) return;
+    result[key] = normalized;
+  };
+
+  const visit = (node: unknown, depth = 0) => {
+    if (depth > 7 || node == null) return;
+
+    if (typeof node === "string") {
+      setUrl("url", node);
+      return;
+    }
+
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item, depth + 1);
+      return;
+    }
+
+    if (typeof node !== "object") return;
+
+    if (visited.has(node)) return;
+    visited.add(node);
+
+    const source = node as Record<string, unknown>;
+
+    // Card image variants have priority for recipe cards.
+    setUrl("url-card", source["url-card"]);
+    setUrl("url-card", source["urlCard"]);
+    setUrl("url-card", source["cardUrl"]);
+    setUrl("url-card", source["card_url"]);
+
+    // Main image variants.
+    setUrl("url", source.url);
+    setUrl("url", source.src);
+    setUrl("url", source.secure_url);
+    setUrl("url", source.image);
+
+    if (!result.alt) {
+      const alt = source.alt ?? source.alternativeText;
+      if (typeof alt === "string" && alt.trim()) {
+        result.alt = alt.trim();
+      }
+    }
+
+    if (result.width == null) {
+      const width = Number(source.width);
+      if (Number.isFinite(width) && width > 0) {
+        result.width = width;
+      }
+    }
+
+    if (result.height == null) {
+      const height = Number(source.height);
+      if (Number.isFinite(height) && height > 0) {
+        result.height = height;
+      }
+    }
+
+    // Handles plain objects and common CMS/API wrappers.
+    for (const key of [
+      "data",
+      "attributes",
+      "formats",
+      "original",
+      "card",
+      "medium",
+      "small",
+      "thumbnail",
+      "image",
+    ]) {
+      visit(source[key], depth + 1);
+    }
+  };
+
+  visit(value);
+  return result;
 }
 
 function serializeJsonLd(value: unknown): string {
@@ -284,7 +394,7 @@ export default async function RecipesPage({
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, 160),
-      img: source.img,
+      img: getRecipeImageData(source.img),
       cookingTimeMinutes:
         numericValue(
           source.cooking_time ??
@@ -382,7 +492,8 @@ export default async function RecipesPage({
       itemListOrder: "https://schema.org/ItemListOrderDescending",
       itemListElement: seoPageRecipes.map((recipe, index) => {
         const recipeUrl = `${SITE_URL}/recipe/${encodeURIComponent(recipe.slug)}`;
-        const imagePath = recipe.img?.["url-card"] || recipe.img?.url;
+        const imageData = getRecipeImageData(recipe.img);
+        const imagePath = imageData["url-card"] || imageData.url;
 
         return {
           "@type": "ListItem",

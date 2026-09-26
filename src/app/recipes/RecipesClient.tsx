@@ -211,22 +211,24 @@ function normalizeImageUrl(
     return undefined;
   }
 
-  const cleanUrl = url.trim();
+  let cleanUrl = url.trim();
 
   if (!cleanUrl) {
     return undefined;
   }
 
-  if (
-    cleanUrl.startsWith("http://") ||
-    cleanUrl.startsWith("https://")
-  ) {
-    return cleanUrl;
-  }
+  cleanUrl = cleanUrl.replace(/\\/g, "/");
 
   if (cleanUrl.startsWith("//")) {
     return `https:${cleanUrl}`;
   }
+
+  if (/^https?:\/\//i.test(cleanUrl)) {
+    // The production site is HTTPS; avoid mixed-content blocking.
+    return cleanUrl.replace(/^http:\/\//i, "https://");
+  }
+
+  cleanUrl = cleanUrl.replace(/^\.\//, "");
 
   return cleanUrl.startsWith("/")
     ? cleanUrl
@@ -237,19 +239,18 @@ function getImageCandidates(
   value: unknown,
 ): string[] {
   const candidates: string[] = [];
+  const visited = new Set<object>();
 
   const add = (value: unknown) => {
     const normalized = normalizeImageUrl(value);
+
     if (normalized && !candidates.includes(normalized)) {
       candidates.push(normalized);
     }
   };
 
-  const visit = (
-    value: unknown,
-    depth = 0,
-  ) => {
-    if (depth > 4 || value == null) {
+  const visit = (value: unknown, depth = 0) => {
+    if (depth > 6 || value == null) {
       return;
     }
 
@@ -259,43 +260,49 @@ function getImageCandidates(
     }
 
     if (Array.isArray(value)) {
-      value.forEach((item) =>
-        visit(item, depth + 1),
-      );
+      value.forEach((item) => visit(item, depth + 1));
       return;
     }
 
-    if (
-      typeof value !== "object"
-    ) {
+    if (typeof value !== "object") {
       return;
     }
 
-    const source =
-      value as Record<string, unknown>;
+    if (visited.has(value)) {
+      return;
+    }
+    visited.add(value);
 
-    // Prefer the card image when available.
+    const source = value as Record<string, unknown>;
+
+    // Card-specific URLs first.
     add(source["url-card"]);
     add(source["urlCard"]);
     add(source["cardUrl"]);
     add(source["card_url"]);
 
-    add(source["url"]);
-    add(source["src"]);
-    add(source["secure_url"]);
-    add(source["image"]);
+    // Main image URL variants.
+    add(source.url);
+    add(source.src);
+    add(source.secure_url);
+    add(source.image);
 
     // Common CMS/API wrappers.
-    visit(source["data"], depth + 1);
-    visit(source["attributes"], depth + 1);
-    visit(source["formats"], depth + 1);
-    visit(source["medium"], depth + 1);
-    visit(source["small"], depth + 1);
-    visit(source["thumbnail"], depth + 1);
+    for (const key of [
+      "data",
+      "attributes",
+      "formats",
+      "original",
+      "card",
+      "medium",
+      "small",
+      "thumbnail",
+    ]) {
+      visit(source[key], depth + 1);
+    }
   };
 
   visit(value);
-
   return candidates;
 }
 
@@ -310,33 +317,50 @@ function getCardImageUrl(
 function getImageAlt(
   recipe: Recipe,
 ): string {
-  if (
-    recipe.img &&
-    typeof recipe.img === "object" &&
-    !Array.isArray(recipe.img)
-  ) {
-    const source =
-      recipe.img as Record<
-        string,
-        unknown
-      >;
+  const img = recipe.img;
+  const visited = new Set<object>();
 
-    const alt =
-      source.alt ??
-      source.alternativeText;
+  const findAlt = (value: unknown, depth = 0): string | undefined => {
+    if (depth > 6 || value == null) return undefined;
 
-    if (
-      typeof alt === "string" &&
-      alt.trim()
-    ) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const alt = findAlt(item, depth + 1);
+        if (alt) return alt;
+      }
+      return undefined;
+    }
+
+    if (typeof value !== "object") return undefined;
+    if (visited.has(value)) return undefined;
+    visited.add(value);
+
+    const source = value as Record<string, unknown>;
+    const alt = source.alt ?? source.alternativeText;
+
+    if (typeof alt === "string" && alt.trim()) {
       return alt.trim();
     }
-  }
 
-  return (
-    recipe.title ||
-    "صورة الوصفة"
-  );
+    for (const key of [
+      "data",
+      "attributes",
+      "formats",
+      "original",
+      "card",
+      "medium",
+      "small",
+      "thumbnail",
+      "image",
+    ]) {
+      const nestedAlt = findAlt(source[key], depth + 1);
+      if (nestedAlt) return nestedAlt;
+    }
+
+    return undefined;
+  };
+
+  return findAlt(img) || recipe.title || "صورة الوصفة";
 }
 
 function isValidImageUrl(
@@ -1845,7 +1869,7 @@ function RecipesPagination({
 ========================================================= */
 
 export default function RecipesClient({
-recipes,
+  recipes,
   categories,
   initialCategory = null,
   initialCountry = null,
@@ -2104,7 +2128,7 @@ recipes,
       }
 
       return result.sort(
-        (a, b) => b.id - a.id,
+        (a, b) => a.id - b.id,
       );
     }, [
       recipes,
@@ -2730,7 +2754,20 @@ recipes,
                 <p className="mx-auto mt-2 max-w-md text-sm font-bold leading-7 text-slate-400">
                   جرّب تغيير التصنيف أو الدولة أو الوسم لعرض وصفات أخرى.
                 </p>
-            
+
+                <button
+                  type="button"
+                  onClick={
+                    clearAllFilters
+                  }
+                  className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 text-sm font-black text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600"
+                >
+                  <RotateCcw
+                    size={16}
+                  />
+
+                  عرض كل الوصفات
+                </button>
               </section>
             )}
 

@@ -1474,7 +1474,7 @@ export default function RecipeView({
 
                 {(description ||
                   intro) && (
-                  <p className="mt-4 max-w-3xl text-sm font-bold leading-8 text-slate-600 dark:text-slate-300 sm:text-base">
+                  <p className="mt-4 hidden max-w-3xl text-sm font-bold leading-8 text-slate-600 dark:text-slate-300 sm:block sm:text-base">
                     {description ||
                       intro}
                   </p>
