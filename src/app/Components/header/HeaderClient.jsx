@@ -51,7 +51,13 @@ const DISCOVER_ITEMS = [
   { title: "🌱 وصفات نباتية", href: `/recipes?category=${encodeURIComponent("أكلات نباتية")}&source=discover` },
 ];
 
+const MAX_RECIPE_MENU_ITEMS = 10;
+const MAX_KITCHEN_MENU_GROUPS = 8;
+
 const filterHref = (key, value) => `/recipes?${key}=${encodeURIComponent(value)}`;
+
+const kitchenRecipeHref = (slug, kitchen) =>
+  `/recipe/${encodeURIComponent(slug)}?source=kitchens&country=${encodeURIComponent(kitchen)}`;
 
 function hrefIsActive(href, pathname, searchParams) {
   const [targetPath, targetQuery = ""] = href.split("?");
@@ -60,20 +66,58 @@ function hrefIsActive(href, pathname, searchParams) {
   const expected = new URLSearchParams(targetQuery);
   const current = new URLSearchParams(searchParams);
   current.delete("page");
+  current.delete("source");
 
   if (Array.from(expected.keys()).length !== Array.from(current.keys()).length) return false;
   return [...expected.entries()].every(([key, value]) => current.get(key) === value);
 }
 
-function menuIsActive(menu, isActive) {
+function menuIsActive(menu, isActive, pathname, searchParams) {
+  const source = searchParams.get("source");
+
+
+  if (pathname.startsWith("/recipe/")) {
+    if (menu.id === "kitchens") {
+      return source === "kitchens";
+    }
+
+    if (menu.id === "recipes") {
+      return source !== "kitchens";
+    }
+  }
+
+
+  if (pathname === "/recipes" && !searchParams.toString()) {
+    return false;
+  }
+
+  if (menu.id === "kitchens" &&
+      (searchParams.has("country") || searchParams.get("view") === "kitchens")) {
+    return true;
+  }
+
+  if (menu.groups?.some((group) => isActive(filterHref("country", group.title)))) {
+    return true;
+  }
+
+  if (menu.id === "recipes") {
+    if (menu.items?.some((item) => isActive(item.href))) return true;
+
+    const hasRecipeFilter =
+      searchParams.has("category") ||
+      searchParams.has("group") ||
+      searchParams.has("discover") ||
+      searchParams.has("tag");
+
+    if (hasRecipeFilter && !searchParams.has("country")) return true;
+  }
+
   if (menu.items?.some((item) => isActive(item.href))) return true;
   if (menu.sections?.some((section) => section.items.some((item) => isActive(item.href)))) return true;
-  if (menu.groups?.some((group) =>
-    isActive(filterHref("country", group.title)) ||
-    group.recipes.some((recipe) => isActive(`/recipe/${encodeURIComponent(recipe.slug)}`)),
-  )) return true;
+
   return Boolean(menu.footer && isActive(menu.footer.href));
 }
+
 
 function Chevron({ open }) {
   return (
@@ -103,7 +147,13 @@ function DesktopMenuContent({ menu, close, isActive }) {
             </Link>
             <div className="space-y-0.5">
               {group.recipes.map((recipe) => (
-                <MenuLink key={recipe.slug} item={{ title: recipe.title, href: `/recipe/${encodeURIComponent(recipe.slug)}` }} close={close} compact active={isActive(`/recipe/${encodeURIComponent(recipe.slug)}`)} />
+                <MenuLink
+                  key={recipe.slug}
+                  item={{ title: recipe.title, href: kitchenRecipeHref(recipe.slug, group.title) }}
+                  close={close}
+                  compact
+                  active={isActive(kitchenRecipeHref(recipe.slug, group.title))}
+                />
               ))}
             </div>
           </section>
@@ -134,9 +184,9 @@ function DesktopMenuContent({ menu, close, isActive }) {
   );
 }
 
-function DesktopDropdown({ menu, openMenu, setOpenMenu, compact, isActive, forceActive = false }) {
+function DesktopDropdown({ menu, openMenu, setOpenMenu, compact, isActive, pathname, searchParams }) {
   const open = openMenu === menu.id;
-  const active = forceActive || menuIsActive(menu, isActive);
+  const active = menuIsActive(menu, isActive, pathname, searchParams);
   const count = menu.groups ? menu.groups.length : menu.sections ? menu.sections.reduce((total, section) => total + section.items.length, 0) : menu.items.length;
 
   return (
@@ -172,7 +222,15 @@ function MobileMenuContent({ menu, close, isActive }) {
       <section key={group.title} className="border-b border-white/10 p-2 last:border-0">
         <Link href={filterHref("country", group.title)} onClick={close} aria-current={isActive(filterHref("country", group.title)) ? "page" : undefined} className={`block rounded-lg px-2 py-2 text-right text-sm font-black ${isActive(filterHref("country", group.title)) ? "bg-orange-500/15 text-orange-300" : "text-orange-400"}`}>{group.title}</Link>
         {group.recipes.map((recipe) => (
-          <Link key={recipe.slug} href={`/recipe/${encodeURIComponent(recipe.slug)}`} onClick={close} aria-current={isActive(`/recipe/${encodeURIComponent(recipe.slug)}`) ? "page" : undefined} className={`block rounded-lg px-3 py-2 text-right text-xs font-semibold leading-5 ${isActive(`/recipe/${encodeURIComponent(recipe.slug)}`) ? "bg-orange-500 text-white" : "text-gray-200 hover:bg-white/10"}`}>{recipe.title}</Link>
+          <Link
+            key={recipe.slug}
+            href={kitchenRecipeHref(recipe.slug, group.title)}
+            onClick={close}
+            aria-current={isActive(kitchenRecipeHref(recipe.slug, group.title)) ? "page" : undefined}
+            className={`block rounded-lg px-3 py-2 text-right text-xs font-semibold leading-5 ${isActive(kitchenRecipeHref(recipe.slug, group.title)) ? "bg-orange-500 text-white" : "text-gray-200 hover:bg-white/10"}`}
+          >
+            {recipe.title}
+          </Link>
         ))}
       </section>
     ));
@@ -190,9 +248,9 @@ function MobileMenuContent({ menu, close, isActive }) {
   return menu.items.map((item) => <Link key={`${item.href}-${item.title}`} href={item.href} onClick={close} aria-current={isActive(item.href) ? "page" : undefined} className={`block rounded-lg px-3 py-2.5 text-right text-sm font-semibold transition ${isActive(item.href) ? "bg-orange-500 text-white" : "text-gray-200 hover:bg-orange-500 hover:text-white"}`}>{item.title}</Link>);
 }
 
-function MobileDropdown({ menu, openMenu, setOpenMenu, isActive, forceActive = false }) {
+function MobileDropdown({ menu, openMenu, setOpenMenu, isActive, pathname, searchParams }) {
   const open = openMenu === menu.id;
-  const active = forceActive || menuIsActive(menu, isActive);
+  const active = menuIsActive(menu, isActive, pathname, searchParams);
   const close = () => setOpenMenu(null);
 
   return (
@@ -232,10 +290,23 @@ export default function HeaderClient({ kitchens, categories }) {
   const [theme, setTheme] = useState("light");
 
   const menus = useMemo(() => [
-    { id: "recipes", title: "الوصفات", items: categories.map((category) => ({ title: category.replaceAll("-", " "), href: filterHref("category", category) })) },
-    { id: "kitchens", title: "المطابخ", groups: kitchens, footer: { title: "عرض كل المطابخ", href: "/recipes?view=kitchens" } },
-    { id: "categories", title: "التصنيفات", sections: CLASSIFICATION_SECTIONS, footer: { title: "تصفح كل التصنيفات", href: "/recipes?view=categories" } },
-    { id: "discover", title: "اكتشف", items: DISCOVER_ITEMS, footer: { title: "تصفح جميع الوسوم", href: "/recipes?view=tags" } },
+    {
+      id: "recipes",
+      title: "الوصفات",
+      items: categories.slice(0, MAX_RECIPE_MENU_ITEMS).map((category) => ({
+        title: category.replaceAll("-", " "),
+        href: filterHref("category", category),
+      })),
+      footer: { title: "عرض كل الوصفات", href: "/recipes" },
+    },
+    {
+      id: "kitchens",
+      title: "المطابخ",
+      groups: kitchens.slice(0, MAX_KITCHEN_MENU_GROUPS),
+      footer: { title: "عرض كل المطابخ", href: "/recipes?view=kitchens" },
+    },
+    { id: "categories", title: "التصنيفات", sections: CLASSIFICATION_SECTIONS, footer: { title: "عرض كل التصنيفات", href: "/recipes?view=categories" } },
+    { id: "discover", title: "اكتشف", items: DISCOVER_ITEMS, footer: { title: "عرض جميع الوسوم", href: "/recipes?view=tags" } },
   ], [categories, kitchens]);
 
   useEffect(() => { setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light"); }, []);
@@ -294,7 +365,7 @@ export default function HeaderClient({ kitchens, categories }) {
             <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
               <ul className="flex items-center gap-0.5 font-medium text-white xl:gap-1.5">
                 <li><Link href="/" className={`whitespace-nowrap rounded-lg px-1.5 py-2 text-[13px] font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-orange-400 xl:px-2 xl:text-sm ${pathname === "/" ? "text-orange-400" : "text-white hover:text-orange-400"}`}>الصفحة الرئيسية</Link></li>
-                {menus.map((menu) => <DesktopDropdown key={menu.id} menu={menu} openMenu={openDesktopMenu} setOpenMenu={setOpenDesktopMenu} compact={isScrolled} isActive={isActiveHref} forceActive={menu.id === "recipes" && (pathname.startsWith("/recipe/") || isActiveHref("/recipes"))} />)}
+                {menus.map((menu) => <DesktopDropdown key={menu.id} menu={menu} openMenu={openDesktopMenu} setOpenMenu={setOpenDesktopMenu} compact={isScrolled} isActive={isActiveHref} pathname={pathname} searchParams={currentParams} />)}
                 {PAGE_LINKS.map((link) => <li key={link.href}><Link href={link.href} className={`whitespace-nowrap rounded-lg px-1.5 py-2 text-[12px] font-bold outline-none transition-colors hover:text-orange-400 focus-visible:ring-2 focus-visible:ring-orange-400 xl:px-2 xl:text-[13px] ${pathname === link.href ? "text-orange-400" : "text-white"}`}>{link.title}</Link></li>)}
               </ul>
             </div>
@@ -310,7 +381,7 @@ export default function HeaderClient({ kitchens, categories }) {
               <button onClick={toggleTheme} type="button" className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 px-3 py-2.5 font-bold text-white transition hover:bg-white/10"><span aria-hidden="true">{theme === "light" ? "🌙" : "☀️"}</span>{theme === "light" ? "الوضع الليلي" : "الوضع النهاري"}</button>
               <ul className="space-y-2 text-center text-white">
                 <li><Link href="/" onClick={closeMobile} className={`block rounded-xl px-3 py-3 font-bold transition ${pathname === "/" ? "bg-orange-500 text-white" : "bg-white/[0.04] hover:bg-white/10 hover:text-orange-400"}`}>الصفحة الرئيسية</Link></li>
-                {menus.map((menu) => <MobileDropdown key={menu.id} menu={menu} openMenu={openMobileMenu} setOpenMenu={setOpenMobileMenu} isActive={isActiveHref} forceActive={menu.id === "recipes" && (pathname.startsWith("/recipe/") || isActiveHref("/recipes"))} />)}
+                {menus.map((menu) => <MobileDropdown key={menu.id} menu={menu} openMenu={openMobileMenu} setOpenMenu={setOpenMobileMenu} isActive={isActiveHref} pathname={pathname} searchParams={currentParams} />)}
                 {PAGE_LINKS.map((link) => <li key={link.href}><Link href={link.href} onClick={closeMobile} className={`block rounded-xl px-3 py-3 font-bold transition ${pathname === link.href ? "bg-orange-500 text-white" : "bg-white/[0.04] hover:bg-white/10 hover:text-orange-400"}`}>{link.title}</Link></li>)}
               </ul>
             </div>

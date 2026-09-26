@@ -1,6 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
@@ -787,6 +793,148 @@ function Guide({
       (item) => item.show,
     );
 
+  const guideRef =
+    useRef<HTMLElement>(null);
+
+  const [desktopGuideStyle, setDesktopGuideStyle] =
+    useState<CSSProperties | undefined>(
+      undefined,
+    );
+
+  useEffect(() => {
+    const updateDesktopGuide = () => {
+      const boundary =
+        document.getElementById(
+          "recipe-content-grid",
+        );
+      const guide = guideRef.current;
+
+      if (!boundary || !guide) {
+        return;
+      }
+
+      const isDesktop =
+        window.matchMedia("(min-width: 1280px)").matches;
+
+      if (!isDesktop) {
+        setDesktopGuideStyle(undefined);
+        return;
+      }
+
+      const boundaryRect =
+        boundary.getBoundingClientRect();
+      const column =
+        guide.parentElement;
+      const columnRect =
+        column?.getBoundingClientRect();
+
+      if (!columnRect) {
+        return;
+      }
+
+      const guideHeight =
+        guide.getBoundingClientRect().height;
+      const topOffset = 112;
+      const scrollY = window.scrollY || window.pageYOffset;
+
+      // Keep the guide in its original grid position until the page
+      // actually reaches it. Only then should it start following the
+      // viewport. This prevents it from appearing underneath the header
+      // while the user is still above the guide's original position.
+      const guideStartDocumentY =
+        columnRect.top + scrollY;
+
+      if (
+        scrollY <
+        guideStartDocumentY - topOffset
+      ) {
+        setDesktopGuideStyle(undefined);
+        return;
+      }
+
+      // The guide must stop when its bottom reaches the end of the
+      // recipe content grid, so it never travels into the footer.
+      const bottomDocumentY =
+        boundaryRect.bottom + scrollY;
+      const maxTop =
+        bottomDocumentY - guideHeight - scrollY;
+
+      const calculatedTop = Math.min(
+        topOffset,
+        maxTop,
+      );
+
+      // If the recipe content is already above the viewport, leave the
+      // guide at its natural position instead of forcing it to the footer.
+      if (calculatedTop < 0) {
+        setDesktopGuideStyle(undefined);
+        return;
+      }
+
+      setDesktopGuideStyle({
+        position: "fixed",
+        top: `${calculatedTop}px`,
+        left: `${columnRect.left}px`,
+        width: `${columnRect.width}px`,
+        zIndex: 30,
+        // Smoothly follow the viewport without changing the guide's design.
+        transition: "top 120ms ease-out, left 180ms ease-out, width 180ms ease-out",
+      });
+    };
+
+    updateDesktopGuide();
+
+    const handleScroll = () => {
+      updateDesktopGuide();
+    };
+
+    window.addEventListener(
+      "scroll",
+      handleScroll,
+      { passive: true },
+    );
+    window.addEventListener(
+      "resize",
+      updateDesktopGuide,
+    );
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(
+            updateDesktopGuide,
+          )
+        : null;
+
+    if (resizeObserver) {
+      const boundary =
+        document.getElementById(
+          "recipe-content-grid",
+        );
+
+      if (boundary) {
+        resizeObserver.observe(boundary);
+      }
+
+      if (guideRef.current) {
+        resizeObserver.observe(
+          guideRef.current,
+        );
+      }
+    }
+
+    return () => {
+      window.removeEventListener(
+        "scroll",
+        handleScroll,
+      );
+      window.removeEventListener(
+        "resize",
+        updateDesktopGuide,
+      );
+      resizeObserver?.disconnect();
+    };
+  }, [visible.length]);
+
   if (!visible.length) {
     return null;
   }
@@ -794,10 +942,15 @@ function Guide({
   return (
     <>
       {/* Desktop Guide */}
-      <aside
-        className="relative hidden xl:block"
-        aria-label="دليل أقسام الوصفة"
+      <div
+        className="hidden min-h-[1px] xl:block"
       >
+        <aside
+          ref={guideRef}
+          className="relative hidden xl:block"
+          style={desktopGuideStyle}
+          aria-label="دليل أقسام الوصفة"
+        >
         <div
           id="recipe-desktop-guide"
           className="w-full max-h-[calc(100vh-7rem)] overflow-hidden rounded-3xl border border-slate-700 bg-[#162235] shadow-2xl shadow-slate-950/20"
@@ -845,7 +998,8 @@ function Guide({
             )}
           </nav>
         </div>
-      </aside>
+        </aside>
+      </div>
 
       {/* Mobile Guide */}
       <details
@@ -980,6 +1134,16 @@ export default function RecipeView({
   recipe: RecipeData;
   relatedRecipes?: RelatedRecipe[];
 }) {
+  // FAQ accordion: the first question starts open, and opening
+  // another question automatically closes the previously open one.
+  const [openFaqIndex, setOpenFaqIndex] =
+    useState<number | null>(0);
+
+  // Ingredients accordion: the first group starts open, and opening
+  // another group automatically closes the previously open one.
+  const [openIngredientGroupIndex, setOpenIngredientGroupIndex] =
+    useState<number | null>(0);
+
   const image =
     recipeImage(recipe);
 
@@ -1401,13 +1565,13 @@ export default function RecipeView({
 
         <div
           dir="ltr"
+          id="recipe-content-grid"
           className="mx-auto grid max-w-7xl gap-6 px-3 py-6 sm:px-4 sm:py-8 xl:grid-cols-[225px_minmax(0,1fr)]"
         >
           {/* Guide */}
           <div
-            id="recipe-guide-boundary"
             dir="rtl"
-            className="relative h-full min-h-0"
+            className="relative min-h-0"
           >
             <Guide
               items={guideItems}
@@ -1485,19 +1649,6 @@ export default function RecipeView({
                         group.title ||
                         "المكونات";
 
-                      const isMainGroup =
-                        title.includes(
-                          "المكونات الأساسية",
-                        ) ||
-                        (!title.includes(
-                          "إضافات احترافية اختيارية",
-                        ) &&
-                          !title.includes(
-                            "خيارات بديلة",
-                          ) &&
-                          groupIndex ===
-                            0);
-
                       const groupIcon =
                         title.includes(
                           "خيارات بديلة",
@@ -1513,11 +1664,23 @@ export default function RecipeView({
                         <details
                           key={`${title}-${groupIndex}`}
                           open={
-                            isMainGroup
+                            openIngredientGroupIndex ===
+                            groupIndex
                           }
                           className="group overflow-hidden rounded-2xl border border-slate-300 bg-slate-50/80 shadow-sm transition-shadow duration-200 open:shadow-md dark:border-slate-700 dark:bg-slate-950/70"
                         >
-                          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 border-b border-transparent bg-orange-50 px-4 py-3 text-base font-black text-orange-700 transition-colors hover:bg-orange-100 dark:bg-orange-500/10 dark:text-orange-300 dark:hover:bg-orange-500/15">
+                          <summary
+                            onClick={(event) => {
+                              event.preventDefault();
+                              setOpenIngredientGroupIndex(
+                                (current) =>
+                                  current === groupIndex
+                                    ? null
+                                    : groupIndex,
+                              );
+                            }}
+                            className="flex cursor-pointer list-none items-center justify-between gap-3 border-b border-transparent bg-orange-50 px-4 py-3 text-base font-black text-orange-700 transition-colors hover:bg-orange-100 dark:bg-orange-500/10 dark:text-orange-300 dark:hover:bg-orange-500/15 [&::-webkit-details-marker]:hidden"
+                          >
                             <span className="flex min-w-0 items-center gap-2">
                               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-orange-500/10 text-sm text-orange-600 dark:bg-orange-400/10 dark:text-orange-300">
                                 {groupIcon}
@@ -1732,7 +1895,7 @@ export default function RecipeView({
                   أسئلة شائعة
                 </SectionHeading>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {faq.map(
                     (
                       item,
@@ -1740,14 +1903,40 @@ export default function RecipeView({
                     ) => (
                       <details
                         key={`${item.question}-${index}`}
-                        className="group overflow-hidden rounded-xl border border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-950"
+                        open={openFaqIndex === index}
+                        className="group overflow-hidden rounded-2xl border border-slate-300 bg-slate-50 transition-shadow duration-300 open:shadow-md dark:border-slate-700 dark:bg-slate-950"
                       >
-                        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-black leading-7 text-slate-900 dark:text-white sm:text-base">
-                          {item.question}
+                        <summary
+                          onClick={(event) => {
+                            event.preventDefault();
+                            setOpenFaqIndex((current) =>
+                              current === index ? null : index,
+                            );
+                          }}
+                          className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 text-sm font-black leading-7 text-slate-900 outline-none transition-colors hover:text-orange-600 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-500 dark:text-white dark:hover:text-orange-400 sm:px-5 sm:text-base [&::-webkit-details-marker]:hidden">
+                          <span className="flex min-w-0 items-center gap-3">
+                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-orange-500/10 text-xs font-black text-orange-600 dark:bg-orange-500/15 dark:text-orange-400">
+                              {index + 1}
+                            </span>
+
+                            <span>{item.question}</span>
+                          </span>
+
+                          <ChevronDown
+                            className="h-5 w-5 shrink-0 text-slate-500 transition-transform duration-300 group-open:rotate-180 dark:text-slate-400"
+                            aria-hidden="true"
+                          />
                         </summary>
 
-                        <div className="border-t border-slate-300 px-4 py-3 text-sm font-bold leading-7 text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                          {item.answer}
+                        <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
+                          <div className="min-h-0 overflow-hidden">
+                            <div className="border-t border-slate-300 px-4 pb-4 pt-3 text-sm font-bold leading-8 text-slate-700 dark:border-slate-700 dark:text-slate-200 sm:px-5">
+                              <span className="font-black text-orange-600 dark:text-orange-400">
+                                الإجابة: 
+                              </span>
+                              {item.answer}
+                            </div>
+                          </div>
                         </div>
                       </details>
                     ),
@@ -1834,17 +2023,28 @@ export default function RecipeView({
 
             if (!sections.length) return;
 
-            const update = () => {
-              let active =
-                sections[0];
+            let lastActiveId = null;
 
-              const probe = 140;
+            const update = () => {
+              const probe = 150;
+              let active = sections[0];
+              let bestDistance = Number.POSITIVE_INFINITY;
 
               for (const section of sections) {
                 const rect =
                   section.element.getBoundingClientRect();
 
-                if (rect.top <= probe) {
+                const distance = Math.abs(rect.top - probe);
+
+                // Prefer the section currently crossing the reading line.
+                if (rect.top <= probe && rect.bottom > probe) {
+                  active = section;
+                  bestDistance = 0;
+                  break;
+                }
+
+                if (distance < bestDistance) {
+                  bestDistance = distance;
                   active = section;
                 }
               }
@@ -1857,7 +2057,51 @@ export default function RecipeView({
                   activeState
                     ? 'true'
                     : 'false';
+
+                link.setAttribute(
+                  'aria-current',
+                  activeState ? 'location' : 'false'
+                );
               });
+
+              // Keep the active item visible inside the guide itself.
+              // Move only the guide's own scroll container so the recipe
+              // page never jumps when the active section changes.
+              if (active.id !== lastActiveId) {
+                lastActiveId = active.id;
+
+                const activeLinks = links.filter(
+                  (link) => getId(link) === active.id
+                );
+
+                activeLinks.forEach((link) => {
+                  const scrollContainer =
+                    link.closest('nav');
+
+                  if (!scrollContainer) {
+                    return;
+                  }
+
+                  const linkRect =
+                    link.getBoundingClientRect();
+                  const containerRect =
+                    scrollContainer.getBoundingClientRect();
+
+                  if (linkRect.top < containerRect.top) {
+                    scrollContainer.scrollBy({
+                      top: linkRect.top - containerRect.top - 8,
+                      behavior: 'smooth',
+                    });
+                  } else if (
+                    linkRect.bottom > containerRect.bottom
+                  ) {
+                    scrollContainer.scrollBy({
+                      top: linkRect.bottom - containerRect.bottom + 8,
+                      behavior: 'smooth',
+                    });
+                  }
+                });
+              }
             };
 
             window.addEventListener(
