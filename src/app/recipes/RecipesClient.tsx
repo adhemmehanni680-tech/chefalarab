@@ -54,8 +54,7 @@ function MeasuredAdSenseBanner({
   minHeight?: number;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const [availableWidth, setAvailableWidth] =
-    useState(0);
+  const [availableWidth, setAvailableWidth] = useState(0);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -84,7 +83,9 @@ function MeasuredAdSenseBanner({
 
     resizeObserver.observe(host);
 
-    return () => resizeObserver.disconnect();
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, []);
 
   const canRenderAd = availableWidth >= 250;
@@ -93,7 +94,9 @@ function MeasuredAdSenseBanner({
     <div
       ref={hostRef}
       className="w-full min-w-0"
-      style={{ minHeight }}
+      style={{
+        minHeight,
+      }}
     >
       {canRenderAd ? (
         <AdSenseBanner
@@ -116,9 +119,9 @@ const MOBILE_AD_INTERVAL = 4;
 const MOBILE_RECIPES_PER_PAGE = 8;
 const DESKTOP_RECIPES_PER_PAGE = 12;
 
-/* =============================== */
-/* Types                           */
-/* =============================== */
+/* =========================================================
+   Types
+========================================================= */
 
 type Recipe = {
   id: number;
@@ -161,18 +164,16 @@ interface RecipesClientProps {
 
 interface CategoryNavigationProps {
   categories: string[];
-
   countriesMap: Record<string, CountryItem[]>;
-
   availableTags: TagItem[];
-
   activeCategory: string | null;
   activeCountry: string | null;
   activeTag: string | null;
-
   expandedCategories: Record<string, boolean>;
 
-  onToggleCategory: (category: string) => void;
+  onToggleCategory: (
+    category: string,
+  ) => void;
 
   onSelectAll: () => void;
 
@@ -186,41 +187,95 @@ interface CategoryNavigationProps {
   onAfterSelect?: () => void;
 }
 
-/* =============================== */
-/* Helpers                         */
-/* =============================== */
+/* =========================================================
+   Image Helpers
+========================================================= */
 
-function formatCategoryName(
-  category: string,
-): string {
-  return category.replace(/-/g, " ").trim();
-}
-
-function isValidImageUrl(
+/**
+ * Normalize all possible image paths.
+ *
+ * Supports:
+ * /images/a.jpg
+ * images/a.jpg
+ * uploads/a.jpg
+ * https://...
+ * http://...
+ * //cdn...
+ */
+function normalizeImageUrl(
   url: string | undefined | null,
-): boolean {
+): string | undefined {
   if (!url || typeof url !== "string") {
-    return false;
+    return undefined;
   }
 
   const cleanUrl = url.trim();
 
   if (!cleanUrl) {
-    return false;
+    return undefined;
   }
 
-  try {
-    new URL(cleanUrl);
-    return true;
-  } catch {
-    return cleanUrl.startsWith("/");
+  // Full URL
+  if (
+    cleanUrl.startsWith("http://") ||
+    cleanUrl.startsWith("https://")
+  ) {
+    return cleanUrl;
   }
+
+  // Protocol relative URL
+  if (cleanUrl.startsWith("//")) {
+    return `https:${cleanUrl}`;
+  }
+
+  // Absolute path from public/
+  if (cleanUrl.startsWith("/")) {
+    return cleanUrl;
+  }
+
+  // Relative path
+  return `/${cleanUrl}`;
 }
 
+/**
+ * Get image URL.
+ *
+ * Prefer url-card.
+ * If missing, use url.
+ */
 function getCardImageUrl(
   recipe: Recipe,
 ): string | undefined {
-  return recipe.img?.["url-card"] || recipe.img?.url;
+  const cardUrl = normalizeImageUrl(
+    recipe.img?.["url-card"],
+  );
+
+  const normalUrl = normalizeImageUrl(
+    recipe.img?.url,
+  );
+
+  return cardUrl || normalUrl;
+}
+
+/**
+ * Check if image URL is usable.
+ */
+function isValidImageUrl(
+  url: string | undefined | null,
+): boolean {
+  return Boolean(normalizeImageUrl(url));
+}
+
+/* =========================================================
+   Helpers
+========================================================= */
+
+function formatCategoryName(
+  category: string,
+): string {
+  return category
+    .replace(/-/g, " ")
+    .trim();
 }
 
 function hasCategory(
@@ -253,10 +308,16 @@ function getCountriesMap(
   recipes: Recipe[],
   categories: string[],
 ): Record<string, CountryItem[]> {
-  const map: Record<string, CountryItem[]> = {};
+  const map: Record<
+    string,
+    CountryItem[]
+  > = {};
 
   categories.forEach((category) => {
-    const countryCounts: Record<string, number> = {};
+    const countryCounts: Record<
+      string,
+      number
+    > = {};
 
     recipes
       .filter((recipe) =>
@@ -268,10 +329,13 @@ function getCountriesMap(
         }
 
         countryCounts[recipe.country] =
-          (countryCounts[recipe.country] || 0) + 1;
+          (countryCounts[recipe.country] || 0) +
+          1;
       });
 
-    map[category] = Object.entries(countryCounts)
+    map[category] = Object.entries(
+      countryCounts,
+    )
       .map(([country, count]) => ({
         country,
         count,
@@ -299,27 +363,36 @@ function getAvailableTags(
   let filteredRecipes = recipes;
 
   if (activeCategory) {
-    filteredRecipes = filteredRecipes.filter(
-      (recipe) =>
-        hasCategory(recipe, activeCategory),
-    );
+    filteredRecipes =
+      filteredRecipes.filter((recipe) =>
+        hasCategory(
+          recipe,
+          activeCategory,
+        ),
+      );
   }
 
   if (activeCountry) {
-    filteredRecipes = filteredRecipes.filter(
-      (recipe) =>
-        recipe.country === activeCountry,
-    );
+    filteredRecipes =
+      filteredRecipes.filter(
+        (recipe) =>
+          recipe.country === activeCountry,
+      );
   }
 
-  const tagCounts: Record<string, number> = {};
+  const tagCounts: Record<
+    string,
+    number
+  > = {};
 
   filteredRecipes.forEach((recipe) => {
     if (!recipe.tags) {
       return;
     }
 
-    const recipeTags = Array.isArray(recipe.tags)
+    const recipeTags = Array.isArray(
+      recipe.tags,
+    )
       ? recipe.tags
       : [recipe.tags];
 
@@ -343,7 +416,10 @@ function getAvailableTags(
         return b.count - a.count;
       }
 
-      return a.tag.localeCompare(b.tag, "ar");
+      return a.tag.localeCompare(
+        b.tag,
+        "ar",
+      );
     })
     .slice(0, 16);
 }
@@ -359,7 +435,9 @@ function getPaginationItems(
 ): PaginationItem[] {
   if (totalPages <= 7) {
     return Array.from(
-      { length: totalPages },
+      {
+        length: totalPages,
+      },
       (_, index) => index + 1,
     );
   }
@@ -399,7 +477,9 @@ function getPaginationItems(
   ];
 }
 
-function formatNumber(value: number): string {
+function formatNumber(
+  value: number,
+): string {
   return value.toLocaleString("ar-EG");
 }
 
@@ -411,16 +491,26 @@ function replaceRecipesUrl(
     return;
   }
 
-  const url = new URL(window.location.href);
+  const url = new URL(
+    window.location.href,
+  );
 
   if (category) {
-    url.searchParams.set("category", category);
+    url.searchParams.set(
+      "category",
+      category,
+    );
   } else {
-    url.searchParams.delete("category");
+    url.searchParams.delete(
+      "category",
+    );
   }
 
   if (page > 1) {
-    url.searchParams.set("page", String(page));
+    url.searchParams.set(
+      "page",
+      String(page),
+    );
   } else {
     url.searchParams.delete("page");
   }
@@ -432,9 +522,9 @@ function replaceRecipesUrl(
   );
 }
 
-/* =============================== */
-/* Footer dock hook                */
-/* =============================== */
+/* =========================================================
+   Footer Hook
+========================================================= */
 
 function useFooterDock(): FooterDockState {
   const [footerState, setFooterState] =
@@ -445,7 +535,9 @@ function useFooterDock(): FooterDockState {
 
   useEffect(() => {
     const footer =
-      document.getElementById("site-footer") ||
+      document.getElementById(
+        "site-footer",
+      ) ||
       document.querySelector("footer");
 
     if (!footer) {
@@ -460,43 +552,53 @@ function useFooterDock(): FooterDockState {
       );
 
       animationFrameId =
-        window.requestAnimationFrame(() => {
-          const footerRect =
-            footer.getBoundingClientRect();
+        window.requestAnimationFrame(
+          () => {
+            const footerRect =
+              footer.getBoundingClientRect();
 
-          const footerIsInsideViewport =
-            footerRect.top < window.innerHeight &&
-            footerRect.bottom > 0;
+            const footerIsInsideViewport =
+              footerRect.top <
+                window.innerHeight &&
+              footerRect.bottom > 0;
 
-          const overlap = footerIsInsideViewport
-            ? Math.max(
-                0,
-                window.innerHeight - footerRect.top,
-              )
-            : 0;
+            const overlap =
+              footerIsInsideViewport
+                ? Math.max(
+                    0,
+                    window.innerHeight -
+                      footerRect.top,
+                  )
+                : 0;
 
-          const nextOffset =
-            overlap > 0
-              ? Math.round(overlap + 12)
-              : 0;
+            const nextOffset =
+              overlap > 0
+                ? Math.round(
+                    overlap + 12,
+                  )
+                : 0;
 
-          setFooterState((current) => {
-            if (
-              current.isFooterVisible ===
-                footerIsInsideViewport &&
-              current.footerOffset === nextOffset
-            ) {
-              return current;
-            }
+            setFooterState(
+              (current) => {
+                if (
+                  current.isFooterVisible ===
+                    footerIsInsideViewport &&
+                  current.footerOffset ===
+                    nextOffset
+                ) {
+                  return current;
+                }
 
-            return {
-              isFooterVisible:
-                footerIsInsideViewport,
-
-              footerOffset: nextOffset,
-            };
-          });
-        });
+                return {
+                  isFooterVisible:
+                    footerIsInsideViewport,
+                  footerOffset:
+                    nextOffset,
+                };
+              },
+            );
+          },
+        );
     };
 
     updateFooterPosition();
@@ -515,7 +617,8 @@ function useFooterDock(): FooterDockState {
     );
 
     const resizeObserver =
-      typeof ResizeObserver !== "undefined"
+      typeof ResizeObserver !==
+      "undefined"
         ? new ResizeObserver(
             updateFooterPosition,
           )
@@ -545,9 +648,9 @@ function useFooterDock(): FooterDockState {
   return footerState;
 }
 
-/* =============================== */
-/* Recipe skeleton                 */
-/* =============================== */
+/* =========================================================
+   Skeleton
+========================================================= */
 
 function RecipeSkeleton() {
   return (
@@ -565,21 +668,18 @@ function RecipeSkeleton() {
   );
 }
 
-/* =============================== */
-/* Category navigation             */
-/* =============================== */
+/* =========================================================
+   Category Navigation
+========================================================= */
 
 function CategoryNavigation({
   categories,
   countriesMap,
   availableTags,
-
   activeCategory,
   activeCountry,
   activeTag,
-
   expandedCategories,
-
   onToggleCategory,
   onSelectAll,
   onSelectCountry,
@@ -595,11 +695,17 @@ function CategoryNavigation({
     category: string,
     country: string | null,
   ) => {
-    onSelectCountry(category, country);
+    onSelectCountry(
+      category,
+      country,
+    );
+
     onAfterSelect?.();
   };
 
-  const handleSelectTag = (tag: string) => {
+  const handleSelectTag = (
+    tag: string,
+  ) => {
     onSelectTag(tag);
     onAfterSelect?.();
   };
@@ -621,7 +727,6 @@ function CategoryNavigation({
         }
         className={clsx(
           "flex w-full items-center gap-2.5 rounded-2xl border px-3 py-3 text-right text-xs font-black transition-all duration-200",
-
           !activeCategory &&
             !activeCountry &&
             !activeTag
@@ -632,7 +737,6 @@ function CategoryNavigation({
         <span
           className={clsx(
             "grid h-8 w-8 shrink-0 place-items-center rounded-full",
-
             !activeCategory &&
               !activeCountry &&
               !activeTag
@@ -649,9 +753,12 @@ function CategoryNavigation({
       </button>
 
       {categories.map((category) => {
-        const isExpanded = Boolean(
-          expandedCategories[category],
-        );
+        const isExpanded =
+          Boolean(
+            expandedCategories[
+              category
+            ],
+          );
 
         const isActive =
           activeCategory === category;
@@ -661,7 +768,6 @@ function CategoryNavigation({
             key={category}
             className={clsx(
               "overflow-hidden rounded-2xl border transition-all duration-200",
-
               isActive
                 ? "border-orange-500/50 bg-[#172335] shadow-lg shadow-orange-500/5"
                 : "border-white/[0.06] bg-[#172335]",
@@ -670,15 +776,18 @@ function CategoryNavigation({
             <button
               type="button"
               onClick={() =>
-                onToggleCategory(category)
+                onToggleCategory(
+                  category,
+                )
               }
               aria-expanded={isExpanded}
               aria-current={
-                isActive ? "page" : undefined
+                isActive
+                  ? "page"
+                  : undefined
               }
               className={clsx(
                 "flex w-full items-center gap-2.5 px-3 py-3 text-right text-xs font-black transition-all",
-
                 isActive
                   ? "bg-orange-500 text-white"
                   : "text-slate-100 hover:bg-[#233247]",
@@ -687,7 +796,6 @@ function CategoryNavigation({
               <span
                 className={clsx(
                   "grid h-8 w-8 shrink-0 place-items-center rounded-full",
-
                   isActive
                     ? "bg-white/20"
                     : "bg-[#101827]",
@@ -697,22 +805,27 @@ function CategoryNavigation({
               </span>
 
               <span className="min-w-0 flex-1 leading-5">
-                {formatCategoryName(category)}
+                {formatCategoryName(
+                  category,
+                )}
               </span>
 
               <span
                 className={clsx(
                   "grid h-6 w-6 shrink-0 place-items-center rounded-full",
-
                   isActive
                     ? "bg-white/15"
                     : "bg-[#101827]",
                 )}
               >
                 {isExpanded ? (
-                  <ChevronUp size={14} />
+                  <ChevronUp
+                    size={14}
+                  />
                 ) : (
-                  <ChevronDown size={14} />
+                  <ChevronDown
+                    size={14}
+                  />
                 )}
               </span>
             </button>
@@ -722,7 +835,9 @@ function CategoryNavigation({
                 <div className="mb-2 flex items-center gap-1.5 px-1 text-[10px] font-black text-slate-400">
                   <MapPin size={12} />
 
-                  <span>الدول المتاحة</span>
+                  <span>
+                    الدول المتاحة
+                  </span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -736,8 +851,8 @@ function CategoryNavigation({
                     }
                     className={clsx(
                       "flex w-full items-center rounded-xl px-3 py-2.5 text-right text-[11px] font-black transition",
-
-                      isActive && !activeCountry
+                      isActive &&
+                        !activeCountry
                         ? "bg-orange-500/15 text-orange-400"
                         : "bg-[#111a28] text-slate-300 hover:bg-[#223148] hover:text-white",
                     )}
@@ -745,7 +860,9 @@ function CategoryNavigation({
                     كل الدول
                   </button>
 
-                  {countriesMap[category]?.map(
+                  {countriesMap[
+                    category
+                  ]?.map(
                     ({ country }) => (
                       <button
                         key={`${category}-${country}`}
@@ -758,7 +875,6 @@ function CategoryNavigation({
                         }
                         className={clsx(
                           "flex w-full items-center rounded-xl px-3 py-2.5 text-right text-[11px] font-black transition",
-
                           isActive &&
                             activeCountry ===
                               country
@@ -775,12 +891,15 @@ function CategoryNavigation({
                 </div>
 
                 {isActive &&
-                  availableTags.length > 0 && (
+                  availableTags.length >
+                    0 && (
                     <div className="mt-4 border-t border-white/[0.05] pt-3">
                       <div className="mb-2 flex items-center gap-1.5 px-1 text-[10px] font-black text-slate-400">
                         <Tags size={12} />
 
-                        <span>وسوم مرتبطة</span>
+                        <span>
+                          وسوم مرتبطة
+                        </span>
                       </div>
 
                       <div className="flex flex-wrap gap-1.5">
@@ -796,8 +915,8 @@ function CategoryNavigation({
                               }
                               className={clsx(
                                 "inline-flex min-w-0 items-center rounded-full border px-2.5 py-1.5 text-[9px] font-black transition",
-
-                                activeTag === tag
+                                activeTag ===
+                                  tag
                                   ? "border-orange-500 bg-orange-500 text-white"
                                   : "border-white/[0.07] bg-[#111a28] text-slate-300 hover:border-orange-500/40 hover:text-orange-400",
                               )}
@@ -820,9 +939,9 @@ function CategoryNavigation({
   );
 }
 
-/* =============================== */
-/* Desktop categories aside        */
-/* =============================== */
+/* =========================================================
+   Desktop Categories
+========================================================= */
 
 function DesktopCategoriesAside({
   isOpen,
@@ -860,11 +979,6 @@ function DesktopCategoriesAside({
               : onToggle
           }
           className="flex h-12 items-center gap-2 rounded-full border border-white/10 bg-orange-500 px-4 text-white shadow-2xl shadow-black/40 transition hover:-translate-y-0.5 hover:bg-orange-600 active:scale-95"
-          aria-label={
-            hasActiveFilters
-              ? "عرض كل الوصفات"
-              : "فتح دليل التصنيفات"
-          }
         >
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
             {hasActiveFilters ? (
@@ -889,8 +1003,9 @@ function DesktopCategoriesAside({
       aria-label="قائمة تصنيفات الوصفات"
       className={clsx(
         "fixed bottom-5 left-0 top-28 z-40 hidden transition-all duration-300 ease-out xl:block",
-
-        isOpen ? "w-[260px]" : "w-[58px]",
+        isOpen
+          ? "w-[260px]"
+          : "w-[58px]",
       )}
     >
       <div className="flex h-full max-h-[calc(100dvh-8.25rem)] flex-col overflow-hidden rounded-r-3xl border border-l-0 border-white/10 bg-[#162235]/95 shadow-2xl shadow-black/30 backdrop-blur-xl">
@@ -912,10 +1027,11 @@ function DesktopCategoriesAside({
                 type="button"
                 onClick={onToggle}
                 aria-label="إغلاق التصنيفات"
-                title="إغلاق التصنيفات"
                 className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15 transition hover:bg-white/25"
               >
-                <ChevronLeft size={17} />
+                <ChevronLeft
+                  size={17}
+                />
               </button>
             </div>
 
@@ -928,11 +1044,12 @@ function DesktopCategoriesAside({
             type="button"
             onClick={onToggle}
             aria-label="فتح التصنيفات"
-            title="فتح التصنيفات"
             className="flex h-full w-full flex-col items-center justify-center gap-4 bg-[#162235] px-2 text-white transition hover:bg-[#1d2b3f]"
           >
             <span className="grid h-9 w-9 place-items-center rounded-full bg-orange-500 shadow-lg shadow-orange-500/20">
-              <ChevronRight size={18} />
+              <ChevronRight
+                size={18}
+              />
             </span>
 
             <ListFilter
@@ -950,9 +1067,9 @@ function DesktopCategoriesAside({
   );
 }
 
-/* =============================== */
-/* Desktop advertisement aside     */
-/* =============================== */
+/* =========================================================
+   Desktop Advertisement
+========================================================= */
 
 function DesktopAdvertisementAside({
   isFooterVisible,
@@ -968,7 +1085,6 @@ function DesktopAdvertisementAside({
       aria-label="الإعلان"
       className={clsx(
         "fixed bottom-5 right-0 top-28 z-40 hidden w-[300px] transition-all duration-300 ease-out xl:block",
-
         isFooterVisible
           ? "pointer-events-none translate-x-full opacity-0"
           : "translate-x-0 opacity-100",
@@ -990,9 +1106,7 @@ function DesktopAdvertisementAside({
 
           <div className="mx-auto w-full min-w-[250px] overflow-hidden rounded-2xl border border-white/[0.05] bg-[#111a28]">
             <div className="w-full min-w-[250px]">
-              <MeasuredAdSenseBanner
-                minHeight={250}
-              />
+              <MeasuredAdSenseBanner minHeight={250} />
             </div>
           </div>
         </div>
@@ -1001,53 +1115,47 @@ function DesktopAdvertisementAside({
   );
 }
 
-/* =============================== */
-/* Mobile categories guide         */
-/* =============================== */
+/* =========================================================
+   Mobile Categories
+========================================================= */
 
 function MobileCategoriesGuide({
   isOpen,
   onToggle,
   onClose,
-
   isFooterVisible,
   footerOffset,
-
   activeCategory,
   activeCountry,
   activeTag,
-
   onShowAllRecipes,
-
   children,
 }: {
   isOpen: boolean;
-
   onToggle: () => void;
   onClose: () => void;
-
   isFooterVisible: boolean;
   footerOffset: number;
-
   activeCategory: string | null;
   activeCountry: string | null;
   activeTag: string | null;
-
   onShowAllRecipes: () => void;
-
   children: ReactNode;
 }) {
-  const hasActiveFilters = Boolean(
-    activeCategory ||
-      activeCountry ||
-      activeTag,
-  );
+  const hasActiveFilters =
+    Boolean(
+      activeCategory ||
+        activeCountry ||
+        activeTag,
+    );
 
   const activeLabel =
     activeTag ||
     activeCountry ||
     (activeCategory
-      ? formatCategoryName(activeCategory)
+      ? formatCategoryName(
+          activeCategory,
+        )
       : "كل الوصفات");
 
   useEffect(() => {
@@ -1086,10 +1194,6 @@ function MobileCategoriesGuide({
     };
   }, [isOpen, onClose]);
 
-  /*
-   * عند ظهور الفوتر
-   * نثبت الزر ناحية الشمال.
-   */
   if (isFooterVisible) {
     return (
       <div
@@ -1109,11 +1213,6 @@ function MobileCategoriesGuide({
               : onToggle
           }
           className="flex h-11 items-center gap-2 rounded-full border border-white/10 bg-orange-500 px-3 text-white shadow-2xl shadow-black/40 transition active:scale-95"
-          aria-label={
-            hasActiveFilters
-              ? "عرض كل الوصفات"
-              : "فتح التصنيفات"
-          }
         >
           <span className="grid h-7 w-7 place-items-center rounded-full bg-white/15">
             {hasActiveFilters ? (
@@ -1135,9 +1234,6 @@ function MobileCategoriesGuide({
 
   return (
     <>
-      {/*
-       * الخلفية خلف القائمة
-       */}
       {isOpen && (
         <button
           type="button"
@@ -1147,15 +1243,9 @@ function MobileCategoriesGuide({
         />
       )}
 
-      {/*
-       * مهم:
-       * القائمة مثبتة ناحية الشمال فعليًا
-       * باستخدام left وليس RTL start/end.
-       */}
       <div
         className={clsx(
           "fixed left-2 right-auto z-[70] flex w-[calc(100vw-1rem)] max-w-[430px] flex-col gap-2 xl:hidden sm:left-3 sm:w-[calc(100vw-1.5rem)]",
-
           isOpen
             ? "pointer-events-auto"
             : "pointer-events-none",
@@ -1214,14 +1304,6 @@ function MobileCategoriesGuide({
           </section>
         )}
 
-        {/*
-         * mr-auto هنا مهم جدًا.
-         * لأن الصفحة RTL، واستخدام items-start
-         * قد يجعل الزر ناحية اليمين.
-         *
-         * margin-right:auto يدفعه فعليًا
-         * ناحية الشمال.
-         */}
         <button
           type="button"
           onClick={onToggle}
@@ -1233,7 +1315,6 @@ function MobileCategoriesGuide({
           }
           className={clsx(
             "pointer-events-auto ml-0 mr-auto flex h-12 max-w-[220px] items-center gap-2 rounded-full border border-white/10 px-3 text-white shadow-xl shadow-black/30 transition active:scale-95",
-
             isOpen
               ? "bg-[#162235] hover:bg-[#1f2d40]"
               : "bg-orange-500 hover:bg-orange-600",
@@ -1242,7 +1323,6 @@ function MobileCategoriesGuide({
           <span
             className={clsx(
               "grid h-8 w-8 shrink-0 place-items-center rounded-full",
-
               isOpen
                 ? "bg-orange-500"
                 : "bg-white/15",
@@ -1272,9 +1352,9 @@ function MobileCategoriesGuide({
   );
 }
 
-/* =============================== */
-/* Recipe card                     */
-/* =============================== */
+/* =========================================================
+   Recipe Card
+========================================================= */
 
 function RecipeCard({
   recipe,
@@ -1285,16 +1365,17 @@ function RecipeCard({
   recipe: Recipe;
   index: number;
   hasImageError: boolean;
-  onImageError: (id: number) => void;
+  onImageError: (
+    id: number,
+  ) => void;
 }) {
   const cardImageUrl =
     getCardImageUrl(recipe);
 
-  const categoryLabel = Array.isArray(
-    recipe.category,
-  )
-    ? recipe.category[0]
-    : recipe.category;
+  const categoryLabel =
+    Array.isArray(recipe.category)
+      ? recipe.category[0]
+      : recipe.category;
 
   return (
     <article className="group h-full">
@@ -1306,7 +1387,9 @@ function RecipeCard({
         className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/[0.07] bg-[#121c2b] shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1.5 hover:border-orange-500/40 hover:shadow-2xl hover:shadow-black/25"
       >
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#243247]">
-          {isValidImageUrl(cardImageUrl) &&
+          {isValidImageUrl(
+            cardImageUrl,
+          ) &&
           !hasImageError ? (
             <Image
               src={cardImageUrl!}
@@ -1318,7 +1401,7 @@ function RecipeCard({
               fill
               sizes="(max-width: 640px) 94vw, (max-width: 1024px) 46vw, (max-width: 1536px) 31vw, 360px"
               quality={70}
-              preload={index < 4}
+              priority={index < 4}
               loading={
                 index < 4
                   ? undefined
@@ -1326,23 +1409,38 @@ function RecipeCard({
               }
               decoding="async"
               draggable={false}
-              unoptimized={cardImageUrl!.startsWith(
-                "http",
-              )}
+              unoptimized={
+                cardImageUrl!.startsWith(
+                  "http://",
+                ) ||
+                cardImageUrl!.startsWith(
+                  "https://",
+                )
+              }
               onError={() =>
-                onImageError(recipe.id)
+                onImageError(
+                  recipe.id,
+                )
               }
               className="object-cover transition-transform duration-700 group-hover:scale-[1.06]"
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#25344a] via-[#172235] to-[#271f1a] text-center">
               <span className="grid h-16 w-16 place-items-center rounded-full bg-white/[0.06] text-slate-400">
-                <UtensilsCrossed size={32} />
+                <UtensilsCrossed
+                  size={32}
+                />
               </span>
 
               <span className="mt-3 px-4 text-xs font-black text-slate-400">
                 صورة الوصفة غير متاحة
               </span>
+
+              {cardImageUrl && (
+                <span className="mt-2 max-w-[90%] truncate text-[8px] text-slate-600">
+                  {cardImageUrl}
+                </span>
+              )}
             </div>
           )}
 
@@ -1370,7 +1468,9 @@ function RecipeCard({
 
           <div className="mt-auto pt-4">
             <span className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-[#1b293b] px-3 py-2.5 text-[11px] font-black text-slate-200 transition group-hover:border-orange-500/30 group-hover:bg-orange-500 group-hover:text-white">
-              <UtensilsCrossed size={14} />
+              <UtensilsCrossed
+                size={14}
+              />
 
               مشاهدة الوصفة
             </span>
@@ -1381,9 +1481,9 @@ function RecipeCard({
   );
 }
 
-/* =============================== */
-/* Pagination                      */
-/* =============================== */
+/* =========================================================
+   Pagination
+========================================================= */
 
 function RecipesPagination({
   currentPage,
@@ -1396,16 +1496,19 @@ function RecipesPagination({
   totalPages: number;
   totalItems: number;
   recipesPerPage: number;
-  onPageChange: (page: number) => void;
+  onPageChange: (
+    page: number,
+  ) => void;
 }) {
   if (totalPages <= 1) {
     return null;
   }
 
-  const paginationItems = getPaginationItems(
-    currentPage,
-    totalPages,
-  );
+  const paginationItems =
+    getPaginationItems(
+      currentPage,
+      totalPages,
+    );
 
   const firstItem =
     (currentPage - 1) *
@@ -1421,7 +1524,8 @@ function RecipesPagination({
     100,
     Math.max(
       0,
-      (currentPage / totalPages) * 100,
+      (currentPage / totalPages) *
+        100,
     ),
   );
 
@@ -1438,7 +1542,11 @@ function RecipesPagination({
       <div className="relative flex flex-col gap-4 border-b border-white/[0.06] px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center justify-center gap-3 sm:justify-start">
           <span className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/25">
-            <ChefHat size={23} strokeWidth={2.2} />
+            <ChefHat
+              size={23}
+              strokeWidth={2.2}
+            />
+
             <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-[#111c2c] bg-emerald-400" />
           </span>
 
@@ -1446,71 +1554,118 @@ function RecipesPagination({
             <p className="text-sm font-black text-white sm:text-base">
               رحلة جديدة بين وصفاتنا
             </p>
+
             <p className="mt-1 text-[10px] font-bold text-slate-400 sm:text-xs">
-              الوصفات {formatNumber(firstItem)}–{formatNumber(lastItem)} من أصل {formatNumber(totalItems)} وصفة
+              الوصفات{" "}
+              {formatNumber(
+                firstItem,
+              )}
+              –
+              {formatNumber(
+                lastItem,
+              )}{" "}
+              من أصل{" "}
+              {formatNumber(
+                totalItems,
+              )}{" "}
+              وصفة
             </p>
           </div>
         </div>
 
         <div className="mx-auto flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/[0.08] px-3 py-2 sm:mx-0">
-          <span className="text-[10px] font-bold text-slate-400">محطتك الحالية</span>
+          <span className="text-[10px] font-bold text-slate-400">
+            محطتك الحالية
+          </span>
+
           <span className="rounded-full bg-orange-500 px-2.5 py-1 text-[11px] font-black text-white">
-            {formatNumber(currentPage)} / {formatNumber(totalPages)}
+            {formatNumber(
+              currentPage,
+            )}{" "}
+            /{" "}
+            {formatNumber(
+              totalPages,
+            )}
           </span>
         </div>
       </div>
 
       <div className="relative p-4 sm:px-6 sm:py-5">
-        {/* Mobile pagination */}
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:hidden">
           <button
             type="button"
             onClick={() =>
-              onPageChange(currentPage - 1)
+              onPageChange(
+                currentPage - 1,
+              )
             }
-            disabled={currentPage === 1}
-            aria-label="الصفحة السابقة"
+            disabled={
+              currentPage === 1
+            }
             className="inline-flex h-12 items-center justify-center gap-1 rounded-2xl border border-white/[0.08] bg-[#19283b] px-3 text-[11px] font-black text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
           >
-            <ChevronRight size={18} />
+            <ChevronRight
+              size={18}
+            />
+
             السابق
           </button>
 
           <div className="grid h-12 min-w-12 place-items-center rounded-2xl bg-orange-500 text-sm font-black text-white shadow-lg shadow-orange-500/25">
-              {formatNumber(currentPage)}
+            {formatNumber(
+              currentPage,
+            )}
           </div>
 
           <button
             type="button"
             onClick={() =>
-              onPageChange(currentPage + 1)
+              onPageChange(
+                currentPage + 1,
+              )
             }
             disabled={
-              currentPage === totalPages
+              currentPage ===
+              totalPages
             }
-            aria-label="الصفحة التالية"
             className="inline-flex h-12 items-center justify-center gap-1 rounded-2xl bg-gradient-to-l from-orange-500 to-orange-600 px-3 text-[11px] font-black text-white shadow-lg shadow-orange-500/20 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
           >
             التالي
-            <ChevronLeft size={18} />
+
+            <ChevronLeft
+              size={18}
+            />
           </button>
         </div>
 
         <p className="mt-3 text-center text-[10px] font-bold text-slate-500 sm:hidden">
-          صفحة {formatNumber(currentPage)} من {formatNumber(totalPages)}
+          صفحة{" "}
+          {formatNumber(
+            currentPage,
+          )}{" "}
+          من{" "}
+          {formatNumber(
+            totalPages,
+          )}
         </p>
 
-        {/* Desktop / tablet pagination */}
         <div className="hidden items-center justify-between gap-4 sm:flex">
           <button
             type="button"
             onClick={() =>
-              onPageChange(currentPage - 1)
+              onPageChange(
+                currentPage - 1,
+              )
             }
-            disabled={currentPage === 1}
+            disabled={
+              currentPage === 1
+            }
             className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/[0.08] bg-[#19283b] px-5 text-xs font-black text-white transition hover:-translate-y-0.5 hover:border-orange-500/40 hover:bg-[#213147] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:translate-y-0"
           >
-            <ChevronRight size={16} />
+            <ChevronRight
+              size={16}
+            />
+
             السابق
           </button>
 
@@ -1518,8 +1673,10 @@ function RecipesPagination({
             {paginationItems.map(
               (item, index) => {
                 if (
-                  item === "start-ellipsis" ||
-                  item === "end-ellipsis"
+                  item ===
+                    "start-ellipsis" ||
+                  item ===
+                    "end-ellipsis"
                 ) {
                   return (
                     <span
@@ -1533,14 +1690,17 @@ function RecipesPagination({
                 }
 
                 const isActive =
-                  item === currentPage;
+                  item ===
+                  currentPage;
 
                 return (
                   <button
                     key={item}
                     type="button"
                     onClick={() =>
-                      onPageChange(item)
+                      onPageChange(
+                        item,
+                      )
                     }
                     aria-label={`الانتقال إلى الصفحة ${item}`}
                     aria-current={
@@ -1550,13 +1710,14 @@ function RecipesPagination({
                     }
                     className={clsx(
                       "grid h-10 min-w-10 place-items-center rounded-xl px-2 text-xs font-black transition duration-200",
-
                       isActive
                         ? "scale-105 bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/30"
                         : "text-slate-400 hover:bg-[#223148] hover:text-white",
                     )}
                   >
-                    {formatNumber(item)}
+                    {formatNumber(
+                      item,
+                    )}
                   </button>
                 );
               },
@@ -1566,15 +1727,21 @@ function RecipesPagination({
           <button
             type="button"
             onClick={() =>
-              onPageChange(currentPage + 1)
+              onPageChange(
+                currentPage + 1,
+              )
             }
             disabled={
-              currentPage === totalPages
+              currentPage ===
+              totalPages
             }
             className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-l from-orange-500 to-orange-600 px-5 text-xs font-black text-white shadow-lg shadow-orange-500/25 transition hover:-translate-y-0.5 hover:shadow-orange-500/35 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:translate-y-0"
           >
             التالي
-            <ChevronLeft size={16} />
+
+            <ChevronLeft
+              size={16}
+            />
           </button>
         </div>
       </div>
@@ -1585,16 +1752,18 @@ function RecipesPagination({
       >
         <div
           className="h-full rounded-full bg-gradient-to-l from-amber-300 via-orange-500 to-orange-600 transition-[width] duration-500"
-          style={{ width: `${progress}%` }}
+          style={{
+            width: `${progress}%`,
+          }}
         />
       </div>
     </nav>
   );
 }
 
-/* =============================== */
-/* Main component                  */
-/* =============================== */
+/* =========================================================
+   Main Component
+========================================================= */
 
 export default function RecipesClient({
   recipes,
@@ -1604,7 +1773,9 @@ export default function RecipesClient({
 }: RecipesClientProps) {
   const normalizedInitialCategory =
     initialCategory &&
-    categories.includes(initialCategory)
+    categories.includes(
+      initialCategory,
+    )
       ? initialCategory
       : null;
 
@@ -1618,18 +1789,25 @@ export default function RecipesClient({
   const [
     activeCountry,
     setActiveCountry,
-  ] = useState<string | null>(null);
+  ] = useState<string | null>(
+    null,
+  );
 
   const [
     activeTag,
     setActiveTag,
-  ] = useState<string | null>(null);
+  ] = useState<string | null>(
+    null,
+  );
 
   const [
     currentPage,
     setCurrentPage,
   ] = useState(() =>
-    Math.max(1, initialPage),
+    Math.max(
+      1,
+      initialPage,
+    ),
   );
 
   const [
@@ -1661,7 +1839,9 @@ export default function RecipesClient({
   const [
     expandedCategories,
     setExpandedCategories,
-  ] = useState<Record<string, boolean>>(
+  ] = useState<
+    Record<string, boolean>
+  >(
     () =>
       normalizedInitialCategory
         ? {
@@ -1674,7 +1854,9 @@ export default function RecipesClient({
   const [
     expandedCategoriesMobile,
     setExpandedCategoriesMobile,
-  ] = useState<Record<string, boolean>>(
+  ] = useState<
+    Record<string, boolean>
+  >(
     () =>
       normalizedInitialCategory
         ? {
@@ -1692,11 +1874,16 @@ export default function RecipesClient({
     footerOffset,
   } = useFooterDock();
 
-  const hasActiveFilters = Boolean(
-    activeCategory ||
-      activeCountry ||
-      activeTag,
-  );
+  const hasActiveFilters =
+    Boolean(
+      activeCategory ||
+        activeCountry ||
+        activeTag,
+    );
+
+  /* =======================================================
+     Responsive pagination
+  ======================================================= */
 
   useEffect(() => {
     const mediaQuery =
@@ -1704,13 +1891,14 @@ export default function RecipesClient({
         "(max-width: 639px)",
       );
 
-    const updateRecipesPerPage = () => {
-      setRecipesPerPage(
-        mediaQuery.matches
-          ? MOBILE_RECIPES_PER_PAGE
-          : DESKTOP_RECIPES_PER_PAGE,
-      );
-    };
+    const updateRecipesPerPage =
+      () => {
+        setRecipesPerPage(
+          mediaQuery.matches
+            ? MOBILE_RECIPES_PER_PAGE
+            : DESKTOP_RECIPES_PER_PAGE,
+        );
+      };
 
     updateRecipesPerPage();
 
@@ -1727,12 +1915,20 @@ export default function RecipesClient({
     };
   }, []);
 
+  /* =======================================================
+     Initial URL state
+  ======================================================= */
+
   useEffect(() => {
     if (
       initialCategory &&
-      categories.includes(initialCategory)
+      categories.includes(
+        initialCategory,
+      )
     ) {
-      setActiveCategory(initialCategory);
+      setActiveCategory(
+        initialCategory,
+      );
 
       setExpandedCategories({
         [initialCategory]: true,
@@ -1744,7 +1940,10 @@ export default function RecipesClient({
     }
 
     setCurrentPage(
-      Math.max(1, initialPage),
+      Math.max(
+        1,
+        initialPage,
+      ),
     );
   }, [
     initialCategory,
@@ -1752,16 +1951,17 @@ export default function RecipesClient({
     categories,
   ]);
 
+  /* =======================================================
+     Data
+  ======================================================= */
+
   const countriesMap = useMemo(
     () =>
       getCountriesMap(
         recipes,
         categories,
       ),
-    [
-      recipes,
-      categories,
-    ],
+    [recipes, categories],
   );
 
   const availableTags = useMemo(
@@ -1778,46 +1978,47 @@ export default function RecipesClient({
     ],
   );
 
-  const filteredRecipes = useMemo(() => {
-    let result = [...recipes];
+  const filteredRecipes =
+    useMemo(() => {
+      let result = [...recipes];
 
-    if (activeCategory) {
-      result = result.filter(
-        (recipe) =>
-          hasCategory(
-            recipe,
-            activeCategory,
-          ),
+      if (activeCategory) {
+        result = result.filter(
+          (recipe) =>
+            hasCategory(
+              recipe,
+              activeCategory,
+            ),
+        );
+      }
+
+      if (activeCountry) {
+        result = result.filter(
+          (recipe) =>
+            recipe.country ===
+            activeCountry,
+        );
+      }
+
+      if (activeTag) {
+        result = result.filter(
+          (recipe) =>
+            hasTag(
+              recipe,
+              activeTag,
+            ),
+        );
+      }
+
+      return result.sort(
+        (a, b) => b.id - a.id,
       );
-    }
-
-    if (activeCountry) {
-      result = result.filter(
-        (recipe) =>
-          recipe.country ===
-          activeCountry,
-      );
-    }
-
-    if (activeTag) {
-      result = result.filter(
-        (recipe) =>
-          hasTag(
-            recipe,
-            activeTag,
-          ),
-      );
-    }
-
-    return result.sort(
-      (a, b) => b.id - a.id,
-    );
-  }, [
-    recipes,
-    activeCategory,
-    activeCountry,
-    activeTag,
-  ]);
+    }, [
+      recipes,
+      activeCategory,
+      activeCountry,
+      activeTag,
+    ]);
 
   const totalPages = Math.max(
     1,
@@ -1827,25 +2028,35 @@ export default function RecipesClient({
     ),
   );
 
-  const safeCurrentPage = Math.min(
-    Math.max(currentPage, 1),
-    totalPages,
-  );
-
-  const paginatedRecipes = useMemo(() => {
-    const startIndex =
-      (safeCurrentPage - 1) *
-      recipesPerPage;
-
-    return filteredRecipes.slice(
-      startIndex,
-      startIndex + recipesPerPage,
+  const safeCurrentPage =
+    Math.min(
+      Math.max(
+        currentPage,
+        1,
+      ),
+      totalPages,
     );
-  }, [
-    filteredRecipes,
-    safeCurrentPage,
-    recipesPerPage,
-  ]);
+
+  const paginatedRecipes =
+    useMemo(() => {
+      const startIndex =
+        (safeCurrentPage - 1) *
+        recipesPerPage;
+
+      return filteredRecipes.slice(
+        startIndex,
+        startIndex +
+          recipesPerPage,
+      );
+    }, [
+      filteredRecipes,
+      safeCurrentPage,
+      recipesPerPage,
+    ]);
+
+  /* =======================================================
+     Grid
+  ======================================================= */
 
   const desktopGridColumns =
     useMemo(() => {
@@ -1864,12 +2075,21 @@ export default function RecipesClient({
       desktopCategoriesOpen,
     ]);
 
+  /* =======================================================
+     Page correction
+  ======================================================= */
+
   useEffect(() => {
-    if (currentPage === safeCurrentPage) {
+    if (
+      currentPage ===
+      safeCurrentPage
+    ) {
       return;
     }
 
-    setCurrentPage(safeCurrentPage);
+    setCurrentPage(
+      safeCurrentPage,
+    );
 
     replaceRecipesUrl(
       safeCurrentPage,
@@ -1881,6 +2101,10 @@ export default function RecipesClient({
     activeCategory,
   ]);
 
+  /* =======================================================
+     Pagination
+  ======================================================= */
+
   const goToPage = useCallback(
     (page: number) => {
       const nextPage = Math.min(
@@ -1888,11 +2112,16 @@ export default function RecipesClient({
         totalPages,
       );
 
-      if (nextPage === safeCurrentPage) {
+      if (
+        nextPage ===
+        safeCurrentPage
+      ) {
         return;
       }
 
-      setCurrentPage(nextPage);
+      setCurrentPage(
+        nextPage,
+      );
 
       replaceRecipesUrl(
         nextPage,
@@ -1908,12 +2137,16 @@ export default function RecipesClient({
         }
 
         const top =
-          section.getBoundingClientRect().top +
+          section.getBoundingClientRect()
+            .top +
           window.scrollY -
           112;
 
         window.scrollTo({
-          top: Math.max(0, top),
+          top: Math.max(
+            0,
+            top,
+          ),
           behavior: "smooth",
         });
       }, 30);
@@ -1924,6 +2157,10 @@ export default function RecipesClient({
       activeCategory,
     ],
   );
+
+  /* =======================================================
+     Filters
+  ======================================================= */
 
   const toggleCategory =
     useCallback(
@@ -1956,8 +2193,12 @@ export default function RecipesClient({
           category,
         );
 
-        setActiveCountry(null);
+        setActiveCountry(
+          null,
+        );
+
         setActiveTag(null);
+
         setCurrentPage(1);
 
         replaceRecipesUrl(
@@ -1985,6 +2226,7 @@ export default function RecipesClient({
         );
 
         setActiveTag(null);
+
         setCurrentPage(1);
 
         replaceRecipesUrl(
@@ -1995,39 +2237,41 @@ export default function RecipesClient({
       [],
     );
 
-  const selectTag =
-    useCallback(
-      (tag: string) => {
-        setActiveTag(
-          (currentTag) =>
-            currentTag === tag
-              ? null
-              : tag,
-        );
+  const selectTag = useCallback(
+    (tag: string) => {
+      setActiveTag(
+        (currentTag) =>
+          currentTag === tag
+            ? null
+            : tag,
+      );
 
-        setCurrentPage(1);
+      setCurrentPage(1);
 
-        replaceRecipesUrl(
-          1,
-          activeCategory,
-        );
-      },
-      [activeCategory],
-    );
+      replaceRecipesUrl(
+        1,
+        activeCategory,
+      );
+    },
+    [activeCategory],
+  );
 
   const clearAllFilters =
     useCallback(() => {
       setActiveCategory(null);
-
       setActiveCountry(null);
-
       setActiveTag(null);
 
       setCurrentPage(1);
 
-      replaceRecipesUrl(1, null);
+      replaceRecipesUrl(
+        1,
+        null,
+      );
 
-      setExpandedCategories({});
+      setExpandedCategories(
+        {},
+      );
 
       setExpandedCategoriesMobile(
         {},
@@ -2041,13 +2285,16 @@ export default function RecipesClient({
       }, 40);
     }, []);
 
+  /* =======================================================
+     Image error
+  ======================================================= */
+
   const handleImageError =
     useCallback(
       (id: number) => {
         setImageErrors(
           (currentErrors) => ({
             ...currentErrors,
-
             [String(id)]: true,
           }),
         );
@@ -2062,15 +2309,15 @@ export default function RecipesClient({
       );
     }, []);
 
+  /* =======================================================
+     Navigation
+  ======================================================= */
+
   const desktopNavigation = (
     <CategoryNavigation
       categories={categories}
-      countriesMap={
-        countriesMap
-      }
-      availableTags={
-        availableTags
-      }
+      countriesMap={countriesMap}
+      availableTags={availableTags}
       activeCategory={
         activeCategory
       }
@@ -2102,12 +2349,8 @@ export default function RecipesClient({
   const mobileNavigation = (
     <CategoryNavigation
       categories={categories}
-      countriesMap={
-        countriesMap
-      }
-      availableTags={
-        availableTags
-      }
+      countriesMap={countriesMap}
+      availableTags={availableTags}
       activeCategory={
         activeCategory
       }
@@ -2138,6 +2381,10 @@ export default function RecipesClient({
       }
     />
   );
+
+  /* =======================================================
+     Render
+  ======================================================= */
 
   return (
     <div
@@ -2177,9 +2424,7 @@ export default function RecipesClient({
       />
 
       <MobileCategoriesGuide
-        isOpen={
-          sidebarMobileOpen
-        }
+        isOpen={sidebarMobileOpen}
         onToggle={() =>
           setSidebarMobileOpen(
             (currentState) =>
@@ -2212,11 +2457,9 @@ export default function RecipesClient({
       <div
         className={clsx(
           "mx-auto w-full max-w-[1920px] px-3 transition-[padding] duration-300 sm:px-5",
-
           desktopCategoriesOpen
             ? "xl:pl-[280px]"
             : "xl:pl-[78px]",
-
           adsEnabled
             ? "xl:pr-[320px]"
             : "xl:pr-5",
@@ -2237,20 +2480,11 @@ export default function RecipesClient({
             </span>
 
             <h1 className="mx-auto max-w-[1000px] text-balance text-xl font-black leading-9 text-white sm:text-2xl sm:leading-10 lg:text-3xl lg:leading-[1.6]">
-              استمتع بألذ
-              الوصفات العربية
-              والعالمية الأصيلة
+              استمتع بألذ الوصفات العربية والعالمية الأصيلة
             </h1>
 
             <p className="mx-auto mt-3 max-w-[900px] text-sm font-bold leading-7 text-slate-300 sm:text-base sm:leading-8">
-              وصفات شهية وسهلة
-              التحضير لكل
-              المناسبات اليومية
-              والعائلية، مع خطوات
-              واضحة ونصائح
-              احترافية وأفكار
-              مبتكرة من مطابخ
-              العالم.
+              وصفات شهية وسهلة التحضير لكل المناسبات اليومية والعائلية، مع خطوات واضحة ونصائح احترافية وأفكار مبتكرة من مطابخ العالم.
             </p>
           </div>
         </section>
@@ -2259,12 +2493,11 @@ export default function RecipesClient({
           ref={recipesSectionRef}
           className="min-w-0"
         >
-          {/* Recipes grid */}
+          {/* Recipes Grid */}
 
           <div
             className={clsx(
               "grid grid-cols-1 gap-4 transition-all duration-300 sm:grid-cols-2 sm:gap-5",
-
               desktopGridColumns,
             )}
           >
@@ -2272,10 +2505,7 @@ export default function RecipesClient({
               ? Array.from({
                   length: 8,
                 }).map(
-                  (
-                    _,
-                    index,
-                  ) => (
+                  (_, index) => (
                     <RecipeSkeleton
                       key={`recipe-skeleton-${index}`}
                     />
@@ -2298,7 +2528,9 @@ export default function RecipesClient({
                           recipe={
                             recipe
                           }
-                          index={index}
+                          index={
+                            index
+                          }
                           hasImageError={Boolean(
                             imageErrors[
                               String(
@@ -2313,8 +2545,7 @@ export default function RecipesClient({
                       </div>
 
                       {adsEnabled &&
-                        (index +
-                          1) %
+                        (index + 1) %
                           MOBILE_AD_INTERVAL ===
                           0 && (
                           <section
@@ -2332,7 +2563,9 @@ export default function RecipesClient({
                             <div className="mx-auto flex min-h-[110px] w-full min-w-0 items-center justify-center overflow-hidden">
                               <MeasuredAdSenseBanner
                                 adFormat="horizontal"
-                                minHeight={110}
+                                minHeight={
+                                  110
+                                }
                               />
                             </div>
                           </section>
@@ -2359,17 +2592,11 @@ export default function RecipesClient({
 
                     <div>
                       <h2 className="text-sm font-black text-white sm:text-base">
-                        أنت تشاهد
-                        نتائج تصنيف
-                        محدد
+                        أنت تشاهد نتائج تصنيف محدد
                       </h2>
 
                       <p className="mt-1 text-[11px] font-bold text-slate-400">
-                        يمكنك الرجوع
-                        إلى جميع
-                        الوصفات وعرض
-                        باقي
-                        التصنيفات.
+                        يمكنك الرجوع إلى جميع الوصفات وعرض باقي التصنيفات.
                       </p>
                     </div>
                   </div>
@@ -2391,7 +2618,7 @@ export default function RecipesClient({
               </section>
             )}
 
-          {/* Empty state */}
+          {/* Empty */}
 
           {!isLoading &&
             filteredRecipes.length ===
@@ -2404,15 +2631,11 @@ export default function RecipesClient({
                 </span>
 
                 <h2 className="mt-4 text-xl font-black text-white">
-                  لا توجد وصفات
-                  مطابقة
+                  لا توجد وصفات مطابقة
                 </h2>
 
                 <p className="mx-auto mt-2 max-w-md text-sm font-bold leading-7 text-slate-400">
-                  جرّب تغيير
-                  التصنيف أو الدولة
-                  أو الوسم لعرض
-                  وصفات أخرى.
+                  جرّب تغيير التصنيف أو الدولة أو الوسم لعرض وصفات أخرى.
                 </p>
 
                 <button
@@ -2432,16 +2655,26 @@ export default function RecipesClient({
             )}
 
           {!isLoading &&
-            filteredRecipes.length > 0 && (
+            filteredRecipes.length >
+              0 && (
               <RecipesPagination
-                currentPage={safeCurrentPage}
-                totalPages={totalPages}
-                totalItems={filteredRecipes.length}
-                recipesPerPage={recipesPerPage}
-                onPageChange={goToPage}
+                currentPage={
+                  safeCurrentPage
+                }
+                totalPages={
+                  totalPages
+                }
+                totalItems={
+                  filteredRecipes.length
+                }
+                recipesPerPage={
+                  recipesPerPage
+                }
+                onPageChange={
+                  goToPage
+                }
               />
             )}
-
         </main>
       </div>
 
@@ -2474,78 +2707,36 @@ export default function RecipesClient({
           background: #ea580c;
         }
 
-        /*
-         * القائمة على الموبايل
-         */
-
         .mobile-category-panel {
-          max-height: calc(
-            100vh - 7rem
-          );
-
-          max-height: calc(
-            100svh - 7rem
-          );
-
-          max-height: calc(
-            100dvh - 7rem
-          );
+          max-height: calc(100vh - 7rem);
+          max-height: calc(100svh - 7rem);
+          max-height: calc(100dvh - 7rem);
         }
-
-        /*
-         * إصلاح Scroll اللمس
-         * على Android و iPhone
-         */
 
         .mobile-category-scroll {
           min-height: 0;
-
           overflow-x: hidden !important;
           overflow-y: auto !important;
-
           -webkit-overflow-scrolling: touch;
-
           overscroll-behavior-y: contain;
-
           touch-action: pan-y;
-
           scrollbar-gutter: stable;
         }
 
-        @supports (
-          -webkit-touch-callout:
-            none
-        ) {
+        @supports (-webkit-touch-callout: none) {
           .mobile-category-scroll {
             -webkit-overflow-scrolling: touch;
-
             touch-action: pan-y;
           }
         }
 
-        /*
-         * الشاشات القصيرة
-         */
-
         @media (max-height: 650px) and (max-width: 1279px) {
           .mobile-category-panel {
-            max-height: calc(
-              100vh - 5.75rem
-            );
-
-            max-height: calc(
-              100svh - 5.75rem
-            );
-
-            max-height: calc(
-              100dvh - 5.75rem
-            );
+            max-height: calc(100vh - 5.75rem);
+            max-height: calc(100svh - 5.75rem);
+            max-height: calc(100dvh - 5.75rem);
           }
         }
-
-        /*
-         * الموبايل
-         */
 
         @media (max-width: 640px) {
           html {
@@ -2553,46 +2744,24 @@ export default function RecipesClient({
           }
 
           .mobile-category-panel {
-            max-height: calc(
-              100vh - 6.25rem
-            );
-
-            max-height: calc(
-              100svh - 6.25rem
-            );
-
-            max-height: calc(
-              100dvh - 6.25rem
-            );
+            max-height: calc(100vh - 6.25rem);
+            max-height: calc(100svh - 6.25rem);
+            max-height: calc(100dvh - 6.25rem);
           }
 
           .mobile-category-scroll {
             padding-bottom: max(
               0.75rem,
-              env(
-                safe-area-inset-bottom
-              )
+              env(safe-area-inset-bottom)
             );
           }
         }
 
-        /*
-         * الشاشات الصغيرة جدًا
-         */
-
         @media (max-width: 380px) {
           .mobile-category-panel {
-            max-height: calc(
-              100vh - 5.5rem
-            );
-
-            max-height: calc(
-              100svh - 5.5rem
-            );
-
-            max-height: calc(
-              100dvh - 5.5rem
-            );
+            max-height: calc(100vh - 5.5rem);
+            max-height: calc(100svh - 5.5rem);
+            max-height: calc(100dvh - 5.5rem);
           }
         }
       `}</style>

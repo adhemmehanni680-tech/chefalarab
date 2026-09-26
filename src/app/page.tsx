@@ -1,19 +1,14 @@
+import type { Metadata } from "next";
 import HomeClient from "./HomeClient";
 import recipesData from "@/data/recipes-catalog.json";
 
 /*
-  غيّر الرقم ده فقط للتحكم
-  في عدد الوصفات داخل كل قسم:
-
-  4  = أربع وصفات
-  8  = ثماني وصفات
-  12 = اثنتا عشرة وصفة
+  عدد الوصفات داخل كل قسم
 */
 const ITEMS_PER_SECTION = 4;
 
 /*
-  الترتيب الأساسي للأقسام
-  في الصفحة الرئيسية.
+  ترتيب الأقسام
 */
 const HOME_CATEGORIES = [
   "المطبخ-العربي",
@@ -29,15 +24,9 @@ const HOME_CATEGORIES = [
 ];
 
 /*
-  يدعم اختلافات كتابة التصنيف
-  داخل ملف JSON.
-
-  مثال:
-  مشروبات ساخنة
-  مشروبات-ساخنة
-  المشروبات الساخنة
+  الاختلافات المحتملة في أسماء التصنيفات
 */
-const CATEGORY_ALIASES = {
+const CATEGORY_ALIASES: Record<string, string[]> = {
   "المطبخ-العربي": [
     "المطبخ-العربي",
     "المطبخ العربي",
@@ -48,18 +37,13 @@ const CATEGORY_ALIASES = {
     "المطبخ الآسيوي",
   ],
 
-  "المطبخ-الأمريكي-و-الأوروبي-و-اللاتيني":
-    [
-      "المطبخ-الأمريكي-و-الأوروبي-و-اللاتيني",
-
-      "المطبخ الأمريكي والأوروبي واللاتيني",
-
-      "المطبخ الأمريكي و الأوروبي و اللاتيني",
-
-      "المطبخ-الأمريكي-والأوروبي-واللاتيني",
-
-      "أمريكي وأوروبي ولاتيني",
-    ],
+  "المطبخ-الأمريكي-و-الأوروبي-و-اللاتيني": [
+    "المطبخ-الأمريكي-و-الأوروبي-و-اللاتيني",
+    "المطبخ الأمريكي والأوروبي واللاتيني",
+    "المطبخ الأمريكي و الأوروبي و اللاتيني",
+    "المطبخ-الأمريكي-والأوروبي-واللاتيني",
+    "أمريكي وأوروبي ولاتيني",
+  ],
 
   "المطبخ-الأفريقي": [
     "المطبخ-الأفريقي",
@@ -99,102 +83,84 @@ const CATEGORY_ALIASES = {
   "مشروبات ساخنة": [
     "مشروبات ساخنة",
     "مشروبات-ساخنة",
-
     "المشروبات الساخنة",
     "المشروبات-الساخنة",
-
     "مشروبات ساخنه",
     "مشروبات-ساخنه",
-
     "المشروبات الساخنه",
     "المشروبات-الساخنه",
-
     "مشروب ساخن",
     "مشروبات حارة",
   ],
 };
 
 /*
-  بيانات مختلفة وحقيقية لكل قسم.
+  بيانات الأقسام
 */
-const CATEGORY_META = {
+const CATEGORY_META: Record<
+  string,
+  {
+    eyebrow: string;
+    description: string;
+  }
+> = {
   "المطبخ-العربي": {
-    eyebrow:
-      "من قلب المائدة العربية",
-
+    eyebrow: "من قلب المائدة العربية",
     description:
       "وصفات عربية أصيلة من بلدان مختلفة، تشمل الأطباق اليومية وأكلات العزومات والمناسبات.",
   },
 
   "المطبخ-الآسيوي": {
-    eyebrow:
-      "نكهات متنوعة من آسيا",
-
+    eyebrow: "نكهات متنوعة من آسيا",
     description:
       "أطباق آسيوية تجمع بين الصوصات والتوابل والخضروات، مع طرق مناسبة للتحضير في المنزل.",
   },
 
-  "المطبخ-الأمريكي-و-الأوروبي-و-اللاتيني":
-    {
-      eyebrow:
-        "وصفات من أمريكا وأوروبا وأمريكا اللاتينية",
-
-      description:
-        "مجموعة من الأطباق الأمريكية والأوروبية واللاتينية، من الوجبات المنزلية إلى المخبوزات والأطباق المعروفة عالميًا.",
-    },
+  "المطبخ-الأمريكي-و-الأوروبي-و-اللاتيني": {
+    eyebrow:
+      "وصفات من أمريكا وأوروبا وأمريكا اللاتينية",
+    description:
+      "مجموعة من الأطباق الأمريكية والأوروبية واللاتينية، من الوجبات المنزلية إلى المخبوزات والأطباق المعروفة عالميًا.",
+  },
 
   "المطبخ-الأفريقي": {
-    eyebrow:
-      "وصفات من مطابخ أفريقيا",
-
+    eyebrow: "وصفات من مطابخ أفريقيا",
     description:
       "أطباق أفريقية متنوعة تعتمد على الحبوب واللحوم والخضروات والتوابل الدافئة التي تميز كل منطقة.",
   },
 
   السلطات: {
-    eyebrow:
-      "أطباق طازجة وخفيفة",
-
+    eyebrow: "أطباق طازجة وخفيفة",
     description:
       "سلطات بالخضروات والحبوب والبروتينات، مناسبة كمقبلات أو أطباق جانبية أو وجبات خفيفة.",
   },
 
   مخللات: {
-    eyebrow:
-      "إضافات منزلية للمائدة",
-
+    eyebrow: "إضافات منزلية للمائدة",
     description:
       "طرق تخليل متنوعة للخضروات بمقادير واضحة، مع الاهتمام بتوازن الملوحة والحموضة والقوام.",
   },
 
   حلويات: {
-    eyebrow:
-      "حلويات للضيافة والمناسبات",
-
+    eyebrow: "حلويات للضيافة والمناسبات",
     description:
       "حلويات شرقية وعالمية تشمل الكيك والبسكويت والحلويات الكريمية والوصفات المناسبة للتجمعات العائلية.",
   },
 
   مثلجات: {
-    eyebrow:
-      "حلويات باردة ومنعشة",
-
+    eyebrow: "حلويات باردة ومنعشة",
     description:
       "وصفات للآيس كريم والحلويات المجمدة بنكهات الفواكه والشوكولاتة والمكونات الكريمية.",
   },
 
   عصائر: {
-    eyebrow:
-      "مشروبات فاكهة منعشة",
-
+    eyebrow: "مشروبات فاكهة منعشة",
     description:
       "عصائر طبيعية وخلطات فواكه مناسبة للتقديم اليومي وفي المناسبات وأيام الصيف.",
   },
 
   "مشروبات ساخنة": {
-    eyebrow:
-      "دفء ونكهة في كل كوب",
-
+    eyebrow: "دفء ونكهة في كل كوب",
     description:
       "مشروبات ساخنة بالقهوة والشاي والحليب والتوابل، مناسبة للصباح والجلسات المسائية.",
   },
@@ -205,20 +171,26 @@ const CATEGORY_META = {
 /* =============================== */
 
 function normalizeCategories(
-  value
-) {
+  value: unknown,
+): string[] {
   if (!value) {
     return [];
   }
 
-  return Array.isArray(value)
-    ? value
-    : [value];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item || "").trim())
+      .filter(Boolean);
+  }
+
+  const single = String(value).trim();
+
+  return single ? [single] : [];
 }
 
 function normalizeCategoryValue(
-  value
-) {
+  value: unknown,
+): string {
   return String(value || "")
     .normalize("NFKC")
     .trim()
@@ -231,8 +203,8 @@ function normalizeCategoryValue(
 }
 
 function formatCategoryName(
-  category
-) {
+  category: string,
+): string {
   return String(category || "")
     .replace(/-/g, " ")
     .replace(/\s+/g, " ")
@@ -240,68 +212,52 @@ function formatCategoryName(
 }
 
 function categoryMatches(
-  recipeCategory,
-  canonicalCategory
-) {
+  recipeCategory: string,
+  canonicalCategory: string,
+): boolean {
   const normalizedRecipeCategory =
-    normalizeCategoryValue(
-      recipeCategory
-    );
+    normalizeCategoryValue(recipeCategory);
 
   const aliases =
-    CATEGORY_ALIASES[
-      canonicalCategory
-    ] || [canonicalCategory];
+    CATEGORY_ALIASES[canonicalCategory] || [
+      canonicalCategory,
+    ];
 
   return aliases.some(
     (alias) =>
-      normalizeCategoryValue(
-        alias
-      ) ===
-      normalizedRecipeCategory
+      normalizeCategoryValue(alias) ===
+      normalizedRecipeCategory,
   );
 }
 
 function pickByCategory(
-  allRecipes,
-  category,
-  limit
+  allRecipes: any[],
+  category: string,
+  limit: number,
 ) {
   return allRecipes
     .filter((recipe) => {
       const recipeCategories =
-        normalizeCategories(
-          recipe.category
-        );
+        normalizeCategories(recipe.category);
 
       return recipeCategories.some(
         (recipeCategory) =>
           categoryMatches(
             recipeCategory,
-            category
-          )
+            category,
+          ),
       );
     })
     .sort(
-      (
-        firstRecipe,
-        secondRecipe
-      ) => {
-        return (
-          Number(
-            secondRecipe.id || 0
-          ) -
-          Number(
-            firstRecipe.id || 0
-          )
-        );
-      }
+      (firstRecipe, secondRecipe) =>
+        Number(secondRecipe.id || 0) -
+        Number(firstRecipe.id || 0),
     )
     .slice(0, limit);
 }
 
 function getCategoryMeta(
-  category
+  category: string,
 ) {
   const savedMeta =
     CATEGORY_META[category];
@@ -311,9 +267,7 @@ function getCategoryMeta(
   }
 
   const categoryName =
-    formatCategoryName(
-      category
-    );
+    formatCategoryName(category);
 
   return {
     eyebrow:
@@ -325,34 +279,27 @@ function getCategoryMeta(
 }
 
 function buildHomeSections() {
-  const recipes =
-    Array.isArray(recipesData)
-      ? recipesData
-      : [];
+  const recipes = Array.isArray(recipesData)
+    ? recipesData
+    : [];
 
   return HOME_CATEGORIES
     .map((category) => {
-      const items =
-        pickByCategory(
-          recipes,
-          category,
-          ITEMS_PER_SECTION
-        );
+      const items = pickByCategory(
+        recipes,
+        category,
+        ITEMS_PER_SECTION,
+      );
 
       return {
         cat: category,
-
         items,
-
-        meta:
-          getCategoryMeta(
-            category
-          ),
+        meta: getCategoryMeta(category),
       };
     })
     .filter(
       (section) =>
-        section.items.length > 0
+        section.items.length > 0,
     );
 }
 
@@ -360,7 +307,7 @@ function buildHomeSections() {
 /* Metadata */
 /* =============================== */
 
-export function generateMetadata() {
+export function generateMetadata(): Metadata {
   const title =
     "شيف العرب | وصفات طبخ عربية وعالمية خطوة بخطوة";
 
@@ -386,41 +333,25 @@ export function generateMetadata() {
       googleBot: {
         index: true,
         follow: true,
-
-        "max-image-preview":
-          "large",
-
+        "max-image-preview": "large",
         "max-snippet": -1,
-
-        "max-video-preview":
-          -1,
+        "max-video-preview": -1,
       },
     },
 
     openGraph: {
       title,
-
       description,
-
-      url:
-        "https://chefalarab.com/",
-
-      siteName:
-        "شيف العرب",
-
+      url: "https://chefalarab.com/",
+      siteName: "شيف العرب",
       type: "website",
-
       locale: "ar_AR",
 
       images: [
         {
-          url:
-            "/og-image.jpg",
-
+          url: "https://chefalarab.com/og-image.jpg",
           width: 1200,
-
           height: 630,
-
           alt:
             "شيف العرب – وصفات طبخ عربية وعالمية سهلة",
         },
@@ -428,15 +359,11 @@ export function generateMetadata() {
     },
 
     twitter: {
-      card:
-        "summary_large_image",
-
+      card: "summary_large_image",
       title,
-
       description,
-
       images: [
-        "/og-image.jpg",
+        "https://chefalarab.com/og-image.jpg",
       ],
     },
   };
@@ -452,9 +379,7 @@ export default function Page() {
 
   return (
     <HomeClient
-      sectionsData={
-        sectionsData
-      }
+      sectionsData={sectionsData}
     />
   );
 }

@@ -1,3 +1,4 @@
+//page 
 import type { Metadata } from "next";
 import RecipesClient from "./RecipesClient";
 import recipesData from "@/data/recipes-catalog.json";
