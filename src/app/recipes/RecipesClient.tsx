@@ -14,7 +14,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import {
-  ArrowLeft,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -131,9 +130,6 @@ type Recipe = {
   country?: string;
   category?: string[] | string;
   tags?: string[] | string;
-  excerpt?: string;
-  cookingTimeMinutes?: number | null;
-  contentFlags?: unknown;
 
   img: {
     url?: string;
@@ -143,13 +139,6 @@ type Recipe = {
     height?: number;
   };
 };
-
-type DiscoverFilter =
-  | "latest"
-  | "quick"
-  | "family";
-
-type RecipeGroup = "desserts" | "drinks" | "birthdays";
 
 type CountryItem = {
   country: string;
@@ -163,17 +152,21 @@ type TagItem = {
 
 type FooterDockState = {
   isFooterVisible: boolean;
+  footerOffset: number;
 };
 
 interface RecipesClientProps {
   recipes: Recipe[];
   categories: string[];
+
   initialCategory?: string | null;
   initialCountry?: string | null;
   initialTag?: string | null;
-  initialDiscover?: DiscoverFilter | null;
+
+  initialDiscover?: string | null;
   initialShowAllTags?: boolean;
-  initialGroup?: RecipeGroup | null;
+  initialGroup?: string | null;
+
   initialPage?: number;
 }
 
@@ -319,78 +312,6 @@ function hasTag(
     : recipe.tags === tag;
 }
 
-function hasAnyCategory(recipe: Recipe, categories: string[]): boolean {
-  return categories.some((category) => hasCategory(recipe, category));
-}
-
-function matchesRecipeGroup(recipe: Recipe, group: RecipeGroup): boolean {
-  const dessertCategories = ["حلويات", "الحلويات الشرقية"];
-
-  if (group === "desserts") {
-    return hasAnyCategory(recipe, dessertCategories);
-  }
-
-  if (group === "drinks") {
-    return hasAnyCategory(recipe, ["مشروبات-ساخنة", "مشروبات", "عصائر"]);
-  }
-
-  const searchable = [
-    recipe.title,
-    ...(Array.isArray(recipe.tags) ? recipe.tags : recipe.tags ? [recipe.tags] : []),
-    ...(Array.isArray(recipe.category) ? recipe.category : recipe.category ? [recipe.category] : []),
-  ]
-    .join(" ")
-    .toLocaleLowerCase("ar");
-
-  return (
-    hasAnyCategory(recipe, dessertCategories) ||
-    ["كيك", "كيكة", "تورتة", "جاتوه", "كب كيك"].some((word) =>
-      searchable.includes(word),
-    )
-  );
-}
-
-function hasContentFlag(recipe: Recipe, aliases: string[]): boolean {
-  const flags = recipe.contentFlags;
-  if (!flags) return false;
-  const wanted = new Set(aliases.map((alias) => alias.toLowerCase()));
-
-  const visit = (value: unknown, depth = 0): boolean => {
-    if (depth > 3 || value == null) return false;
-    if (typeof value === "string") {
-      const normalized = value.toLowerCase();
-      return [...wanted].some((alias) => normalized.includes(alias));
-    }
-    if (Array.isArray(value)) {
-      return value.some((item) => visit(item, depth + 1));
-    }
-    if (typeof value === "object") {
-      return Object.entries(value as Record<string, unknown>).some(
-        ([key, nestedValue]) => {
-          const enabled =
-            nestedValue === true || nestedValue === 1 ||
-            nestedValue === "true" || nestedValue === "yes";
-          return (wanted.has(key.toLowerCase()) && enabled) || visit(nestedValue, depth + 1);
-        },
-      );
-    }
-    return false;
-  };
-
-  return visit(flags);
-}
-
-function matchesDiscover(recipe: Recipe, discover: DiscoverFilter): boolean {
-  switch (discover) {
-    case "latest":
-      return true;
-    case "quick":
-      return Number(recipe.cookingTimeMinutes) > 0 && Number(recipe.cookingTimeMinutes) <= 30;
-    case "family":
-      return hasContentFlag(recipe, ["family", "family_friendly", "عائلية"]);
-  }
-}
-
 function getCountriesMap(
   recipes: Recipe[],
   categories: string[],
@@ -446,7 +367,6 @@ function getAvailableTags(
   recipes: Recipe[],
   activeCategory: string | null,
   activeCountry: string | null,
-  showAll = false,
 ): TagItem[] {
   let filteredRecipes = recipes;
 
@@ -494,7 +414,7 @@ function getAvailableTags(
     });
   });
 
-  const tags = Object.entries(tagCounts)
+  return Object.entries(tagCounts)
     .map(([tag, count]) => ({
       tag,
       count,
@@ -504,19 +424,12 @@ function getAvailableTags(
         return b.count - a.count;
       }
 
-<<<<<<< HEAD
-      return a.tag.localeCompare(b.tag, "ar");
-    });
-
-  return showAll ? tags : tags.slice(0, 16);
-=======
       return a.tag.localeCompare(
         b.tag,
         "ar",
       );
     })
     .slice(0, 16);
->>>>>>> developmentnew
 }
 
 type PaginationItem =
@@ -581,6 +494,8 @@ function formatNumber(
 function replaceRecipesUrl(
   page: number,
   category: string | null,
+  country: string | null = null,
+  tag: string | null = null,
 ) {
   if (typeof window === "undefined") {
     return;
@@ -601,6 +516,28 @@ function replaceRecipesUrl(
     );
   }
 
+  if (country) {
+    url.searchParams.set(
+      "country",
+      country,
+    );
+  } else {
+    url.searchParams.delete(
+      "country",
+    );
+  }
+
+  if (tag) {
+    url.searchParams.set(
+      "tag",
+      tag,
+    );
+  } else {
+    url.searchParams.delete(
+      "tag",
+    );
+  }
+
   if (page > 1) {
     url.searchParams.set(
       "page",
@@ -617,36 +554,15 @@ function replaceRecipesUrl(
   );
 }
 
-<<<<<<< HEAD
-function removeDiscoveryUrlParams() {
-  if (typeof window === "undefined") return;
-  const url = new URL(window.location.href);
-  url.searchParams.delete("discover");
-  url.searchParams.delete("country");
-  url.searchParams.delete("tag");
-  url.searchParams.delete("view");
-  url.searchParams.delete("group");
-  url.searchParams.delete("source");
-  window.history.replaceState(
-    window.history.state,
-    "",
-    `${url.pathname}${url.search}${url.hash}`,
-  );
-}
-
-/* =============================== */
-/* Footer dock hook                */
-/* =============================== */
-=======
 /* =========================================================
    Footer Hook
 ========================================================= */
->>>>>>> developmentnew
 
 function useFooterDock(): FooterDockState {
   const [footerState, setFooterState] =
     useState<FooterDockState>({
       isFooterVisible: false,
+      footerOffset: 0,
     });
 
   useEffect(() => {
@@ -660,18 +576,6 @@ function useFooterDock(): FooterDockState {
       return;
     }
 
-<<<<<<< HEAD
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        const nextVisible = entry.isIntersecting;
-
-        setFooterState((current) =>
-          current.isFooterVisible === nextVisible
-            ? current
-            : { isFooterVisible: nextVisible },
-        );
-      },
-=======
     let animationFrameId = 0;
 
     const updateFooterPosition = () => {
@@ -734,17 +638,11 @@ function useFooterDock(): FooterDockState {
     window.addEventListener(
       "scroll",
       updateFooterPosition,
->>>>>>> developmentnew
       {
-        // نخفي الأدوات قبل وصول الفوتر للشاشة بمسافة مريحة.
-        rootMargin: "0px 0px 96px 0px",
-        threshold: 0,
+        passive: true,
       },
     );
 
-<<<<<<< HEAD
-    observer.observe(footer);
-=======
     window.addEventListener(
       "resize",
       updateFooterPosition,
@@ -759,10 +657,23 @@ function useFooterDock(): FooterDockState {
         : null;
 
     resizeObserver?.observe(footer);
->>>>>>> developmentnew
 
     return () => {
-      observer.disconnect();
+      window.cancelAnimationFrame(
+        animationFrameId,
+      );
+
+      window.removeEventListener(
+        "scroll",
+        updateFooterPosition,
+      );
+
+      window.removeEventListener(
+        "resize",
+        updateFooterPosition,
+      );
+
+      resizeObserver?.disconnect();
     };
   }, []);
 
@@ -1068,17 +979,20 @@ function DesktopCategoriesAside({
   isOpen,
   onToggle,
   isFooterVisible,
+  footerOffset,
+  hasActiveFilters,
+  onShowAllRecipes,
   children,
 }: {
   isOpen: boolean;
   onToggle: () => void;
   isFooterVisible: boolean;
+  footerOffset: number;
+  hasActiveFilters: boolean;
+  onShowAllRecipes: () => void;
   children: ReactNode;
 }) {
   if (isFooterVisible) {
-<<<<<<< HEAD
-    return null;
-=======
     return (
       <div
         className="fixed left-3 z-50 hidden transition-all duration-300 xl:block"
@@ -1114,7 +1028,6 @@ function DesktopCategoriesAside({
         </button>
       </div>
     );
->>>>>>> developmentnew
   }
 
   return (
@@ -1243,34 +1156,17 @@ function MobileCategoriesGuide({
   onToggle,
   onClose,
   isFooterVisible,
-<<<<<<< HEAD
-
-  activeCategory,
-  activeCountry,
-  activeTag,
-
-=======
   footerOffset,
   activeCategory,
   activeCountry,
   activeTag,
   onShowAllRecipes,
->>>>>>> developmentnew
   children,
 }: {
   isOpen: boolean;
   onToggle: () => void;
   onClose: () => void;
   isFooterVisible: boolean;
-<<<<<<< HEAD
-
-  activeCategory: string | null;
-  activeCountry: string | null;
-  activeTag: string | null;
-
-  children: ReactNode;
-}) {
-=======
   footerOffset: number;
   activeCategory: string | null;
   activeCountry: string | null;
@@ -1285,7 +1181,6 @@ function MobileCategoriesGuide({
         activeTag,
     );
 
->>>>>>> developmentnew
   const activeLabel =
     activeTag ||
     activeCountry ||
@@ -1332,9 +1227,6 @@ function MobileCategoriesGuide({
   }, [isOpen, onClose]);
 
   if (isFooterVisible) {
-<<<<<<< HEAD
-    return null;
-=======
     return (
       <div
         className="fixed left-2 z-50 xl:hidden sm:left-3"
@@ -1370,7 +1262,6 @@ function MobileCategoriesGuide({
         </button>
       </div>
     );
->>>>>>> developmentnew
   }
 
   return (
@@ -1518,24 +1409,14 @@ function RecipeCard({
       ? recipe.category[0]
       : recipe.category;
 
-  const visibleTags = (Array.isArray(recipe.tags)
-    ? recipe.tags
-    : recipe.tags
-      ? [recipe.tags]
-      : []
-  ).slice(0, 2);
-
-  const cardNumber = String(index + 1).padStart(2, "0");
-
   return (
-    <article className="group self-start [content-visibility:auto] [contain-intrinsic-size:430px]">
+    <article className="group h-full">
       <Link
         href={`/recipe/${encodeURIComponent(
           recipe.slug,
         )}`}
         prefetch={false}
-        aria-label={`عرض وصفة ${recipe.title}`}
-        className="relative block overflow-hidden rounded-[30px] border border-white/[0.09] bg-[#091321] shadow-[0_18px_50px_rgba(0,0,0,0.24)] outline-none transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1.5 hover:border-orange-400/40 hover:shadow-[0_28px_65px_rgba(0,0,0,0.35)] focus-visible:ring-2 focus-visible:ring-orange-400 motion-reduce:transform-none motion-reduce:transition-none"
+        className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/[0.07] bg-[#121c2b] shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1.5 hover:border-orange-500/40 hover:shadow-2xl hover:shadow-black/25"
       >
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#243247]">
           {isValidImageUrl(
@@ -1551,13 +1432,8 @@ function RecipeCard({
               }
               fill
               sizes="(max-width: 640px) 94vw, (max-width: 1024px) 46vw, (max-width: 1536px) 31vw, 360px"
-<<<<<<< HEAD
-              quality={72}
-              preload={index < 4}
-=======
               quality={70}
               priority={index < 4}
->>>>>>> developmentnew
               loading={
                 index < 4
                   ? undefined
@@ -1578,7 +1454,7 @@ function RecipeCard({
                   recipe.id,
                 )
               }
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.045] motion-reduce:transform-none motion-reduce:transition-none"
+              className="object-cover transition-transform duration-700 group-hover:scale-[1.06]"
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#25344a] via-[#172235] to-[#271f1a] text-center">
@@ -1600,64 +1476,35 @@ function RecipeCard({
             </div>
           )}
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#091321] via-[#091321]/5 to-black/25" />
-
-          <span
-            aria-hidden="true"
-            className="absolute left-4 top-3 font-mono text-[30px] font-black leading-none tracking-[-0.08em] text-white/45 drop-shadow-md"
-          >
-            {cardNumber}
-          </span>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0e1725] via-[#0e1725]/60 to-transparent" />
 
           {recipe.country && (
-            <span className="absolute bottom-10 right-4 max-w-[82%] truncate rounded-full border border-white/15 bg-black/65 px-3 py-1.5 text-[10px] font-black text-white shadow-lg backdrop-blur-md">
+            <span className="absolute bottom-3 right-3 max-w-[80%] truncate rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[10px] font-black text-white backdrop-blur-md">
               {recipe.country}
             </span>
           )}
         </div>
 
-        <div className="relative mx-3 -mt-8 mb-3 rounded-[24px] border border-white/[0.09] bg-[#111d2d]/95 p-4 shadow-[0_18px_38px_rgba(0,0,0,0.28)] backdrop-blur-md sm:p-[18px]">
-          <div className="mb-3 flex items-center gap-2.5">
-            <span className="h-px flex-1 bg-gradient-to-l from-orange-400/70 to-transparent" />
-            {categoryLabel && (
-              <span className="max-w-[75%] truncate text-[10px] font-black tracking-wide text-orange-400">
-                {formatCategoryName(categoryLabel)}
-              </span>
-            )}
-          </div>
+        <div className="flex flex-1 flex-col p-4">
+          {categoryLabel && (
+            <span className="mb-2 block truncate text-[10px] font-black text-orange-400">
+              {formatCategoryName(
+                categoryLabel,
+              )}
+            </span>
+          )}
 
-          <h2 className="line-clamp-2 border-r-2 border-orange-500 pr-3 text-right text-[15px] font-black leading-7 text-white transition-colors group-hover:text-orange-200 sm:text-[17px]">
+          <h2 className="line-clamp-2 min-h-[56px] text-center text-sm font-black leading-7 text-white transition-colors group-hover:text-orange-400 sm:text-base">
             {recipe.title}
           </h2>
 
-<<<<<<< HEAD
-          {recipe.excerpt && (
-            <p className="mt-3 line-clamp-2 text-right text-[12px] font-semibold leading-[22px] text-slate-400 sm:text-[13px]">
-              {recipe.excerpt}
-            </p>
-          )}
-
-          <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/[0.07] pt-3.5">
-            <div className="flex min-w-0 flex-1 flex-nowrap gap-1.5 overflow-hidden">
-              {visibleTags.map((tag) => (
-                <span
-                  key={tag}
-                  className="min-w-0 truncate rounded-full border border-white/[0.06] bg-white/[0.05] px-2.5 py-1.5 text-[9px] font-bold text-slate-300"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-=======
           <div className="mt-auto pt-4">
             <span className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-[#1b293b] px-3 py-2.5 text-[11px] font-black text-slate-200 transition group-hover:border-orange-500/30 group-hover:bg-orange-500 group-hover:text-white">
               <UtensilsCrossed
                 size={14}
               />
->>>>>>> developmentnew
 
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] border border-orange-400/30 bg-orange-500 text-white shadow-[0_8px_22px_rgba(249,115,22,0.24)] transition-transform duration-300 group-hover:-translate-x-1 motion-reduce:transform-none">
-              <ArrowLeft size={18} strokeWidth={2.2} />
+              مشاهدة الوصفة
             </span>
           </div>
         </div>
@@ -1956,9 +1803,6 @@ export default function RecipesClient({
   initialCategory = null,
   initialCountry = null,
   initialTag = null,
-  initialDiscover = null,
-  initialShowAllTags = false,
-  initialGroup = null,
   initialPage = 1,
 }: RecipesClientProps) {
   const normalizedInitialCategory =
@@ -1979,30 +1823,16 @@ export default function RecipesClient({
   const [
     activeCountry,
     setActiveCountry,
-<<<<<<< HEAD
-  ] = useState<string | null>(initialCountry);
-=======
   ] = useState<string | null>(
-    null,
+    initialCountry,
   );
->>>>>>> developmentnew
 
   const [
     activeTag,
     setActiveTag,
-<<<<<<< HEAD
-  ] = useState<string | null>(initialTag);
-
-  const [activeDiscover, setActiveDiscover] =
-    useState<DiscoverFilter | null>(initialDiscover);
-
-  const [activeGroup, setActiveGroup] =
-    useState<RecipeGroup | null>(initialGroup);
-=======
   ] = useState<string | null>(
-    null,
+    initialTag,
   );
->>>>>>> developmentnew
 
   const [
     currentPage,
@@ -2033,7 +1863,7 @@ export default function RecipesClient({
   const [
     sidebarMobileOpen,
     setSidebarMobileOpen,
-  ] = useState(initialShowAllTags);
+  ] = useState(false);
 
   const [
     desktopCategoriesOpen,
@@ -2073,18 +1903,11 @@ export default function RecipesClient({
   const recipesSectionRef =
     useRef<HTMLElement>(null);
 
-  const { isFooterVisible } =
-    useFooterDock();
+  const {
+    isFooterVisible,
+    footerOffset,
+  } = useFooterDock();
 
-<<<<<<< HEAD
-  const hasActiveFilters = Boolean(
-    activeCategory ||
-      activeCountry ||
-      activeTag ||
-      activeDiscover ||
-      activeGroup,
-  );
-=======
   const hasActiveFilters =
     Boolean(
       activeCategory ||
@@ -2095,7 +1918,6 @@ export default function RecipesClient({
   /* =======================================================
      Responsive pagination
   ======================================================= */
->>>>>>> developmentnew
 
   useEffect(() => {
     const mediaQuery =
@@ -2151,15 +1973,6 @@ export default function RecipesClient({
       });
     }
 
-    setActiveCountry(initialCountry);
-    setActiveTag(initialTag);
-    setActiveDiscover(initialDiscover);
-    setActiveGroup(initialGroup);
-    if (initialShowAllTags) {
-      setSidebarMobileOpen(true);
-      setDesktopCategoriesOpen(true);
-    }
-
     setCurrentPage(
       Math.max(
         1,
@@ -2168,11 +1981,6 @@ export default function RecipesClient({
     );
   }, [
     initialCategory,
-    initialCountry,
-    initialTag,
-    initialDiscover,
-    initialGroup,
-    initialShowAllTags,
     initialPage,
     categories,
   ]);
@@ -2196,13 +2004,11 @@ export default function RecipesClient({
         recipes,
         activeCategory,
         activeCountry,
-        initialShowAllTags,
       ),
     [
       recipes,
       activeCategory,
       activeCountry,
-      initialShowAllTags,
     ],
   );
 
@@ -2241,48 +2047,12 @@ export default function RecipesClient({
       return result.sort(
         (a, b) => b.id - a.id,
       );
-<<<<<<< HEAD
-    }
-
-    if (activeDiscover) {
-      result = result.filter((recipe) =>
-        matchesDiscover(recipe, activeDiscover),
-      );
-    }
-
-    if (activeGroup) {
-      result = result.filter((recipe) =>
-        matchesRecipeGroup(recipe, activeGroup),
-      );
-    }
-
-    if (activeDiscover === "quick") {
-      return result.sort(
-        (a, b) => Number(a.cookingTimeMinutes || Infinity) - Number(b.cookingTimeMinutes || Infinity) || a.id - b.id,
-      );
-    }
-
-    if (activeDiscover === "latest") {
-      return result.sort((a, b) => b.id - a.id);
-    }
-
-    return result.sort((a, b) => a.id - b.id);
-  }, [
-    recipes,
-    activeCategory,
-    activeCountry,
-    activeTag,
-    activeDiscover,
-    activeGroup,
-  ]);
-=======
     }, [
       recipes,
       activeCategory,
       activeCountry,
       activeTag,
     ]);
->>>>>>> developmentnew
 
   const totalPages = Math.max(
     1,
@@ -2358,11 +2128,15 @@ export default function RecipesClient({
     replaceRecipesUrl(
       safeCurrentPage,
       activeCategory,
+      activeCountry,
+      activeTag,
     );
   }, [
     currentPage,
     safeCurrentPage,
     activeCategory,
+    activeCountry,
+    activeTag,
   ]);
 
   /* =======================================================
@@ -2390,6 +2164,8 @@ export default function RecipesClient({
       replaceRecipesUrl(
         nextPage,
         activeCategory,
+        activeCountry,
+        activeTag,
       );
 
       window.setTimeout(() => {
@@ -2419,6 +2195,8 @@ export default function RecipesClient({
       totalPages,
       safeCurrentPage,
       activeCategory,
+      activeCountry,
+      activeTag,
     ],
   );
 
@@ -2462,19 +2240,15 @@ export default function RecipesClient({
         );
 
         setActiveTag(null);
-<<<<<<< HEAD
-        setActiveDiscover(null);
-        setActiveGroup(null);
-=======
 
->>>>>>> developmentnew
         setCurrentPage(1);
 
         replaceRecipesUrl(
           1,
           category,
+          null,
+          null,
         );
-        removeDiscoveryUrlParams();
       },
       [],
     );
@@ -2496,66 +2270,42 @@ export default function RecipesClient({
         );
 
         setActiveTag(null);
-<<<<<<< HEAD
-        setActiveDiscover(null);
-        setActiveGroup(null);
-=======
 
->>>>>>> developmentnew
         setCurrentPage(1);
 
         replaceRecipesUrl(
           1,
           category,
+          country,
+          null,
         );
-        removeDiscoveryUrlParams();
       },
       [],
     );
 
-<<<<<<< HEAD
-  const selectTag =
-    useCallback(
-      (tag: string) => {
-        setActiveDiscover(null);
-        setActiveGroup(null);
-        setActiveTag(
-          (currentTag) =>
-            currentTag === tag
-              ? null
-              : tag,
-        );
-=======
   const selectTag = useCallback(
     (tag: string) => {
-      setActiveTag(
-        (currentTag) =>
-          currentTag === tag
-            ? null
-            : tag,
-      );
->>>>>>> developmentnew
+      const nextTag =
+        activeTag === tag
+          ? null
+          : tag;
 
+      setActiveTag(nextTag);
       setCurrentPage(1);
 
-<<<<<<< HEAD
-        replaceRecipesUrl(
-          1,
-          activeCategory,
-        );
-        removeDiscoveryUrlParams();
-      },
-      [activeCategory],
-    );
-=======
       replaceRecipesUrl(
         1,
         activeCategory,
+        activeCountry,
+        nextTag,
       );
     },
-    [activeCategory],
+    [
+      activeCategory,
+      activeCountry,
+      activeTag,
+    ],
   );
->>>>>>> developmentnew
 
   const clearAllFilters =
     useCallback(() => {
@@ -2563,21 +2313,14 @@ export default function RecipesClient({
       setActiveCountry(null);
       setActiveTag(null);
 
-      setActiveDiscover(null);
-
-      setActiveGroup(null);
-
       setCurrentPage(1);
 
-<<<<<<< HEAD
-      replaceRecipesUrl(1, null);
-      removeDiscoveryUrlParams();
-=======
       replaceRecipesUrl(
         1,
         null,
+        null,
+        null,
       );
->>>>>>> developmentnew
 
       setExpandedCategories(
         {},
@@ -2714,6 +2457,15 @@ export default function RecipesClient({
         isFooterVisible={
           isFooterVisible
         }
+        footerOffset={
+          footerOffset
+        }
+        hasActiveFilters={
+          hasActiveFilters
+        }
+        onShowAllRecipes={
+          clearAllFilters
+        }
       >
         {desktopNavigation}
       </DesktopCategoriesAside>
@@ -2738,6 +2490,9 @@ export default function RecipesClient({
         isFooterVisible={
           isFooterVisible
         }
+        footerOffset={
+          footerOffset
+        }
         activeCategory={
           activeCategory
         }
@@ -2745,6 +2500,9 @@ export default function RecipesClient({
           activeCountry
         }
         activeTag={activeTag}
+        onShowAllRecipes={
+          clearAllFilters
+        }
       >
         {mobileNavigation}
       </MobileCategoriesGuide>
@@ -2896,6 +2654,19 @@ export default function RecipesClient({
                     </div>
                   </div>
 
+                  <button
+                    type="button"
+                    onClick={
+                      clearAllFilters
+                    }
+                    className="inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 text-xs font-black text-white shadow-lg shadow-orange-500/20 transition hover:-translate-y-0.5 hover:bg-orange-600 sm:w-auto"
+                  >
+                    <RotateCcw
+                      size={15}
+                    />
+
+                    عرض كل الوصفات
+                  </button>
                 </div>
               </section>
             )}
@@ -2931,7 +2702,7 @@ export default function RecipesClient({
                     size={16}
                   />
 
-                  مسح الفلاتر
+                  عرض كل الوصفات
                 </button>
               </section>
             )}
