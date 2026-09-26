@@ -120,7 +120,7 @@ export default function TermsConditionsClient() {
           <h1 className="mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100">
             الشروط والأحكام
           </h1>
-
+ 
           <p className="text-xs font-bold text-gray-500 dark:text-gray-400">
             آخر تحديث: 26 سبتمبر 2026
           </p>
