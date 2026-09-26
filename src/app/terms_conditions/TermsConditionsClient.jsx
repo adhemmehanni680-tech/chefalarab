@@ -122,7 +122,7 @@ export default function TermsConditionsClient() {
           </h1>
 
           <p className="text-xs font-bold text-gray-500 dark:text-gray-400">
-            آخر تحديث: 25 سبتمبر 2026
+            آخر تحديث: 26 سبتمبر 2026
           </p>
         </header>
 

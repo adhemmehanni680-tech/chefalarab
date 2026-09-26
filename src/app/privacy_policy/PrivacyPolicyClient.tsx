@@ -212,7 +212,7 @@ return ( <main
       <div className="mt-5 border-t border-white/10 pt-4">
         <p className="text-xs font-bold text-gray-400">
           آخر تحديث لسياسة الخصوصية:{" "}
-          <time dateTime="2026-09-17">17 سبتمبر 2026</time>
+          <time dateTime="2026-09-26">26 سبتمبر 2026</time>
         </p>
       </div>
     </section>
