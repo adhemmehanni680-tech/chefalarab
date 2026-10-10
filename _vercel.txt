@@ -1,0 +1,3 @@
+vc-domain-verify=chefalarab.com,9e601143d57d971d6fcf
+
+vc-domain-verify=www.chefalarab.com,d428b79b37b92719cc4f
