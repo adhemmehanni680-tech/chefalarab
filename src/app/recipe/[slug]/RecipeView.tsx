@@ -1480,6 +1480,7 @@ export default function RecipeView({
                   </p>
                 )}
 
+
                 <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                   {updatedDate && (
                     <span>
